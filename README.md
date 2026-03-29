@@ -29,10 +29,10 @@ Roles:
 
 
 ## TEAM ROLES todo
-# |---------Name---------|-----Role-----|
-# | Ilya Yakubski        | TL + Backend | 
-# | Ialanta Pushchayenka |              |
-# | Kiryl Verkhavodka    |              |
+
+# Ilya Yakubski - TL + Backend
+# Ialanta Pushchayenka -
+# Kiryl Verkhavodka -
 
 
 ## TECHNOLOGIES USED
