@@ -28,12 +28,15 @@ Roles:
 - Admin (moderator of categories, status directories, and global statistics)
 
 
-## TEAM ROLES todo
+## TEAM ROLES
+# Name - Role - GitHub nickname
 
-# Ilya Yakubski - TL + Backend
-# Ialanta Pushchayenka -
-# Kiryl Verkhavodka -
+# Ilya Yakubski - TL + Backend - DP-63-A
+# Ialanta Pushchayenka - Frontend - iolanta-pushchayenka
+# Kiryl Verkhavodka - Backend - Bruh-2
 
 
 ## TECHNOLOGIES USED
-# todo
+# Backend - Java
+# Frontend - JS
+# Databases - PostgreSQL
