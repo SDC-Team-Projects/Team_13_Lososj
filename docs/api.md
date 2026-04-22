@@ -4,11 +4,12 @@
 
 - Формат данных: JSON
 - Протокол: HTTP
-- Аутентификация: JWT
+- Аутентификация: JWT (Bearer Token)
+- Base URL: /api
 
 ---
 
-## Auth
+##   Auth
 
 ### POST /auth/register
 Регистрация пользователя
@@ -16,13 +17,17 @@
 Request:
 {
   "email": "user@mail.com",
-  "password": "123456"
+  "password": "12345678",
+  "username": "alex",
+  "city": "Vilnius",
+  "country": "Lithuania"
 }
 
 Response:
 {
   "id": 1,
-  "email": "user@mail.com"
+  "email": "user@mail.com",
+  "username": "alex"
 }
 
 ---
@@ -33,7 +38,7 @@ Response:
 Request:
 {
   "email": "user@mail.com",
-  "password": "123456"
+  "password": "12345678"
 }
 
 Response:
@@ -43,10 +48,60 @@ Response:
 
 ---
 
-## Collections
+### POST /auth/logout
+Выход из системы
+
+Response:
+{
+  "message": "Logged out successfully"
+}
+
+---
+
+##  Profile
+
+### GET /profile
+Получить профиль пользователя
+
+Response:
+{
+  "id": 1,
+  "email": "user@mail.com",
+  "username": "alex",
+  "city": "Vilnius",
+  "country": "Lithuania",
+  "created_at": "2026-01-15"
+}
+
+---
+
+### PUT /profile
+Обновить профиль
+
+Request:
+{
+  "username": "alex_updated",
+  "city": "Berlin",
+  "country": "Germany"
+}
+
+---
+
+### PUT /profile/password
+Смена пароля
+
+Request:
+{
+  "old_password": "12345678",
+  "new_password": "newpassword123"
+}
+
+---
+
+##  Collections
 
 ### GET /collections
-Получить список коллекций пользователя
+Список коллекций пользователя
 
 ---
 
@@ -56,7 +111,10 @@ Response:
 Request:
 {
   "name": "Монеты",
-  "description": "Коллекция монет"
+  "description": "Коллекция монет",
+  "category": "Нумизматика",
+  "image": "collection.jpg",
+  "is_public": true
 }
 
 ---
@@ -66,15 +124,41 @@ Request:
 
 ---
 
+### PUT /collections/{id}
+Обновить коллекцию
+
+---
+
 ### DELETE /collections/{id}
 Удалить коллекцию
 
 ---
 
-## Items
+### GET /collections/public/{id}
+Просмотр публичной коллекции
+
+---
+
+### GET /collections/{id}/export
+Экспорт коллекции
+
+Response:
+{
+  "file_url": "export.pdf"
+}
+
+---
+
+##  Items
 
 ### GET /collections/{id}/items
-Список предметов коллекции
+Список предметов
+
+Query параметры:
+- search
+- category
+- min_price
+- max_price
 
 ---
 
@@ -85,8 +169,11 @@ Request:
 {
   "collection_id": 1,
   "name": "Монета 1920",
+  "description": "Редкая монета",
+  "notes": "Куплена на аукционе",
   "condition": "good",
   "estimated_value": 100,
+  "categories": [1, 2],
   "custom_fields": {
     "year": 1920
   }
@@ -99,12 +186,17 @@ Request:
 
 ---
 
+### PUT /items/{id}
+Редактировать предмет
+
+---
+
 ### DELETE /items/{id}
 Удалить предмет
 
 ---
 
-## Photos
+##  Photos
 
 ### POST /items/{id}/photos
 Добавить фото
@@ -116,16 +208,97 @@ Request:
 
 ---
 
-## Analytics
+### DELETE /photos/{id}
+Удалить фото
+
+---
+
+##  Favorites
+
+### POST /favorites/{item_id}
+Добавить в избранное
+
+---
+
+### DELETE /favorites/{item_id}
+Удалить из избранного
+
+---
+
+### GET /favorites
+Список избранных предметов
+
+---
+
+##  Analytics
 
 ### GET /analytics/collection/{id}
-Получить аналитику по коллекции
+Аналитика коллекции
 
 Response:
 {
   "total_value": 1000,
   "items_count": 10,
   "categories_distribution": [
-  { "category": "Монеты", "count": 5 }
+    {
+      "category": "Монеты",
+      "count": 5
+    }
+  ]
+}
+
+---
+
+### GET /analytics/user
+Общая статистика пользователя
+
+Response:
+{
+  "collections_count": 4,
+  "items_count": 263,
+  "total_value": 10000
+}
+
+---
+
+##  Activity
+
+### GET /activity
+Последняя активность пользователя
+
+Response:
+[
+  {
+    "action": "added item",
+    "item": "1924 Ruble",
+    "date": "2026-04-05"
+  }
 ]
+
+---
+
+##  Admin 
+
+### DELETE /admin/items/{id}
+Удаление предмета модератором
+
+Request:
+{
+  "reason": "Inappropriate content"
+}
+
+---
+
+### DELETE /admin/collections/{id}
+Удаление коллекции модератором
+
+---
+
+### POST /admin/users/{id}/ban
+Блокировка пользователя
+
+Request:
+{
+  "type": "temporary",
+  "until": "2026-05-01"
 }
