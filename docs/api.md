@@ -88,12 +88,39 @@ Request:
 ---
 
 ### PUT /profile/password
-Смена пароля
+Смена пароля (в целях безопасности аккаунта)
 
 Request:
 {
   "old_password": "12345678",
   "new_password": "newpassword123"
+}
+
+---
+
+### POST /auth/password-reset/request
+Запрос на смену пароля (пользователь его забыл)
+
+Request:
+{
+  "email": "user@example.com"
+}
+
+Response:
+{
+  "message": "Password reset link sent"
+}
+
+---
+
+### POST /auth/password-reset/confirm
+Подтверждение смены пароля (пользователь его забыл)
+
+Request:
+{
+  "token": "XYZ",
+  "new_password": "newpassword123",
+  "confirm_new_password": "newpassword123"
 }
 
 ---
@@ -130,7 +157,7 @@ Request:
 ---
 
 ### DELETE /collections/{id}
-Удалить коллекцию
+Удалить коллекцию (реализовать для обычного пользователя и для модератора)
 
 ---
 
@@ -192,7 +219,7 @@ Request:
 ---
 
 ### DELETE /items/{id}
-Удалить предмет
+Удалить предмет (реализовать для обычного пользователя и для модератора)
 
 ---
 
@@ -278,21 +305,6 @@ Response:
 ---
 
 ##  Admin 
-
-### DELETE /admin/items/{id}
-Удаление предмета модератором
-
-Request:
-{
-  "reason": "Inappropriate content"
-}
-
----
-
-### DELETE /admin/collections/{id}
-Удаление коллекции модератором
-
----
 
 ### POST /admin/users/{id}/ban
 Блокировка пользователя
