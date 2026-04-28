@@ -38,5 +38,5 @@ Roles:
 
 ## TECHNOLOGIES USED
 - Backend - Java
-- Frontend - JS
+- Frontend - JavaScript (primary language), React (framework), Redux (state management)
 - Databases - PostgreSQL
