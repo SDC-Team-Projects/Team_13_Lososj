@@ -35,7 +35,7 @@ export default function LoginForm() {
                   </div>
 
       <Button variant="primary">Sign In</Button>
-      <p className={styles.confirmation}>Don't have an account? <Link to="/register"className={styles.highlight}>Create now </Link></p>
+      <p className={styles.confirmation}>Don't have an account? <Link to="/"className={styles.highlight}>Create now </Link></p>
     </form>
     </div>
   );
