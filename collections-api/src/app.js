@@ -236,6 +236,143 @@ app.get("/api/collections/:id/export", auth, async (req, res) => {
   }
 });
 
+/* ---------------- ITEMS ---------------- */
+
+/* CREATE ITEM */
+app.post("/api/items", auth, async (req, res) => {
+  try {
+    const {
+      collection_id,
+      name,
+      description,
+      notes,
+      condition,
+      estimated_value,
+      categories,
+      custom_fields
+    } = req.body;
+
+    const result = await pool.query(
+      `INSERT INTO items 
+      (collection_id, name, description, notes, condition, estimated_value, custom_fields)
+      VALUES ($1,$2,$3,$4,$5,$6,$7)
+      RETURNING *`,
+      [
+        collection_id,
+        name,
+        description,
+        notes,
+        condition,
+        estimated_value,
+        custom_fields
+      ]
+    );
+
+    res.json(result.rows[0]);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+/* GET ITEMS BY COLLECTION */
+app.get("/api/collections/:id/items", auth, async (req, res) => {
+  try {
+    const result = await pool.query(
+      "SELECT * FROM items WHERE collection_id = $1 ORDER BY created_at DESC",
+      [req.params.id]
+    );
+
+    res.json(result.rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+/* GET ITEM BY ID */
+app.get("/api/items/:id", auth, async (req, res) => {
+  try {
+    const result = await pool.query(
+      "SELECT * FROM items WHERE id = $1",
+      [req.params.id]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: "Item not found" });
+    }
+
+    res.json(result.rows[0]);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+/* UPDATE ITEM */
+app.put("/api/items/:id", auth, async (req, res) => {
+  try {
+    const {
+      name,
+      description,
+      notes,
+      condition,
+      estimated_value,
+      custom_fields
+    } = req.body;
+
+    const result = await pool.query(
+      `UPDATE items
+       SET name=$1,
+           description=$2,
+           notes=$3,
+           condition=$4,
+           estimated_value=$5,
+           custom_fields=$6
+       WHERE id=$7
+       RETURNING *`,
+      [
+        name,
+        description,
+        notes,
+        condition,
+        estimated_value,
+        custom_fields,
+        req.params.id
+      ]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: "Item not found" });
+    }
+
+    res.json(result.rows[0]);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+/* DELETE ITEM */
+app.delete("/api/items/:id", auth, async (req, res) => {
+  try {
+    const result = await pool.query(
+      "DELETE FROM items WHERE id = $1 RETURNING *",
+      [req.params.id]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: "Item not found" });
+    }
+
+    res.json({ message: "Deleted successfully" });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+
 /* ---------------- START SERVER ---------------- */
 
 app.listen(process.env.PORT || 5000, () => {
