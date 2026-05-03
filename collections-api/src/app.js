@@ -606,6 +606,95 @@ app.post("/api/auth/password-reset/confirm", async (req, res) => {
   }
 });
 
+/* ---------------- ANALYTICS ---------------- */
+
+/* COLLECTION ANALYTICS */
+app.get("/api/analytics/collection/:id", auth, async (req, res) => {
+  try {
+    const collectionId = req.params.id;
+
+    // total items + value
+    const stats = await pool.query(
+      `
+      SELECT 
+        COUNT(i.id) AS items_count,
+        COALESCE(SUM(i.estimated_value), 0) AS total_value
+      FROM items i
+      WHERE i.collection_id = $1
+      `,
+      [collectionId]
+    );
+
+    // categories distribution
+    const categories = await pool.query(
+      `
+      SELECT c.name AS category, COUNT(*) AS count
+      FROM item_categories ic
+      JOIN categories c ON c.id = ic.category_id
+      JOIN items i ON i.id = ic.item_id
+      WHERE i.collection_id = $1
+      GROUP BY c.name
+      `,
+      [collectionId]
+    );
+
+    res.json({
+      items_count: stats.rows[0].items_count,
+      total_value: stats.rows[0].total_value,
+      categories_distribution: categories.rows
+    });
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+/* USER ANALYTICS */
+app.get("/api/analytics/user", auth, async (req, res) => {
+  try {
+    const userId = req.user.id;
+
+    const collections = await pool.query(
+      "SELECT COUNT(*) FROM collections WHERE user_id = $1",
+      [userId]
+    );
+
+    const items = await pool.query(
+      `
+      SELECT COUNT(i.id)
+      FROM items i
+      JOIN collections c ON c.id = i.collection_id
+      WHERE c.user_id = $1
+      `,
+      [userId]
+    );
+
+    const value = await pool.query(
+      `
+      SELECT COALESCE(SUM(i.estimated_value), 0) AS total_value
+      FROM items i
+      JOIN collections c ON c.id = i.collection_id
+      WHERE c.user_id = $1
+      `,
+      [userId]
+    );
+
+    res.json({
+      collections_count: collections.rows[0].count,
+      items_count: items.rows[0].count,
+      total_value: value.rows[0].total_value
+    });
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+
+
+
 /* ---------------- START SERVER ---------------- */
 
 app.listen(process.env.PORT || 5000, () => {
