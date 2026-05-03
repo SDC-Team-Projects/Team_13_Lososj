@@ -12,6 +12,16 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+/* ---------------- ACTIVITY HELPER ---------------- */
+
+async function addActivity(userId, action, item = null) {
+  await pool.query(
+    `INSERT INTO activity (user_id, action, item)
+     VALUES ($1, $2, $3)`,
+    [userId, action, item]
+  );
+}
+
 /* ---------------- ROOT ---------------- */
 
 app.get("/", (req, res) => {
@@ -111,6 +121,9 @@ app.post("/api/collections", auth, async (req, res) => {
       [req.user.id, name, description, category, image, is_public]
     );
 
+    // ACTIVITY
+    await addActivity(req.user.id, "created collection", name);
+
     res.json(result.rows[0]);
   } catch (err) {
     console.error(err);
@@ -192,6 +205,9 @@ app.delete("/api/collections/:id", auth, async (req, res) => {
       return res.status(404).json({ error: "Collection not found" });
     }
 
+    // ACTIVITY
+    await addActivity(req.user.id, "deleted collection", req.params.id);
+
     res.json({ message: "Deleted successfully" });
   } catch (err) {
     console.error(err);
@@ -267,6 +283,9 @@ app.post("/api/items", auth, async (req, res) => {
         custom_fields
       ]
     );
+
+    // ACTIVITY
+    await addActivity(req.user.id, "created item", name);
 
     res.json(result.rows[0]);
   } catch (err) {
@@ -364,6 +383,9 @@ app.delete("/api/items/:id", auth, async (req, res) => {
     if (result.rows.length === 0) {
       return res.status(404).json({ error: "Item not found" });
     }
+
+    // ACTIVITY
+    await addActivity(req.user.id, "deleted item", req.params.id);
 
     res.json({ message: "Deleted successfully" });
   } catch (err) {
@@ -684,6 +706,62 @@ app.get("/api/analytics/user", auth, async (req, res) => {
       collections_count: collections.rows[0].count,
       items_count: items.rows[0].count,
       total_value: value.rows[0].total_value
+    });
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+/* ---------------- ACTIVITY ---------------- */
+
+/* GET ACTIVITY */
+  
+app.get("/api/activity", auth, async (req, res) => {
+  try {
+    const result = await pool.query(
+      `SELECT * FROM activity
+       WHERE user_id = $1
+       ORDER BY created_at DESC`,
+      [req.user.id]
+    );
+
+    res.json(result.rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+/* ---------------- ADMIN ---------------- */
+
+/* BAN USER */
+app.post("/api/admin/users/:id/ban", auth, async (req, res) => {
+  try {
+     
+    const me = await pool.query(
+      "SELECT role FROM users WHERE id = $1",
+      [req.user.id]
+    );
+
+    if (me.rows[0].role !== "ADMIN") {
+      return res.status(403).json({ error: "No access" });
+    }
+
+    const { type, until } = req.body;
+
+    await pool.query(
+      `UPDATE users
+       SET status = 'banned'
+       WHERE id = $1`,
+      [req.params.id]
+    );
+
+    res.json({
+      message: "User banned",
+      type,
+      until: until || null
     });
 
   } catch (err) {
