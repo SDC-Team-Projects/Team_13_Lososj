@@ -474,7 +474,137 @@ app.get("/api/favorites", auth, async (req, res) => {
   }
 });
 
+/* ---------------- PROFILE ---------------- */
 
+/* GET PROFILE */
+app.get("/api/profile", auth, async (req, res) => {
+  try {
+    const result = await pool.query(
+      `SELECT id, email, username, city, country, created_at
+       FROM users
+       WHERE id = $1`,
+      [req.user.id]
+    );
+
+    res.json(result.rows[0]);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+/* UPDATE PROFILE */
+app.put("/api/profile", auth, async (req, res) => {
+  try {
+    const { username, city, country } = req.body;
+
+    const result = await pool.query(
+      `UPDATE users
+       SET username = $1,
+           city = $2,
+           country = $3
+       WHERE id = $4
+       RETURNING id, email, username, city, country`,
+      [username, city, country, req.user.id]
+    );
+
+    res.json(result.rows[0]);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+/* CHANGE PASSWORD */
+app.put("/api/profile/password", auth, async (req, res) => {
+  try {
+    const { old_password, new_password } = req.body;
+
+    const userResult = await pool.query(
+      "SELECT * FROM users WHERE id = $1",
+      [req.user.id]
+    );
+
+    const user = userResult.rows[0];
+
+    const validPassword = await bcrypt.compare(old_password, user.password);
+
+    if (!validPassword) {
+      return res.status(400).json({ error: "Wrong old password" });
+    }
+
+    const hashedPassword = await bcrypt.hash(new_password, 10);
+
+    await pool.query(
+      "UPDATE users SET password = $1 WHERE id = $2",
+      [hashedPassword, req.user.id]
+    );
+
+    res.json({ message: "Password updated" });
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+/* REQUEST RESET PASSWORD */
+app.post("/api/auth/password-reset/request", async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    const userResult = await pool.query(
+      "SELECT * FROM users WHERE email = $1",
+      [email]
+    );
+
+    if (userResult.rows.length === 0) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    
+    const resetToken = "RESET_TOKEN_123";
+
+    res.json({
+      message: "Password reset link sent",
+      token: resetToken   // 👈 для теста
+    });
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+/* CONFIRM RESET PASSWORD */
+app.post("/api/auth/password-reset/confirm", async (req, res) => {
+  try {
+    const { token, new_password, confirm_new_password } = req.body;
+
+    if (new_password !== confirm_new_password) {
+      return res.status(400).json({ error: "Passwords do not match" });
+    }
+
+     
+    if (token !== "RESET_TOKEN_123") {
+      return res.status(400).json({ error: "Invalid token" });
+    }
+
+     
+    const hashedPassword = await bcrypt.hash(new_password, 10);
+
+    await pool.query(
+      "UPDATE users SET password = $1 WHERE id = $2",
+      [hashedPassword, 1]
+    );
+
+    res.json({ message: "Password reset successful" });
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
 
 /* ---------------- START SERVER ---------------- */
 
