@@ -412,6 +412,68 @@ app.delete("/api/photos/:id", auth, async (req, res) => {
   }
 });
 
+/* ---------------- FAVORITES ---------------- */
+
+/* ADD TO FAVORITES */
+app.post("/api/favorites/:item_id", auth, async (req, res) => {
+  try {
+    const { item_id } = req.params;
+
+    const result = await pool.query(
+      `INSERT INTO favorites (user_id, item_id)
+       VALUES ($1, $2)
+       RETURNING *`,
+      [req.user.id, item_id]
+    );
+
+    res.json(result.rows[0]);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+/* REMOVE FROM FAVORITES */
+app.delete("/api/favorites/:item_id", auth, async (req, res) => {
+  try {
+    const { item_id } = req.params;
+
+    const result = await pool.query(
+      `DELETE FROM favorites
+       WHERE user_id = $1 AND item_id = $2
+       RETURNING *`,
+      [req.user.id, item_id]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: "Not in favorites" });
+    }
+
+    res.json({ message: "Removed from favorites" });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+/* GET FAVORITES */
+app.get("/api/favorites", auth, async (req, res) => {
+  try {
+    const result = await pool.query(
+      `SELECT items.*
+       FROM favorites
+       JOIN items ON favorites.item_id = items.id
+       WHERE favorites.user_id = $1`,
+      [req.user.id]
+    );
+
+    res.json(result.rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
 
 
 /* ---------------- START SERVER ---------------- */
