@@ -38,5 +38,10 @@ Roles:
 
 ## TECHNOLOGIES USED
 - Backend - Java
-- Frontend - JavaScript (primary language), React (framework), Redux (state management)
 - Databases - PostgreSQL
+
+### Frontend
+- JavaScript
+- React
+- Redux
+- Deployment: Vercel

@@ -3,6 +3,7 @@ import Input from "../ui/Input";
 import Button from "../ui/Button";
 import styles from "../css/AuthForm.module.css";
 import { Link } from "react-router-dom";
+import { Toaster, toast } from "react-hot-toast";
 
 export default function LoginForm() {
   const [form, setForm] = useState({
@@ -45,15 +46,18 @@ export default function LoginForm() {
       
       localStorage.setItem("token", data.token);
 
-      alert("Login successful!");
+      //alert("Login successful!");
+      toast.success("Login successful!");
 
     } catch (err) {
       console.error(err);
-      alert("Error");
+      toast.error("Error");
     }
   };
 
   return (
+    <>
+      <Toaster />  
     <div className={styles.page}>
       <div className={styles.main}>
         <h1>Welcome Back!</h1>
@@ -97,5 +101,6 @@ export default function LoginForm() {
         </p>
       </form>
     </div>
+     </>
   );
 }

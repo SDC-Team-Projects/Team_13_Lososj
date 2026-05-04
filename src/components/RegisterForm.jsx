@@ -6,6 +6,7 @@ import Select from "../ui/Select";
 import countries from "i18n-iso-countries";
 import en from "i18n-iso-countries/langs/en.json";
 import { Link } from "react-router-dom";
+import { Toaster, toast } from "react-hot-toast";
 
 countries.registerLocale(en);
 
@@ -64,14 +65,17 @@ export default function RegisterForm() {
       const data = await res.json();
       console.log(data);
 
-      alert("Registered successfully!");
+      toast.success("Register successful!");
+
     } catch (err) {
       console.error(err);
-      alert("Error");
+      toast.error("Error");
     }
   };
 
   return (
+    <>
+     <Toaster />  
     <div className={styles.page}>
       <div className={styles.main}>
         <h1>Welcome !</h1>
@@ -159,5 +163,6 @@ export default function RegisterForm() {
         </p>
       </form>
     </div>
+    </>
   );
 }
