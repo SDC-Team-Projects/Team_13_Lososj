@@ -1,0 +1,25 @@
+.wrapper {
+  display: flex;
+  gap: 12px;
+  margin-left: auto;
+  width: 75%;
+  margin-top: 15px;
+}
+
+.search {
+  flex: 7;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 17px;
+  outline: none;
+}
+
+.select {
+  flex: 1.5;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 17px;
+  background: white;
+  cursor: pointer;
+
+}
