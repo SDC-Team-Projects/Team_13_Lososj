@@ -1,3 +1,4 @@
+import { useState } from "react";
 import Input from "../ui/Input";
 import Button from "../ui/Button";
 import styles from "../css/AuthForm.module.css";
@@ -8,7 +9,9 @@ import { Link } from "react-router-dom";
 
 countries.registerLocale(en);
 
-const countryOptions = Object.entries(countries.getNames("en", { select: "official" }))
+const countryOptions = Object.entries(
+  countries.getNames("en", { select: "official" })
+)
   .map(([code, name]) => ({
     value: code,
     label: name,
@@ -16,54 +19,145 @@ const countryOptions = Object.entries(countries.getNames("en", { select: "offici
   .sort((a, b) => a.label.localeCompare(b.label));
 
 export default function RegisterForm() {
+  const [form, setForm] = useState({
+    username: "",
+    email: "",
+    password: "",
+    confirmPassword: "",
+    city: "",
+    country: "",
+  });
+
+  const handleChange = (e) => {
+    setForm({
+      ...form,
+      [e.target.name]: e.target.value,
+    });
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    if (form.password !== form.confirmPassword) {
+      alert("Passwords do not match");
+      return;
+    }
+
+    try {
+      const res = await fetch(
+        "https://team-13-lososj.onrender.com/api/auth/register",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            email: form.email,
+            password: form.password,
+            username: form.username,
+            city: form.city,
+            country: form.country,
+          }),
+        }
+      );
+
+      const data = await res.json();
+      console.log(data);
+
+      alert("Registered successfully!");
+    } catch (err) {
+      console.error(err);
+      alert("Error");
+    }
+  };
+
   return (
     <div className={styles.page}>
-      <div className={styles.main}> 
-      <h1>Welcome !</h1>
-      <p>Create collections in seconds and discover unique items 
-      that will complement your collection.</p>
+      <div className={styles.main}>
+        <h1>Welcome !</h1>
+        <p>
+          Create collections in seconds and discover unique items that will
+          complement your collection.
+        </p>
       </div>
 
-
-    <form className={styles.form}>
-      <div className={styles.information}>
-        <h2>Create Account</h2>
-      <p>Create account to access your collection</p>
-      </div>
-      <div className={styles.input}>
-        <label className={styles.labelRequired}>Full Name</label>
-        <Input placeholder="Name Surname"/>
-      </div>
-
-      <div>
-      <label className={styles.labelRequired}>Email</label>
-      <Input placeholder="email@example.com" />
-      </div>
-
-<div className={styles.pair}>
-    <div className={styles.field}>
-        <label className={styles.labelRequired}>Country</label>
-        <Select options={countryOptions} className={styles.select} />
+      <form className={styles.form} onSubmit={handleSubmit}>
+        <div className={styles.information}>
+          <h2>Create Account</h2>
+          <p>Create account to access your collection</p>
         </div>
-    
-      <div className={styles.field}>
-        <label className={styles.labelRequired}>City</label>
-        <Input placeholder="Enter city" />
+
+        <div className={styles.input}>
+          <label className={styles.labelRequired}>Full Name</label>
+          <Input
+            name="username"
+            placeholder="Name Surname"
+            onChange={handleChange}
+          />
         </div>
-</div>
 
-          <div className={styles.password}>
-                            <label className={styles.labelRequired}>Password</label>
-                            <Input placeholder="Password" type="password" />
-                              </div>
-                            <div className={styles.password}>
-                            <label className={styles.labelRequired}>Confirm Password</label>
-                            <Input placeholder="Confirm Password" type="password" />
-                          </div>
+        <div>
+          <label className={styles.labelRequired}>Email</label>
+          <Input
+            name="email"
+            placeholder="email@example.com"
+            onChange={handleChange}
+          />
+        </div>
 
-      <Button className={styles.button}>Create account</Button>
-      <p className={styles.confirmation}>Already have an account?<Link to="/login" className={styles.highlight}>Sign in</Link></p>
-    </form>
+        <div className={styles.pair}>
+          <div className={styles.field}>
+            <label className={styles.labelRequired}>Country</label>
+            <Select
+              options={countryOptions}
+              className={styles.select}
+              onChange={(option) =>
+                setForm({ ...form, country: option.label })
+              }
+            />
+          </div>
+
+          <div className={styles.field}>
+            <label className={styles.labelRequired}>City</label>
+            <Input
+              name="city"
+              placeholder="Enter city"
+              onChange={handleChange}
+            />
+          </div>
+        </div>
+
+        <div className={styles.password}>
+          <label className={styles.labelRequired}>Password</label>
+          <Input
+            name="password"
+            placeholder="Password"
+            type="password"
+            onChange={handleChange}
+          />
+        </div>
+
+        <div className={styles.password}>
+          <label className={styles.labelRequired}>Confirm Password</label>
+          <Input
+            name="confirmPassword"
+            placeholder="Confirm Password"
+            type="password"
+            onChange={handleChange}
+          />
+        </div>
+
+        <Button className={styles.button} type="submit">
+          Create account
+        </Button>
+
+        <p className={styles.confirmation}>
+          Already have an account?
+          <Link to="/login" className={styles.highlight}>
+            Sign in
+          </Link>
+        </p>
+      </form>
     </div>
   );
 }
