@@ -36,22 +36,55 @@ app.post("/api/auth/register", async (req, res) => {
   try {
     const { email, password, username, city, country } = req.body;
 
+    //  VALIDATION  
+    if (!email || !password || !username || !city || !country) {
+      return res.status(400).json({
+        error: "All fields are required (email, password, username, city, country)",
+      });
+    }
+
+    //  доп. защита от пустых строк "   "
+    if (
+      !email.trim() ||
+      !password.trim() ||
+      !username.trim() ||
+      !city.trim() ||
+      !country.trim()
+    ) {
+      return res.status(400).json({
+        error: "Fields cannot be empty",
+      });
+    }
+
+    //  проверка длины пароля
+    if (password.length < 6) {
+      return res.status(400).json({
+        error: "Password must be at least 6 characters",
+      });
+    }
+
+    //  проверка email (очень базовая)
+    const emailRegex = /\S+@\S+\.\S+/;
+    if (!emailRegex.test(email)) {
+      return res.status(400).json({
+        error: "Invalid email format",
+      });
+    }
+
+    //  хешируем пароль
     const hashedPassword = await bcrypt.hash(password, 10);
 
+    //  сохраняем в БД
     const result = await pool.query(
       `INSERT INTO users (email, password, username, city, country)
        VALUES ($1, $2, $3, $4, $5)
-       RETURNING id, email, username`,
+       RETURNING id, email, username, city, country`,
       [email, hashedPassword, username, city, country]
     );
 
     res.json(result.rows[0]);
 
   } catch (err) {
-    if (err.code === "23505") {
-      return res.status(400).json({ error: "Email already exists" });
-    }
-
     console.error(err);
     res.status(500).json({ error: "Server error" });
   }
