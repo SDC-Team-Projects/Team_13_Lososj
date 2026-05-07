@@ -6,4 +6,15 @@
 .content {
   flex: 1;
   padding: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 50px;
 }
+
+  .infoRow {
+    display: flex;
+  margin-top: 10px;
+  gap: 60px;
+  
+  }

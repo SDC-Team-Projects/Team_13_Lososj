@@ -1,8 +1,28 @@
 import styles from "../css/Select.module.css";
 
-export default function Select ({options, value, onChange, className}) {
-    return (
- <select value={value} onChange={onChange} className={styles.select}>
+// export default function Select ({options, value, onChange, className}) {
+//     return (
+//  <select value={value} onChange={onChange} className={styles.select}>
+//       <option value="">Select country</option>
+
+//       {options.map((opt) => (
+//         <option key={opt.value} value={opt.value}>
+//           {opt.label}
+//         </option>
+//       ))}
+//     </select>
+//     )
+// }
+
+
+export default function Select({ options, value, onChange, name }) {
+  return (
+    <select
+      name={name}
+      value={value}
+      onChange={onChange}
+      className={styles.select}
+    >
       <option value="">Select country</option>
 
       {options.map((opt) => (
@@ -11,5 +31,5 @@ export default function Select ({options, value, onChange, className}) {
         </option>
       ))}
     </select>
-    )
+  );
 }

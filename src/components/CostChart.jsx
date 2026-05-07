@@ -8,7 +8,7 @@ import {
   CartesianGrid,
 } from "recharts";
 
-import "./CostChart.css";
+import "../css/CostChart.css";
 
 function getLast4MonthsData() {
   const now = new Date();
@@ -35,7 +35,7 @@ export default function CostChart() {
     <div className="chartCard">
       <h3 className="title">Cost of collections</h3>
 
-      <ResponsiveContainer width="75%" height={250}>
+      <ResponsiveContainer   className="chart" width="75%" height={250}>
         <LineChart data={data}>
           <CartesianGrid strokeDasharray="3 3" />
           <XAxis dataKey="month" />

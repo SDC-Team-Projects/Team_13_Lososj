@@ -2,14 +2,18 @@ import { useState } from "react";
 import Input from "../ui/Input";
 import Button from "../ui/Button";
 import styles from "../css/AuthForm.module.css";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Toaster, toast } from "react-hot-toast";
+import { useAuth } from "../context/AuthContext";
 
 export default function LoginForm() {
+  const { login } = useAuth();
   const [form, setForm] = useState({
     email: "",
     password: "",
   });
+
+  const navigate = useNavigate();
 
   const handleChange = (e) => {
     setForm({
@@ -44,10 +48,12 @@ export default function LoginForm() {
       }
 
       
-      localStorage.setItem("token", data.token);
+      login(data.token);
 
-      //alert("Login successful!");
       toast.success("Login successful!");
+
+      // перейти на профиль
+      navigate("/home");
 
     } catch (err) {
       console.error(err);
