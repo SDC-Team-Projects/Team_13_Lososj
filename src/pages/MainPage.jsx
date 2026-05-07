@@ -3,7 +3,7 @@ import "../css/MainPage.css";
 import ProfileCard from "../components/ProfileCard";
 import InfoCard from "../components/InfoCard";
 import CostChart from "../components/CostChart";
-
+import CollectionForm from "../components/CollectionForm";
 
 
 const mockItems = [
@@ -65,6 +65,7 @@ export default function MainPage() {
          <div className="costChart">
                 <CostChart />
             </div>
+            <div className="collectionForm"> <CollectionForm /></div>
         </div>
          </div>
     </>
