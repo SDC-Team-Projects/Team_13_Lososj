@@ -1,29 +1,65 @@
-import React from "react";
 import "../css/ItemCard.css";
-
-
-
+import Button from "../ui/Button";
 
 export default function ItemCard({ item }) {
   return (
     <div className="itemCard">
-      <div className="imageWrapper">
+
+      {/* COVER IMAGE */}
+      <div className="coverWrapper">
         <img
-          src={item.image || "https://via.placeholder.com/300"}
+          src={item.image}
           alt={item.name}
+          className="coverImage"
         />
       </div>
 
-      <div className="itemContent">
-        <h3 className="title">{item.name}</h3>
-        <p className="description">{item.description}</p>
+      {/* CARD CONTENT */}
+      <div className="cardContent">
 
-        <div className="meta">
-          <span>📅 {item.purchaseDate}</span>
-          {/* <span>👤 {item.owner}</span> */}
-          <span>💰 {item.price}$</span>
-          <span>🏷 {item.category}</span>
+        {/* TOP ROW */}
+        <div className="topRow">
+
+          {/* PROFILE */}
+          <div className="profileSection">
+            <img
+              src={item.profileImage}
+              alt={item.owner}
+              className="avatar"
+            />
+          </div>
+
+          {/* CATEGORY */}
+          <div className="categoryBadge">
+            {item.category}
+          </div>
+
         </div>
+
+        {/* TITLE */}
+        <h3 className="cardTitle">
+          {item.name}
+        </h3>
+
+        {/* DESCRIPTION */}
+        <p className="cardDescription">
+          {item.description}
+        </p>
+
+        {/* STATS */}
+        <div className="stats">
+
+          <div className="statItem">
+            💰 ${item.price}
+          </div>
+
+        </div>
+
+        {/* BUTTON */}
+        <Button variant="primary">
+          View
+        </Button>
+
       </div>
     </div>
   );

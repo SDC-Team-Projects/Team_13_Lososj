@@ -170,7 +170,7 @@ export default function RegisterForm() {
             />
           </div>
 
-          <Button className={styles.button} type="submit">
+          <Button className={`${styles.button} ${styles.primary}`} type="submit">
             Create account
           </Button>
 

@@ -11,7 +11,7 @@ export default function Sidebar() {
       <nav className="sidebar__nav">
         <Link to="/home">Home</Link>
         <a href="/projects">Overview</a>
-        <a href="/settings">My Collections</a>
+        <Link to="/collections">My Collections</Link>
         <a href="/settings">Favourites</a>
         <Link to="/profile">Profile</Link>
         <a href="/settings">Log Out</a>

@@ -1,21 +1,29 @@
 .button {
-  padding: 10px;
+  padding: 12px 18px;
   border: none;
-  border-radius: 6px;
+  border-radius: 12px;
   cursor: pointer;
-  width: 100%;
   font-size: 14px;
-  background-color: rgba(48, 20, 255, 1);
-  color: rgba(255, 255, 255, 1);
+  font-weight: 500;
+
+  transition: all 0.2s ease;
+  position: relative;
+
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
 }
 
-/* варианты
 .primary {
-  background-color: #4f46e5;
+  background-color: rgb(125, 187, 253);
   color: white;
 }
 
 .danger {
-  background-color: red;
+  background-color: #ef4444;
   color: white;
-} */
+}
+
+
+.button:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
+}

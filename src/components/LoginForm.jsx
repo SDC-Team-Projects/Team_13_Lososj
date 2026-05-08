@@ -43,9 +43,9 @@ export default function LoginForm() {
       const data = await res.json();
 
       if (!res.ok) {
-        alert(data.error || "Login failed");
-        return;
-      }
+  toast.error(data.error || "Login failed");
+  return;
+}
 
       
       login(data.token);
@@ -96,8 +96,8 @@ export default function LoginForm() {
         </div>
 
         <Button type="submit" variant="primary">
-          Sign In
-        </Button>
+  Sign In
+</Button>
 
         <p className={styles.confirmation}>
           Don't have an account?{" "}
