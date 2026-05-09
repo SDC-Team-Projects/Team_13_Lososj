@@ -96,6 +96,20 @@ app.post("/api/auth/login", async (req, res) => {
   try {
     const { email, password } = req.body;
 
+// VALIDATION
+    if (!email || !password) {
+      return res.status(400).json({
+        error: "Email and password are required",
+      });
+    }
+
+     
+    if (!email.trim() || !password.trim()) {
+      return res.status(400).json({
+        error: "Fields cannot be empty",
+      });
+    }
+
     const userResult = await pool.query(
       "SELECT * FROM users WHERE email = $1",
       [email]
