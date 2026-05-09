@@ -57,7 +57,7 @@ app.post("/api/auth/register", async (req, res) => {
     }
 
     //  проверка длины пароля
-    if (password.length < 6) {
+    if (password.length < 8) {
       return res.status(400).json({
         error: "Password must be at least 6 characters",
       });
