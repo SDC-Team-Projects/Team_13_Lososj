@@ -27,14 +27,34 @@ const navigate = useNavigate();
     { value: "other", label: "Other" },
   ];
 
-  const handleImageChange = (e) => {
+const handleImageChange = async (e) => {
   const file = e.target.files[0];
-
   if (!file) return;
 
-  const imageUrl = URL.createObjectURL(file);
+  const formData = new FormData();
+  formData.append("file", file);
+  formData.append("upload_preset", "collections_upload"); // 👈 твой preset
 
-  setImage(imageUrl);
+  try {
+    const res = await fetch(
+      "https://api.cloudinary.com/v1_1/ddtujezze/image/upload",
+      {
+        method: "POST",
+        body: formData,
+      }
+    );
+
+    const data = await res.json();
+
+    if (!data.secure_url) {
+      console.error("Cloudinary error:", data);
+      return;
+    }
+
+    setImage(data.secure_url); // 👈 сохраняем ссылку на картинку
+  } catch (err) {
+    console.error("Upload failed:", err);
+  }
 };
 
 const handleSubmit = async (e) => {
@@ -67,25 +87,32 @@ const handleSubmit = async (e) => {
           <p>Fill in the details below to add a new collection</p>
         </div>
 
-        <label className={styles.uploadBox}>
-          <input
-            type="file"
-            onChange={handleImageChange}
-            className={styles.uploadInput}
-            accept="image/*"
-          />
+      <label className={styles.uploadBox}>
+  <input
+    type="file"
+    onChange={handleImageChange}
+    className={styles.uploadInput}
+    accept="image/*"
+  />
 
-          <div className={styles.uploadContent}>
-            <div className={styles.uploadIcon}>
-              <CloudUpload />
-            </div>
+  {image ? (
+    <img
+      src={image}
+      alt="preview"
+      className={styles.previewInside}
+    />
+  ) : (
+    <div className={styles.uploadContent}>
+      <div className={styles.uploadIcon}>
+        <CloudUpload />
+      </div>
 
-            <p className={styles.uploadText}>
-              <span>Click to</span> upload image
-            </p>
-          </div>
-        </label>
-
+      <p className={styles.uploadText}>
+        <span>Click to</span> upload image
+      </p>
+    </div>
+  )}
+</label>
       </div>
 
       {/* RIGHT */}
@@ -129,10 +156,9 @@ const handleSubmit = async (e) => {
             Cancel
           </Button>
 
-          <Button type="submit" className={`${styles.button} ${styles.primary}`}>
+          <Button type="submit"  disabled={!image} className={`${styles.button} ${styles.primary}`}>
             Add Collection
           </Button>
-
         </div>
 
       </div>

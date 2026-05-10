@@ -1,66 +1,166 @@
 import "../css/ItemCard.css";
 import Button from "../ui/Button";
+import { Link } from "react-router-dom";
 
-export default function ItemCard({ item }) {
-  return (
-    <div className="itemCard">
+export default function ItemCard({
+  item,
+  layout = "grid",
+  mode = "preview",
+}) {
+  const isHorizontal = layout === "horizontal";
+  const isDetails = mode === "details";
 
-      {/* COVER IMAGE */}
-      <div className="coverWrapper">
-        <img
-          src={item.image}
-          alt={item.name}
-          className="coverImage"
-        />
-      </div>
+  const card = (
+    <div
+      className={`itemCard ${
+        isHorizontal ? "horizontal" : ""
+      } ${isDetails ? "details" : ""}`}
+    >
+      {!isHorizontal ? (
+        <>
+          {/* GRID VERSION */}
 
-      {/* CARD CONTENT */}
-      <div className="cardContent">
-
-        {/* TOP ROW */}
-        <div className="topRow">
-
-          {/* PROFILE */}
-          <div className="profileSection">
+          <div className="coverWrapper">
             <img
-              src={item.profileImage}
-              alt={item.owner}
-              className="avatar"
+              src={item.image}
+              alt={item.name}
+              className="coverImage"
             />
           </div>
 
-          {/* CATEGORY */}
-          <div className="categoryBadge">
-            {item.category}
+          <div className="cardContent">
+
+            <div className="topRow">
+              <div className="profileSection">
+                <img
+                  src={item.profileImage}
+                  alt="profile"
+                  className="avatar"
+                />
+              </div>
+
+              <div className="categoryBadge">
+                {item.category}
+              </div>
+            </div>
+
+            <h3 className="cardTitle">
+              {item.name}
+            </h3>
+
+            <p className="cardDescription">
+              {item.description}
+            </p>
+
+            {/* PRICE ONLY IN PREVIEW */}
+            {!isDetails && (
+              <div className="stats">
+                <div className="statItem">
+                  💰 ${item.price}
+                </div>
+              </div>
+            )}
+
+            {/* BUTTONS */}
+            {!isDetails ? (
+              <Button variant="primary">
+                View
+              </Button>
+            ) : (
+              <div className="actions">
+                <Button variant="secondary">
+                  Download PDF
+                </Button>
+
+                <Button variant="primary">
+                  Edit
+                </Button>
+
+                <Button variant="danger">
+                  Delete
+                </Button>
+              </div>
+            )}
+
           </div>
+        </>
+      ) : (
+        <>
+          {/* HORIZONTAL VERSION */}
 
-        </div>
+          <div className="horizontalCard">
 
-        {/* TITLE */}
-        <h3 className="cardTitle">
-          {item.name}
-        </h3>
+            <div className="leftSide">
+              <img
+                src={item.image}
+                alt={item.name}
+                className="horizontalImage"
+              />
+            </div>
 
-        {/* DESCRIPTION */}
-        <p className="cardDescription">
-          {item.description}
-        </p>
+            <div className="rightSide">
 
-        {/* STATS */}
-        <div className="stats">
+              <div className="categoryBadge">
+                {item.category}
+              </div>
 
-          <div className="statItem">
-            💰 ${item.price}
+              <h3 className="cardTitle">
+                {item.name}
+              </h3>
+
+              <p className="cardDescription">
+                {item.description}
+              </p>
+
+              {/* PRICE ONLY IN PREVIEW */}
+              {!isDetails && (
+                <div className="stats">
+                  <div className="statItem">
+                    💰 ${item.price}
+                  </div>
+                </div>
+              )}
+
+              {/* BUTTONS */}
+              {!isDetails ? (
+                <Button variant="primary">
+                  View
+                </Button>
+              ) : (
+                <div className="actions">
+                  <Button variant="secondary">
+                    Download PDF
+                  </Button>
+
+                  <Button variant="primary">
+                    Edit
+                  </Button>
+
+                  <Button variant="danger">
+                    Delete
+                  </Button>
+                </div>
+              )}
+
+            </div>
           </div>
-
-        </div>
-
-        {/* BUTTON */}
-        <Button variant="primary">
-          View
-        </Button>
-
-      </div>
+        </>
+      )}
     </div>
   );
+
+  // PREVIEW MODE => clickable card
+  if (!isDetails) {
+    return (
+      <Link
+        to={`/items/${item.id}`}
+        className="cardLink"
+      >
+        {card}
+      </Link>
+    );
+  }
+
+  // DETAILS MODE => no link
+  return card;
 }

@@ -9,6 +9,10 @@ import { AuthProvider } from "./context/AuthContext";
 import ProtectedRoute from "./routes/ProtectedRoute";
 import CollectionFormPage from "./pages/CollectionFormPage";
 import MyCollectionsPage from "./pages/MyCollectionsPage";
+import CollectionPage from "./pages/CollectionPage";
+import ItemForm from "./components/ItemForm";
+import ItemPage from "./components/ItemPage";
+import EditProfilePage from "./components/EditProfilePage";
 
 function App() {
 
@@ -24,9 +28,12 @@ function App() {
       <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
       <Route path="/collectionForm" element={<ProtectedRoute><CollectionFormPage /></ProtectedRoute>} />
       <Route path="/collections" element={<ProtectedRoute><MyCollectionsPage /></ProtectedRoute>} />
+      <Route path="/collections/:id" element={<ProtectedRoute><CollectionPage /></ProtectedRoute>} />
+      <Route path="/collections/:id/items/new" element={<ProtectedRoute><ItemForm /></ProtectedRoute>} />
+      <Route path="/items/:id" element={<ProtectedRoute><ItemPage /></ProtectedRoute>} />
+      <Route path="/profile/edit" element={<ProtectedRoute>< EditProfilePage /></ProtectedRoute>} />
     </Routes>
     </BrowserRouter>
-    
     </AuthProvider>
     </>
   )

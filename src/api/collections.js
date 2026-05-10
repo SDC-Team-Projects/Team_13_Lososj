@@ -78,3 +78,23 @@ export async function getUserAnalytics() {
 
   return response.json();
 }
+
+
+/* ---------------- GET COLLECTION BY ID ---------------- */
+
+export async function getCollectionById(id) {
+  const token = localStorage.getItem("token");
+
+  const response = await fetch(`${API_URL}/collections/${id}`, {
+    method: "GET",
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error("Failed to fetch collection");
+  }
+
+  return response.json();
+}

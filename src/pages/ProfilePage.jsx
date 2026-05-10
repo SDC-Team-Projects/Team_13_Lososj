@@ -2,8 +2,31 @@ import Sidebar from "../components/Sidebar";
 import ProfileCard from "../components/ProfileCard";
 import InfoCard from "../components/InfoCard";
 import "../css/ProfilePage.css";
+import { getUserAnalytics } from "../api/collections";
+import React, { useEffect, useState } from "react";
+
 
 export default function ProfilePage() {
+
+    const [analytics, setAnalytics] = useState({
+      items_count: 0,
+      collections_count: 0,
+      total_value: 0,
+    });
+
+      useEffect(() => {
+        loadAnalytics();
+      }, []);
+    
+       async function loadAnalytics() {
+        try {
+          const data = await getUserAnalytics();
+          setAnalytics(data);
+        } catch (err) {
+          console.error(err);
+        }
+      }
+
   return (
     <>
    <div className="layout">
@@ -13,9 +36,9 @@ export default function ProfilePage() {
         <ProfileCard />
 
         <div className="infoRow">
-        <InfoCard title="Items" count={24} />
-        <InfoCard title="Collections" count={5} />
-        <InfoCard title="Total value" count={"$1200"} />
+        <InfoCard title="Items" count={analytics.items_count} />
+        <InfoCard title="Collections" count={analytics.collections_count} />
+        <InfoCard title="Total value" count={analytics.total_value} />
       </div>
       </div>
     </div>

@@ -1,3 +1,10 @@
+.cardLink {
+  text-decoration: none;
+  color: inherit;
+}
+
+/* CARD */
+
 .itemCard {
   width: 100%;
   max-width: 340px;
@@ -51,7 +58,8 @@
 }
 
 
-/* TOP */
+/* TOP ROW */
+
 .topRow {
   display: flex;
 
@@ -64,15 +72,20 @@
 
 
 /* AVATAR */
+
 .avatar {
   width: 58px;
   height: 58px;
+
   object-fit: cover;
+
+  border-radius: 50%;
 
   border: 4px solid white;
 
   background: white;
 }
+
 
 /* CATEGORY */
 
@@ -134,3 +147,70 @@
 
   color: #111827;
 }
+
+
+/* ACTIONS */
+
+.actions {
+  display: flex;
+
+  gap: 12px;
+
+  flex-wrap: wrap;
+}
+
+
+/* HORIZONTAL */
+
+.itemCard.horizontal {
+  max-width: 100%;
+
+  width: 100%;
+
+  min-height: 260px;
+}
+
+.horizontalCard {
+  display: flex;
+
+  width: 100%;
+
+  height: 100%;
+}
+
+.leftSide {
+  width: 38%;
+
+  overflow: hidden;
+}
+
+.horizontalImage {
+  width: 100%;
+  height: 100%;
+
+  object-fit: cover;
+}
+
+.rightSide {
+  width: 62%;
+
+  padding: 28px;
+
+  display: flex;
+  flex-direction: column;
+
+  justify-content: center;
+
+  gap: 16px;
+}
+
+
+/* DETAILS MODE */
+
+.itemCard.details {
+  border: 1px solid #e5e7eb;
+}  
+
+
+
+

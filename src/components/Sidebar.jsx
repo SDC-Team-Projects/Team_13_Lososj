@@ -14,7 +14,8 @@ export default function Sidebar() {
         <Link to="/collections">My Collections</Link>
         <a href="/settings">Favourites</a>
         <Link to="/profile">Profile</Link>
-        <a href="/settings">Log Out</a>
+         <Link to="/collections/:id"
+>Log Out</Link>
       </nav>
     </aside>
   );

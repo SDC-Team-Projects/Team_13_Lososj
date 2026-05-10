@@ -4,7 +4,8 @@ import ProfileCard from "../components/ProfileCard";
 import InfoCard from "../components/InfoCard";
 import CostChart from "../components/CostChart";
 import CollectionForm from "../components/CollectionForm";
-import ItemCard from "../components/ItemCard";
+// import ItemCard from "../components/ItemCard";
+import CollectionCard from "../components/CollectionCard";
 import { getUserAnalytics } from "../api/collections";
 import React, { useEffect, useState } from "react";
 

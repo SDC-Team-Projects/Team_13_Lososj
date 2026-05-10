@@ -5,7 +5,7 @@ import { Link } from "react-router-dom";
 import "../css/MyCollectionsPage.css";
 import SearchBar from "../components/SearchBar";
 import Sidebar from "../components/Sidebar";
-import ItemCard from "../components/ItemCard";
+import CollectionCard from "../components/CollectionCard";
 import { getCollections } from "../api/collections";
 
 
@@ -54,9 +54,19 @@ if (loading) {
 </Link>
 </div>
 <div className="search"><SearchBar /></div>
- <div className="itemsGrid">
+ {/* <div className="itemsGrid">
   {collections.map((item) => (
   <ItemCard key={item.id} item={item} />
+))}
+</div> */}
+
+<div className="itemsGrid">
+{collections.map((collection) => (
+  <CollectionCard
+    key={collection.id}
+    collection={collection}
+    variant="square"
+  />
 ))}
 </div>
 </div>

@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import "../css/ProfileCard.css";
+import { Link } from "react-router-dom";
 
 export default function ProfileCard() {
   const [user, setUser] = useState(null);
@@ -100,7 +101,9 @@ export default function ProfileCard() {
               {user.firstName} {user.lastName}
             </h2>
 
-            <button className="editBtn">Edit profile</button>
+<Link to="/profile/edit"> 
+<button className="editBtn">Edit profile</button> 
+</Link>
           </div>
 
           <p className="description">{user.description}</p>
