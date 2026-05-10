@@ -1,0 +1,29 @@
+.button {
+  padding: 12px 18px;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+
+  transition: all 0.2s ease;
+  position: relative;
+
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.primary {
+  background-color: rgb(125, 187, 253);
+  color: white;
+}
+
+.danger {
+  background-color: #ef4444;
+  color: white;
+}
+
+
+.button:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
+}
