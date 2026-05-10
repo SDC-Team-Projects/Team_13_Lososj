@@ -565,19 +565,61 @@ app.get("/api/profile", auth, async (req, res) => {
 /* UPDATE PROFILE */
 app.put("/api/profile", auth, async (req, res) => {
   try {
-    const { username, city, country } = req.body;
+    const {
+      username,
+      city,
+      country,
+      email,
+      bio,
+      avatar_url
+    } = req.body;
+
+    // validation
+    if (!email || !username) {
+      return res.status(400).json({
+        error: "Email and username are required"
+      });
+    }
+
+    // email format
+    const emailRegex = /\S+@\S+\.\S+/;
+
+    if (!emailRegex.test(email)) {
+      return res.status(400).json({
+        error: "Invalid email format"
+      });
+    }
 
     const result = await pool.query(
       `UPDATE users
        SET username = $1,
            city = $2,
-           country = $3
-       WHERE id = $4
-       RETURNING id, email, username, city, country`,
-      [username, city, country, req.user.id]
+           country = $3,
+           email = $4,
+           bio = $5,
+           avatar_url = $6
+       WHERE id = $7
+       RETURNING 
+         id,
+         email,
+         username,
+         city,
+         country,
+         bio,
+         avatar_url`,
+      [
+        username,
+        city,
+        country,
+        email,
+        bio,
+        avatar_url,
+        req.user.id
+      ]
     );
 
     res.json(result.rows[0]);
+
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Server error" });
