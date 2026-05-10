@@ -37,11 +37,30 @@ Roles:
 
 
 ## TECHNOLOGIES USED
-- Backend - Java
-- Databases - PostgreSQL
 
-### Frontend
-- JavaScript
+Technologies used:
+
+## Frontend:
 - React
-- Redux
-- Deployment: Vercel
+- React Router
+- Axios / Fetch
+- React Hot Toast
+
+## Backend:
+- Node.js
+- Express.js
+- JWT authentication
+- bcrypt
+
+## Database:
+- PostgreSQL (Neon.tech)
+
+## Deployment:
+- Frontend: Vercel
+- Backend: Render
+
+## Testing:
+- Postman
+
+## Language:
+- JavaScript (ES6+)
