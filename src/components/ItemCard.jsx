@@ -1,6 +1,8 @@
 import "../css/ItemCard.css";
 import Button from "../ui/Button";
 import { Link } from "react-router-dom";
+import { deleteItem } from "../api/items";
+import { useNavigate } from "react-router-dom";
 
 export default function ItemCard({
   item,
@@ -9,6 +11,27 @@ export default function ItemCard({
 }) {
   const isHorizontal = layout === "horizontal";
   const isDetails = mode === "details";
+
+  const navigate = useNavigate();
+
+async function handleDelete() {
+  const confirmDelete = window.confirm(
+    "Delete this item?"
+  );
+
+  if (!confirmDelete) return;
+
+  try {
+    await deleteItem(item.id);
+
+    alert("Item deleted");
+
+    navigate(-1);
+  } catch (err) {
+    console.error(err);
+    alert("Failed to delete item");
+  }
+}
 
   const card = (
     <div
@@ -31,13 +54,6 @@ export default function ItemCard({
           <div className="cardContent">
 
             <div className="topRow">
-              <div className="profileSection">
-                <img
-                  src={item.profileImage}
-                  alt="profile"
-                  className="avatar"
-                />
-              </div>
 
               <div className="categoryBadge">
                 {item.category}
@@ -76,7 +92,7 @@ export default function ItemCard({
                   Edit
                 </Button>
 
-                <Button variant="danger">
+                <Button variant="danger" onClick={handleDelete}>
                   Delete
                 </Button>
               </div>

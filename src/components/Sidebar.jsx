@@ -10,12 +10,11 @@ export default function Sidebar() {
 
       <nav className="sidebar__nav">
         <Link to="/home">Home</Link>
-        <a href="/projects">Overview</a>
+        <Link to="/overview">Overview</Link>
         <Link to="/collections">My Collections</Link>
         <a href="/settings">Favourites</a>
         <Link to="/profile">Profile</Link>
-         <Link to="/collections/:id"
->Log Out</Link>
+        <Link to="/collections/:id">Log Out</Link>
       </nav>
     </aside>
   );

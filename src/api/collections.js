@@ -98,3 +98,123 @@ export async function getCollectionById(id) {
 
   return response.json();
 }
+
+
+/* ---------------- UPDATE COLLECTION ---------------- */
+
+export async function updateCollection(id, collectionData) {
+  const token = localStorage.getItem("token");
+
+  const response = await fetch(`${API_URL}/collections/${id}`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(collectionData),
+  });
+
+  if (!response.ok) {
+    throw new Error("Failed to update collection");
+  }
+
+  return response.json();
+}
+
+
+/* ---------------- COLLECTION ANALYTICS ---------------- */
+
+export async function getCollectionAnalytics(id) {
+  const token = localStorage.getItem("token");
+
+  const response = await fetch(
+    `${API_URL}/analytics/collection/${id}`,
+    {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  );
+
+  if (!response.ok) {
+    throw new Error("Failed to fetch collection analytics");
+  }
+
+  return response.json();
+}
+
+
+
+/* ---------------- GET PUBLIC COLLECTIONS ---------------- */
+
+export async function getPublicCollections() {
+
+  const response = await fetch(
+    `${API_URL}/collections/public`
+  );
+
+  if (!response.ok) {
+    throw new Error(
+      "Failed to fetch public collections"
+    );
+  }
+
+  return response.json();
+}
+
+
+/* ---------------- FAVORITES ---------------- */
+
+export async function addFavoriteCollection(id) {
+  const token = localStorage.getItem("token");
+
+  const res = await fetch(
+    `${API_URL}/favorites/collections/${id}`,
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  );
+
+  if (!res.ok) throw new Error("Failed to add favorite");
+
+  return res.json();
+}
+
+export async function removeFavoriteCollection(id) {
+  const token = localStorage.getItem("token");
+
+  const res = await fetch(
+    `${API_URL}/favorites/collections/${id}`,
+    {
+      method: "DELETE",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  );
+
+  if (!res.ok) throw new Error("Failed to remove favorite");
+
+  return res.json();
+}
+
+export async function getFavoriteCollections() {
+  const token = localStorage.getItem("token");
+
+  const res = await fetch(
+    `${API_URL}/favorites/collections`,
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  );
+
+  if (!res.ok) throw new Error("Failed to load favorites");
+
+  return res.json();
+}

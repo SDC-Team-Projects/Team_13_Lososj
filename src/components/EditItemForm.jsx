@@ -6,16 +6,19 @@ import Input from "../ui/Input";
 import Button from "../ui/Button";
 import Select from "../ui/Select";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import {
   useNavigate,
   useParams,
 } from "react-router-dom";
 
-import { createItem } from "../api/items";
+import {
+  getItemById,
+  updateItem,
+} from "../api/items";
 
-export default function ItemForm() {
+export default function EditItemForm() {
 
   const navigate = useNavigate();
 
@@ -34,6 +37,35 @@ export default function ItemForm() {
   const [price, setPrice] = useState("");
 
   const [image, setImage] = useState("");
+
+  useEffect(() => {
+    loadItem();
+  }, []);
+
+  async function loadItem() {
+
+    try {
+
+      const data = await getItemById(id);
+
+      setName(data.name || "");
+
+      setDescription(data.description || "");
+
+      setNotes(data.notes || "");
+
+      setCondition(data.condition || "");
+
+      setPrice(data.estimated_value || "");
+
+      setImage(
+        data.custom_fields?.image || ""
+      );
+
+    } catch (err) {
+      console.error(err);
+    }
+  }
 
   const conditions = [
     {
@@ -81,11 +113,6 @@ export default function ItemForm() {
 
       const data = await res.json();
 
-      if (!data.secure_url) {
-        console.error(data);
-        return;
-      }
-
       setImage(data.secure_url);
 
     } catch (err) {
@@ -99,8 +126,10 @@ export default function ItemForm() {
 
     try {
 
-      await createItem({
-        collection_id: id,
+      const currentItem =
+        await getItemById(id);
+
+      await updateItem(id, {
         name,
         description,
         notes,
@@ -112,7 +141,9 @@ export default function ItemForm() {
         },
       });
 
-      navigate(`/collections/${id}`);
+      navigate(
+        `/collections/${currentItem.collection_id}`
+      );
 
     } catch (err) {
       console.error(err);
@@ -130,11 +161,10 @@ export default function ItemForm() {
       <div className={styles.left}>
 
         <div className={styles.mainText}>
-          <h1>Add New Item</h1>
+          <h1>Edit Item</h1>
 
           <p>
-            Fill in the details below to add
-            a new item
+            Update item information
           </p>
         </div>
 
@@ -183,7 +213,7 @@ export default function ItemForm() {
           </label>
 
           <Input
-            placeholder="e.g. Harry Potter Book"
+            placeholder="Item name"
             value={name}
             onChange={(e) =>
               setName(e.target.value)
@@ -197,7 +227,6 @@ export default function ItemForm() {
         </label>
 
         <Select
-          placeholder="Select condition"
           options={conditions}
           value={condition}
           onChange={(e) =>
@@ -210,7 +239,7 @@ export default function ItemForm() {
         </label>
 
         <Input
-          placeholder="Describe item..."
+          placeholder="Description..."
           value={description}
           onChange={(e) =>
             setDescription(e.target.value)
@@ -222,7 +251,7 @@ export default function ItemForm() {
         </label>
 
         <Input
-          placeholder="Additional notes..."
+          placeholder="Notes..."
           value={notes}
           onChange={(e) =>
             setNotes(e.target.value)
@@ -246,20 +275,16 @@ export default function ItemForm() {
 
           <Button
             type="button"
-            className={`${styles.button} ${styles.primary}`}
-            onClick={() =>
-              navigate(`/collections/${id}`)
-            }
+            onClick={() => navigate(-1)}
           >
             Cancel
           </Button>
 
           <Button
             type="submit"
-            disabled={!image}
-            className={`${styles.button} ${styles.primary}`}
+            className={styles.primary}
           >
-            Add Item
+            Save Changes
           </Button>
 
         </div>

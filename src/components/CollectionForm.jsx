@@ -135,6 +135,7 @@ const handleSubmit = async (e) => {
         </label>
 
         <Select
+  placeholder="Select category"
   options={categories}
   value={category}
   onChange={(e) => setCategory(e.target.value)}

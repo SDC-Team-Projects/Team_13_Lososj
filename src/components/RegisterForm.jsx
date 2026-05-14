@@ -137,6 +137,7 @@ export default function RegisterForm() {
   options={countryOptions}
   value={form.country}
   onChange={handleChange}
+  placeholder="Select country"
 />
             </div>
 
@@ -170,7 +171,7 @@ export default function RegisterForm() {
             />
           </div>
 
-          <Button className={`${styles.button} ${styles.primary}`} type="submit">
+          <Button className={styles.button} type="submit">
             Create account
           </Button>
 

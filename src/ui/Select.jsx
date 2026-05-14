@@ -1,21 +1,12 @@
 import styles from "../css/Select.module.css";
 
-// export default function Select ({options, value, onChange, className}) {
-//     return (
-//  <select value={value} onChange={onChange} className={styles.select}>
-//       <option value="">Select country</option>
-
-//       {options.map((opt) => (
-//         <option key={opt.value} value={opt.value}>
-//           {opt.label}
-//         </option>
-//       ))}
-//     </select>
-//     )
-// }
-
-
-export default function Select({ options, value, onChange, name }) {
+export default function Select({
+  options,
+  value,
+  onChange,
+  name,
+  placeholder = "Select option",
+}) {
   return (
     <select
       name={name}
@@ -23,7 +14,9 @@ export default function Select({ options, value, onChange, name }) {
       onChange={onChange}
       className={styles.select}
     >
-      <option value="">Select country</option>
+      <option value="" disabled>
+        {placeholder}
+      </option>
 
       {options.map((opt) => (
         <option key={opt.value} value={opt.value}>

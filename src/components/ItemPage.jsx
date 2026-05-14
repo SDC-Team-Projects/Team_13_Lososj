@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, Link } from "react-router-dom";
 
 import Sidebar from "../components/Sidebar";
 
@@ -12,7 +12,7 @@ import {
   Heart,
 } from "lucide-react";
 
-import { getItemById } from "../api/items";
+import { getItemById, deleteItem } from "../api/items";
 
 import "../css/ItemPage.css";
 
@@ -57,6 +57,31 @@ export default function ItemPage() {
   const image =
     item.custom_fields?.image ||
     "https://placehold.co/1200x800";
+
+
+    async function handleDelete() {
+
+  const confirmDelete = window.confirm(
+    "Delete this item?"
+  );
+
+  if (!confirmDelete) return;
+
+  try {
+
+    await deleteItem(item.id);
+
+    alert("Item deleted");
+
+    navigate("/collections");
+
+  } catch (err) {
+
+    console.error(err);
+
+    alert("Failed to delete item");
+  }
+}
 
   return (
     <div className="layout">
@@ -108,11 +133,13 @@ export default function ItemPage() {
               <Download size={18} />
             </Button>
 
+            <Link to={`/items/${item.id}/edit`}>
             <Button variant="secondary">
               <Pencil size={18} />
                </Button>
+               </Link>
 
-            <Button variant="danger">
+            <Button variant="danger" onClick={handleDelete}>
               <Trash2 size={18} />
             </Button>
 

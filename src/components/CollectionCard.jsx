@@ -1,12 +1,19 @@
 import "../css/CollectionCard.css";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import Button from "../ui/Button";
-import { getUserAnalytics } from "../api/collections";
+import {
+  getCollectionAnalytics,
+  deleteCollection,
+} from "../api/collections";
+
+
+
 import React, { useEffect, useState } from "react";
 
 export default function CollectionCard({
   collection,
   variant = "square",
+  onDelete,
 }) {
 
   const [analytics, setAnalytics] = useState({
@@ -15,16 +22,59 @@ export default function CollectionCard({
     total_value: 0,
   });
 
+  const [deleting, setDeleting] = useState(false);
+
+  const navigate = useNavigate();
+
   useEffect(() => {
     loadAnalytics();
   }, []);
 
   async function loadAnalytics() {
     try {
-      const data = await getUserAnalytics();
+
+      const data = await getCollectionAnalytics(
+        collection.id
+      );
+
       setAnalytics(data);
+
     } catch (err) {
       console.error(err);
+    }
+  }
+
+  async function handleDelete(e) {
+
+    e.preventDefault();
+
+    const confirmDelete = window.confirm(
+      "Delete this collection?"
+    );
+
+    if (!confirmDelete) return;
+
+    try {
+
+      setDeleting(true);
+
+      await deleteCollection(collection.id);
+
+      if (onDelete) {
+  onDelete(collection.id);
+}
+
+navigate("/collections");
+
+    } catch (err) {
+
+      console.error(err);
+
+      alert("Failed to delete collection");
+
+    } finally {
+
+      setDeleting(false);
     }
   }
 
@@ -95,12 +145,18 @@ export default function CollectionCard({
             Download PDF
           </Button>
 
-          <Button variant="primary">
-            Edit
-          </Button>
+          <Link to={`/collections/edit/${collection.id}`}>
+            <Button variant="primary">
+              Edit
+            </Button>
+          </Link>
 
-          <Button variant="danger">
-            Delete
+          <Button
+            variant="danger"
+            onClick={handleDelete}
+            disabled={deleting}
+          >
+            {deleting ? "Deleting..." : "Delete"}
           </Button>
 
         </div>
