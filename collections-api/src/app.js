@@ -36,14 +36,14 @@ app.post("/api/auth/register", async (req, res) => {
   try {
     const { email, password, username, city, country } = req.body;
 
-    //  VALIDATION  
+    // VALIDATION
     if (!email || !password || !username || !city || !country) {
       return res.status(400).json({
         error: "All fields are required (email, password, username, city, country)",
       });
     }
 
-    //  доп. защита от пустых строк "   "
+     
     if (
       !email.trim() ||
       !password.trim() ||
@@ -56,25 +56,38 @@ app.post("/api/auth/register", async (req, res) => {
       });
     }
 
-    //  проверка длины пароля
+     
     if (password.length < 8) {
       return res.status(400).json({
         error: "Password must be at least 8 characters",
       });
     }
 
-    //  проверка email (очень базовая)
+     
     const emailRegex = /\S+@\S+\.\S+/;
+
     if (!emailRegex.test(email)) {
       return res.status(400).json({
         error: "Invalid email format",
       });
     }
 
-    //  хешируем пароль
+     
+    const existingUser = await pool.query(
+      "SELECT * FROM users WHERE email = $1",
+      [email]
+    );
+
+    if (existingUser.rows.length > 0) {
+      return res.status(400).json({
+        error: "User already exists",
+      });
+    }
+
+     
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    //  сохраняем в БД
+     
     const result = await pool.query(
       `INSERT INTO users (email, password, username, city, country)
        VALUES ($1, $2, $3, $4, $5)
@@ -82,11 +95,29 @@ app.post("/api/auth/register", async (req, res) => {
       [email, hashedPassword, username, city, country]
     );
 
-    res.json(result.rows[0]);
+    const user = result.rows[0];
+
+     
+    const token = jwt.sign(
+      {
+        id: user.id,
+        email: user.email
+      },
+      process.env.JWT_SECRET,
+      { expiresIn: "7d" }
+    );
+
+     
+    res.json({
+      token,
+      user
+    });
 
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: "Server error" });
+    res.status(500).json({
+      error: "Server error"
+    });
   }
 });
 
@@ -182,11 +213,22 @@ app.post("/api/collections", auth, async (req, res) => {
 app.get("/api/collections", auth, async (req, res) => {
   try {
     const result = await pool.query(
-      "SELECT * FROM collections WHERE user_id = $1 ORDER BY created_at DESC",
+      `
+      SELECT 
+        collections.*,
+        COUNT(items.id) AS items_count
+      FROM collections
+      LEFT JOIN items
+      ON items.collection_id = collections.id
+      WHERE collections.user_id = $1
+      GROUP BY collections.id
+      ORDER BY collections.created_at DESC
+      `,
       [req.user.id]
     );
 
     res.json(result.rows);
+
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Server error" });
@@ -292,6 +334,27 @@ app.get("/api/collections/:id/export", auth, async (req, res) => {
     res.json({
       file_url: fileUrl
     });
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+/* GET ALL PUBLIC COLLECTIONS */
+
+app.get("/api/collections/public", async (req, res) => {
+  try {
+    const result = await pool.query(
+      `
+      SELECT *
+      FROM collections
+      WHERE is_public = true
+      ORDER BY created_at DESC
+      `
+    );
+
+    res.json(result.rows);
 
   } catch (err) {
     console.error(err);
@@ -483,7 +546,7 @@ app.delete("/api/photos/:id", auth, async (req, res) => {
 
 /* ---------------- FAVORITES ---------------- */
 
-/* ADD TO FAVORITES */
+/* ADD ITEM TO FAVORITES */
 app.post("/api/favorites/:item_id", auth, async (req, res) => {
   try {
     const { item_id } = req.params;
@@ -502,7 +565,7 @@ app.post("/api/favorites/:item_id", auth, async (req, res) => {
   }
 });
 
-/* REMOVE FROM FAVORITES */
+/* REMOVE ITEM FROM FAVORITES */
 app.delete("/api/favorites/:item_id", auth, async (req, res) => {
   try {
     const { item_id } = req.params;
@@ -537,6 +600,79 @@ app.get("/api/favorites", auth, async (req, res) => {
     );
 
     res.json(result.rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+/* ADD COLLECTION TO FAVORITES */
+
+app.post("/api/favorites/collections/:collection_id", auth, async (req, res) => {
+  try {
+    const { collection_id } = req.params;
+
+    const result = await pool.query(
+      `INSERT INTO favorite_collections (user_id, collection_id)
+       VALUES ($1, $2)
+       RETURNING *`,
+      [req.user.id, collection_id]
+    );
+
+    res.json(result.rows[0]);
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+/* REMOVE COLLECTION FROM FAVORITES */
+
+app.delete("/api/favorites/collections/:collection_id", auth, async (req, res) => {
+  try {
+    const { collection_id } = req.params;
+
+    const result = await pool.query(
+      `DELETE FROM favorite_collections
+       WHERE user_id = $1 AND collection_id = $2
+       RETURNING *`,
+      [req.user.id, collection_id]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({
+        error: "Collection not in favorites"
+      });
+    }
+
+    res.json({
+      message: "Removed from favorites"
+    });
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+/* GET FAVORITE COLLECTIONS */
+
+app.get("/api/favorites/collections", auth, async (req, res) => {
+  try {
+    const result = await pool.query(
+      `
+      SELECT collections.*
+      FROM favorite_collections
+      JOIN collections
+      ON favorite_collections.collection_id = collections.id
+      WHERE favorite_collections.user_id = $1
+      `,
+      [req.user.id]
+    );
+
+    res.json(result.rows);
+
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Server error" });
