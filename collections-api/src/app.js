@@ -342,23 +342,14 @@ app.get("/api/collections/:id/export", auth, async (req, res) => {
 });
 
 /* GET ALL PUBLIC COLLECTIONS */
-
 app.get("/api/collections/public", async (req, res) => {
   try {
     const result = await pool.query(
       `
-      SELECT 
-        collections.*,
-        users.username,
-        COUNT(items.id) AS items_count
+      SELECT *
       FROM collections
-      LEFT JOIN users
-        ON users.id = collections.user_id
-      LEFT JOIN items
-        ON items.collection_id = collections.id
-      WHERE collections.is_public = true
-      GROUP BY collections.id, users.username
-      ORDER BY collections.created_at DESC
+      WHERE is_public = true
+      ORDER BY created_at DESC
       `
     );
 
@@ -366,9 +357,7 @@ app.get("/api/collections/public", async (req, res) => {
 
   } catch (err) {
     console.error(err);
-    res.status(500).json({
-      error: "Server error"
-    });
+    res.status(500).json({ error: "Server error" });
   }
 });
 
