@@ -209,6 +209,26 @@ app.post("/api/collections", auth, async (req, res) => {
   }
 });
 
+/* GET ALL PUBLIC COLLECTIONS */
+app.get("/api/collections/public", async (req, res) => {
+  try {
+    const result = await pool.query(
+      `
+      SELECT *
+      FROM collections
+      WHERE is_public = true
+      ORDER BY created_at DESC
+      `
+    );
+
+    res.json(result.rows);
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
 /* GET ALL */
 app.get("/api/collections", auth, async (req, res) => {
   try {
@@ -304,26 +324,6 @@ app.delete("/api/collections/:id", auth, async (req, res) => {
   }
 });
 
-/* GET PUBLIC COLLECTION */
-
-app.get("/api/collections/public/:id", async (req, res) => {
-  try {
-    const result = await pool.query(
-      "SELECT * FROM collections WHERE id = $1 AND is_public = true",
-      [req.params.id]
-    );
-
-    if (result.rows.length === 0) {
-      return res.status(404).json({ error: "Collection not found" });
-    }
-
-    res.json(result.rows[0]);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Server error" });
-  }
-});
-
 /* EXPORT COLLECTION */
 
 app.get("/api/collections/:id/export", auth, async (req, res) => {
@@ -334,26 +334,6 @@ app.get("/api/collections/:id/export", auth, async (req, res) => {
     res.json({
       file_url: fileUrl
     });
-
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Server error" });
-  }
-});
-
-/* GET ALL PUBLIC COLLECTIONS */
-app.get("/api/collections/public", async (req, res) => {
-  try {
-    const result = await pool.query(
-      `
-      SELECT *
-      FROM collections
-      WHERE is_public = true
-      ORDER BY created_at DESC
-      `
-    );
-
-    res.json(result.rows);
 
   } catch (err) {
     console.error(err);
