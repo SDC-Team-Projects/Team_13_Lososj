@@ -274,19 +274,45 @@ app.get("/api/collections", auth, async (req, res) => {
   }
 });
 
-/* GET BY ID */
-app.get("/api/collections/:id", auth, async (req, res) => {
+/* GET COLLECTION BY ID */
+
+app.get("/api/collections/public/:id", async (req, res) => {
   try {
     const result = await pool.query(
-      "SELECT * FROM collections WHERE id = $1 AND user_id = $2",
-      [req.params.id, req.user.id]
+      `
+      SELECT
+        collections.*,
+
+        users.username AS owner_name,
+
+        COUNT(items.id) AS items_count,
+
+        COALESCE(SUM(items.estimated_value), 0) AS total_value
+
+      FROM collections
+
+      JOIN users
+      ON users.id = collections.user_id
+
+      LEFT JOIN items
+      ON items.collection_id = collections.id
+
+      WHERE collections.id = $1
+      AND collections.is_public = true
+
+      GROUP BY collections.id, users.username
+      `,
+      [req.params.id]
     );
 
     if (result.rows.length === 0) {
-      return res.status(404).json({ error: "Collection not found" });
+      return res.status(404).json({
+        error: "Collection not found"
+      });
     }
 
     res.json(result.rows[0]);
+
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Server error" });
