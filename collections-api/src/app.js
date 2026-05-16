@@ -664,13 +664,24 @@ app.get("/api/favorites/collections", auth, async (req, res) => {
 app.get("/api/profile", auth, async (req, res) => {
   try {
     const result = await pool.query(
-      `SELECT id, email, username, city, country, created_at
-       FROM users
-       WHERE id = $1`,
+      `
+      SELECT 
+        id,
+        email,
+        username,
+        city,
+        country,
+        bio,
+        avatar_url,
+        created_at
+      FROM users
+      WHERE id = $1
+      `,
       [req.user.id]
     );
 
     res.json(result.rows[0]);
+
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Server error" });
