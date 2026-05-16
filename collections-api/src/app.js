@@ -210,14 +210,33 @@ app.post("/api/collections", auth, async (req, res) => {
 });
 
 /* GET ALL PUBLIC COLLECTIONS */
+
 app.get("/api/collections/public", async (req, res) => {
   try {
     const result = await pool.query(
       `
-      SELECT *
+      SELECT
+        collections.*,
+
+        users.username AS owner_name,
+
+        COUNT(items.id) AS items_count,
+
+        COALESCE(SUM(items.estimated_value), 0) AS total_value
+
       FROM collections
-      WHERE is_public = true
-      ORDER BY created_at DESC
+
+      JOIN users
+      ON users.id = collections.user_id
+
+      LEFT JOIN items
+      ON items.collection_id = collections.id
+
+      WHERE collections.is_public = true
+
+      GROUP BY collections.id, users.username
+
+      ORDER BY collections.created_at DESC
       `
     );
 
