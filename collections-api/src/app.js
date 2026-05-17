@@ -698,11 +698,33 @@ app.get("/api/favorites/collections", auth, async (req, res) => {
   try {
     const result = await pool.query(
       `
-      SELECT collections.*
+      SELECT
+        collections.*,
+
+        collections.user_id,
+
+        users.username AS owner_name,
+
+        COUNT(items.id) AS items_count,
+
+        COALESCE(SUM(items.estimated_value), 0) AS total_value
+
       FROM favorite_collections
+
       JOIN collections
       ON favorite_collections.collection_id = collections.id
+
+      JOIN users
+      ON users.id = collections.user_id
+
+      LEFT JOIN items
+      ON items.collection_id = collections.id
+
       WHERE favorite_collections.user_id = $1
+
+      GROUP BY collections.id, users.username
+
+      ORDER BY collections.created_at DESC
       `,
       [req.user.id]
     );
