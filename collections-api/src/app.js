@@ -6,8 +6,10 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const pool = require("./db");
 const auth = require("./middleware/auth");
+const PDFDocument = require("pdfkit");
 
 const app = express();
+
 
 app.use(cors());
 app.use(express.json());
