@@ -233,3 +233,58 @@ export async function addFavoriteCollection(id) {
 
   return res.json();
 }
+
+
+export const searchCollections = async (params = {}) => {
+  const query = new URLSearchParams();
+
+  if (params.q) {
+    query.append("q", params.q);
+  }
+
+  if (params.category) {
+    query.append("category", params.category);
+  }
+
+  if (params.min_value) {
+    query.append("min_value", params.min_value);
+  }
+
+  if (params.max_value) {
+    query.append("max_value", params.max_value);
+  }
+
+  if (params.sort) {
+    query.append("sort", params.sort);
+  }
+
+  const response = await fetch(
+    `${API_URL}/collections/search?${query.toString()}`
+  );
+
+  if (!response.ok) {
+    throw new Error("Failed to fetch collections");
+  }
+
+  return response.json();
+};
+
+export const downloadCollectionPdf = async (id) => {
+  const token = localStorage.getItem("token");
+
+  const response = await fetch(
+    `${API_URL}/collections/${id}/export`,
+    {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    }
+  );
+
+  if (!response.ok) {
+    throw new Error("Failed to download PDF");
+  }
+
+  return response.blob();
+
+};

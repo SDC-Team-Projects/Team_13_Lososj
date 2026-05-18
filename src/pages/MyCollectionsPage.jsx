@@ -159,6 +159,7 @@
 // }
 
 
+
 import { useEffect, useState } from "react";
 import Button from "../ui/Button";
 import { Link } from "react-router-dom";
@@ -181,6 +182,15 @@ export default function MyCollectionsPage() {
   const [loading, setLoading] = useState(true);
 
   const [favoriteIds, setFavoriteIds] = useState([]);
+
+  // 🔥 ДОБАВИЛИ ФИЛЬТРЫ
+  const [filters, setFilters] = useState({
+    search: "",
+    category: "",
+    minValue: "",
+    maxValue: "",
+    sort: "",
+  });
 
   useEffect(() => {
     loadCollections();
@@ -225,19 +235,6 @@ export default function MyCollectionsPage() {
     }
   }
 
-
-//  async function toggleFavorite(collectionId) {
-//   const isFav = favoriteIds.includes(collectionId);
-
-//   if (isFav) {
-//     setFavoriteIds((prev) =>
-//       prev.filter((id) => id !== collectionId)
-//     );
-//   } else {
-//     setFavoriteIds((prev) => [...prev, collectionId]);
-//   }
-// }
-
   function handleDeleteCollection(id) {
     setCollections((prev) =>
       prev.filter((collection) => collection.id !== id)
@@ -247,6 +244,35 @@ export default function MyCollectionsPage() {
       prev.filter((favId) => favId !== id)
     );
   }
+
+  // 🔥 ФИЛЬТРАЦИЯ (ТОЛЬКО ДОБАВИЛИ)
+  const filteredCollections = collections
+    .filter((c) => {
+      return c.name
+        .toLowerCase()
+        .includes(filters.search.toLowerCase());
+    })
+    .filter((c) => {
+      if (!filters.category) return true;
+      return c.category === filters.category;
+    })
+    .filter((c) => {
+      if (!filters.minValue) return true;
+      return Number(c.total_value) >= Number(filters.minValue);
+    })
+    .filter((c) => {
+      if (!filters.maxValue) return true;
+      return Number(c.total_value) <= Number(filters.maxValue);
+    })
+    .sort((a, b) => {
+      if (filters.sort === "price_asc") {
+        return a.total_value - b.total_value;
+      }
+      if (filters.sort === "price_desc") {
+        return b.total_value - a.total_value;
+      }
+      return 0;
+    });
 
   if (loading) {
     return <h2>Loading collections...</h2>;
@@ -270,11 +296,15 @@ export default function MyCollectionsPage() {
         </div>
 
         <div className="search">
-          <SearchBar />
+          {/* 🔥 ПРОКИДЫВАЕМ FILTERS */}
+          <SearchBar
+            filters={filters}
+            setFilters={setFilters}
+          />
         </div>
 
         <div className="itemsGrid">
-          {collections.map((collection) => (
+          {filteredCollections.map((collection) => (
             <CollectionCard
               key={collection.id}
               collection={collection}

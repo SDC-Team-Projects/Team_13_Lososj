@@ -1,23 +1,55 @@
 .wrapper {
-  display: flex;
-  gap: 12px;
-  width: 75%;
+  width: 100%;
+  max-width: 1200px;
   margin: 0 auto;
 }
 
-.search {
-  flex: 7;
-  padding: 10px;
-  border: 1px solid #ccc;
-  border-radius: 12px;
-  outline: none;
+.topRow {
+  display: flex;
+  gap: 12px;
+  align-items: center;
 }
 
-.select {
-  flex: 1.5;
-  padding: 10px;
-  border: 1px solid #ccc;
+.search {
+  flex: 1;
+  padding: 14px 18px;
+  border-radius: 14px;
+  border: 1px solid rgba(0,0,0,0.08);
+  font-size: 15px;
+}
+
+.filterBtn {
+  padding: 14px 16px;
   border-radius: 12px;
-  background: white;
+  border: none;
   cursor: pointer;
+  background: #5aacff;
+  color: white;
+  font-weight: 500;
+}
+
+.panel {
+  margin-top: 12px;
+
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+
+  padding: 16px;
+
+  background: rgba(255,255,255,0.08);
+  backdrop-filter: blur(14px);
+
+  border-radius: 18px;
+}
+
+.input,
+.select {
+  flex: 1;
+  min-width: 160px;
+
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid rgba(0,0,0,0.08);
+  font-size: 14px;
 }
