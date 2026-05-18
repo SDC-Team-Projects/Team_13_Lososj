@@ -1,8 +1,3 @@
-.cardLink {
-  text-decoration: none;
-  color: inherit;
-  display: block;
-}
 
 /* ================= CARD BASE ================= */
 
@@ -30,11 +25,8 @@
 /* ================= IMAGE ================= */
 
 .imageBlock {
-  width: 100%;
-  height: 180px;
   overflow: hidden;
   flex-shrink: 0;
-  border-radius: 20px;
 }
 
 .imageBlock img {
@@ -62,28 +54,42 @@
 }
 
 /* CATEGORY */
+
 .category {
   padding: 8px 16px;
   border-radius: 999px;
+
   background: #f3f4f6;
+
   margin-top: 30px;
+
   font-size: 14px;
   font-weight: 600;
+
   color: #4b5563;
+
+  flex-shrink: 0;
+  white-space: nowrap;
 }
 
 /* TITLE */
+
 .title {
   margin: 0;
+
   font-size: 20px;
   font-weight: 700;
+
   color: #111827;
 }
 
 /* DESC */
+
 .desc {
   margin: 0;
+
   font-size: 14px;
+
   color: #6b7280;
 }
 
@@ -92,9 +98,11 @@
 .statsRow {
   display: flex;
   justify-content: space-between;
+
   gap: 12px;
 
   padding-top: 10px;
+
   border-top: 1px solid #eee;
 }
 
@@ -105,6 +113,7 @@
 
 .statsRow strong {
   display: block;
+
   font-size: 14px;
   font-weight: 700;
 }
@@ -114,42 +123,62 @@
 .actions {
   display: flex;
   gap: 10px;
-  flex-wrap: wrap;
-
+  
   padding: 16px 22px 22px;
 }
 
 /* ================= VARIANTS ================= */
 
 /* -------- SQUARE -------- */
+
 .collectionCard.square {
   flex-direction: column;
   max-width: 340px;
 }
 
+.collectionCard.square .imageBlock {
+  width: 100%;
+  height: 180px;
+
+  border-radius: 20px;
+}
+
 /* -------- HORIZONTAL -------- */
 
 .collectionCard.horizontal {
-  max-width: 100%;
+  width: fit-content;
+  max-width: none;
+  display: flex;
+  justify-content: center;
   flex-direction: row;
   align-items: stretch;
 }
 
-/* link becomes row container */
+/* left side */
+
 .collectionCard.horizontal .cardLink {
   display: flex;
-  flex: 1;
+
+  flex: 0 0 auto;
+  min-width: 0;
 }
 
-/* image left */
+/* image */
+
 .collectionCard.horizontal .imageBlock {
-  width: 40%;
+  width: 260px;
+  min-width: 260px;
+
   height: auto;
+
+  flex-shrink: 0;
 }
 
-/* right side content */
+/* content */
+
 .collectionCard.horizontal .contentBlock {
-  width: 60%;
+  min-width: 320px;
+  max-width: 420px;
 
   display: flex;
   flex-direction: column;
@@ -158,7 +187,8 @@
   padding: 20px;
 }
 
-/* actions RIGHT SIDE like in your screenshot */
+/* actions */
+
 .collectionCard.horizontal .actions {
   display: flex;
   flex-direction: row;
@@ -166,18 +196,73 @@
 
   gap: 12px;
 
-  padding: 20px;
+  padding: 20px 24px 20px 10px;
 
   flex-shrink: 0;
+
+  flex-wrap: nowrap;
 }
 
-/* fix buttons not stretching */
+/* buttons */
+
 .collectionCard.horizontal .actions button {
   width: auto;
+
   flex: 0 0 auto;
+
+  white-space: nowrap;
 }
 
-.category {
-  flex-shrink: 0;
-  white-space: nowrap;
+.favoriteBtn {
+  display: flex;
+  align-items: center; /* 👈 главное */
+  gap: 8px;
+}
+
+.collectionCard {
+  position: relative;
+}
+
+.favoriteIcon {
+  position: absolute;
+
+  top: 18px;
+  right: 18px;
+
+  width: 42px;
+  height: 42px;
+
+  border: none;
+  border-radius: 50%;
+
+  background: rgba(255,255,255,0.95);
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  cursor: pointer;
+
+
+
+  transition: 0.2s ease;
+}
+
+.favoriteIcon:hover {
+  transform: scale(1.08);
+}
+
+.favoriteIcon.active {
+  background: #fee2e2;
+}
+
+.horizontalFavoriteButton {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+   justify-content: center;
+}
+
+.horizontalFavoriteButton svg {
+  display: block;
 }

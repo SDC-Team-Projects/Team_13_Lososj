@@ -1,85 +1,163 @@
+
 // import { useEffect, useState } from "react";
 // import Button from "../ui/Button";
-// import styles from "../css/Button.module.css";
 // import { Link } from "react-router-dom";
+
 // import "../css/MyCollectionsPage.css";
+
 // import SearchBar from "../components/SearchBar";
 // import Sidebar from "../components/Sidebar";
 // import CollectionCard from "../components/CollectionCard";
-// import { getCollections } from "../api/collections";
 
+// import { getCollections, 
+//   getFavoriteCollections,
+//   addFavoriteCollection,
+//   removeFavoriteCollection,
+//  } from "../api/collections";
 
-// export default function MyCollectionsPage({variant = "square"}) {
+// export default function MyCollectionsPage({
+//   variant = "square",
+// }) {
 
 //   const [collections, setCollections] = useState([]);
 //   const [loading, setLoading] = useState(true);
+//   const [favoriteCollections, setFavoriteCollections] = useState([]);
 
 //   const addCollection = (newCollection) => {
-//   setCollections([...collections, newCollection]);
-// };
+//     setCollections([
+//       ...collections,
+//       newCollection,
+//     ]);
+//   };
 
-// const loadCollections = async () => {
-//   try {
-//     const data = await getCollections();
+//   async function loadCollections() {
 
-//     setCollections(data);
+//     try {
 
-//   } catch (err) {
-//     console.error(err);
-//   } finally {
-//     setLoading(false);
+//       const data = await getCollections();
+
+//       setCollections(data);
+
+//     } catch (err) {
+
+//       console.error(err);
+
+//     } finally {
+
+//       setLoading(false);
+//     }
 //   }
-// };
 
-// useEffect(() => {
+
+//   useEffect(() => {
 //   loadCollections();
+//   loadFavorites();
 // }, []);
 
+//   function handleDeleteCollection(id) {
 
+//     setCollections((prev) =>
+//       prev.filter(
+//         (collection) => collection.id !== id
+//       )
+//     );
+//   }
 
 // if (loading) {
-//   return <h2>Loading collections...</h2>;
+//     return <h2>Loading collections...</h2>;
+//   }
+
+
+// async function loadFavorites() {
+//   try {
+//     const data = await getFavoriteCollections();
+//     setFavoriteCollections(data);
+//   } catch (err) {
+//     console.error(err);
+//   }
+// }
+
+// async function toggleFavorite(collectionId) {
+//   const isFav = favoriteCollections.some(
+//     c => c.id === collectionId
+//   );
+
+//   try {
+//     if (isFav) {
+//       await removeFavoriteCollection(collectionId);
+
+//       setFavoriteCollections(prev =>
+//         prev.filter(c => c.id !== collectionId)
+//       );
+//     } else {
+//       await addFavoriteCollection(collectionId);
+
+//       const collection = collections.find(
+//         c => c.id === collectionId
+//       );
+
+//       if (collection) {
+//         setFavoriteCollections(prev => [
+//           ...prev,
+//           collection,
+//         ]);
+//       }
+//     }
+//   } catch (err) {
+//     console.error(err);
+//   }
 // }
 
 //   return (
-//     <>
-//      <div className="layout">
-//         <Sidebar />
-//         <div className="content">
-//     <div className="title">
-//         <h1>My Collections</h1>
-//       <p>Here you can manage your collections</p>
-//        <Link to="/collectionForm">
-//   <Button type="button">
-//     + Create New Collection
-//   </Button>
-// </Link>
-// </div>
-// <div className="search"><SearchBar /></div>
-//  {/* <div className="itemsGrid">
-//   {collections.map((item) => (
-//   <ItemCard key={item.id} item={item} />
-// ))}
-// </div> */}
+//     <div className="layout">
 
-// <div className="itemsGrid">
-// {collections.map((collection) => (
-//   <CollectionCard
-//     key={collection.id}
-//     collection={collection}
-//     variant="square"
-//   />
-// ))}
-// </div>
-// </div>
+//       <Sidebar />
 
-// </div>
-//     </>
+//       <div className="content">
+
+//         <div className="title">
+
+//           <h1>My Collections</h1>
+
+//           <p>
+//             Here you can manage your collections
+//           </p>
+
+//           <Link to="/collectionForm">
+//             <Button type="button">
+//               + Create New Collection
+//             </Button>
+//           </Link>
+
+//         </div>
+
+//         <div className="search">
+//           <SearchBar />
+//         </div>
+
+//         <div className="itemsGrid">
+
+//           {collections.map((collection) => (
+
+//             <CollectionCard
+//               key={collection.id}
+//               collection={collection}
+//               variant="square"
+//               onDelete={handleDeleteCollection}
+//               isFavorite={favoriteCollections.some(c => c.id === collection.id)}
+//               onToggleFavorite={toggleFavorite}
+//             />
+
+//           ))}
+
+//         </div>
+
+//       </div>
+
+//     </div>
 //   );
 // }
 
-
-// MyCollectionsPage.jsx
 
 import { useEffect, useState } from "react";
 import Button from "../ui/Button";
@@ -91,50 +169,82 @@ import SearchBar from "../components/SearchBar";
 import Sidebar from "../components/Sidebar";
 import CollectionCard from "../components/CollectionCard";
 
-import { getCollections } from "../api/collections";
+import {
+  getCollections,
+  getFavoriteCollections,
+  addFavoriteCollection,
+  removeFavoriteCollection,
+} from "../api/collections";
 
-export default function MyCollectionsPage({
-  variant = "square",
-}) {
-
+export default function MyCollectionsPage() {
   const [collections, setCollections] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  const addCollection = (newCollection) => {
-    setCollections([
-      ...collections,
-      newCollection,
-    ]);
-  };
+  const [favoriteIds, setFavoriteIds] = useState([]);
+
+  useEffect(() => {
+    loadCollections();
+    loadFavorites();
+  }, []);
 
   async function loadCollections() {
-
     try {
-
       const data = await getCollections();
-
       setCollections(data);
-
     } catch (err) {
-
       console.error(err);
-
     } finally {
-
       setLoading(false);
     }
   }
 
-  useEffect(() => {
-    loadCollections();
-  }, []);
+  async function loadFavorites() {
+    try {
+      const data = await getFavoriteCollections();
+      setFavoriteIds(data.map((c) => c.id));
+    } catch (err) {
+      console.error(err);
+    }
+  }
+
+  async function toggleFavorite(collectionId) {
+    const isFav = favoriteIds.includes(collectionId);
+
+    try {
+      if (isFav) {
+        await removeFavoriteCollection(collectionId);
+        setFavoriteIds((prev) =>
+          prev.filter((id) => id !== collectionId)
+        );
+      } else {
+        await addFavoriteCollection(collectionId);
+        setFavoriteIds((prev) => [...prev, collectionId]);
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  }
+
+
+//  async function toggleFavorite(collectionId) {
+//   const isFav = favoriteIds.includes(collectionId);
+
+//   if (isFav) {
+//     setFavoriteIds((prev) =>
+//       prev.filter((id) => id !== collectionId)
+//     );
+//   } else {
+//     setFavoriteIds((prev) => [...prev, collectionId]);
+//   }
+// }
 
   function handleDeleteCollection(id) {
-
     setCollections((prev) =>
-      prev.filter(
-        (collection) => collection.id !== id
-      )
+      prev.filter((collection) => collection.id !== id)
+    );
+
+    setFavoriteIds((prev) =>
+      prev.filter((favId) => favId !== id)
     );
   }
 
@@ -144,25 +254,19 @@ export default function MyCollectionsPage({
 
   return (
     <div className="layout">
-
       <Sidebar />
 
       <div className="content">
-
         <div className="title">
-
           <h1>My Collections</h1>
 
-          <p>
-            Here you can manage your collections
-          </p>
+          <p>Here you can manage your collections</p>
 
           <Link to="/collectionForm">
             <Button type="button">
               + Create New Collection
             </Button>
           </Link>
-
         </div>
 
         <div className="search">
@@ -170,22 +274,18 @@ export default function MyCollectionsPage({
         </div>
 
         <div className="itemsGrid">
-
           {collections.map((collection) => (
-
             <CollectionCard
               key={collection.id}
               collection={collection}
               variant="square"
               onDelete={handleDeleteCollection}
+              isFavorite={favoriteIds.includes(collection.id)}
+              onToggleFavorite={toggleFavorite}
             />
-
           ))}
-
         </div>
-
       </div>
-
     </div>
   );
 }

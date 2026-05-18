@@ -16,6 +16,7 @@ import EditProfilePage from "./components/EditProfilePage";
 import EditCollectionForm from "./components/EditCollectionForm";
 import EditItemForm from "./components/EditItemForm";
 import OverviewPage from "./pages/OverviewPage";
+import FavoritesPage from "./pages/FavoritesPage";
 
 function App() {
 
@@ -38,6 +39,8 @@ function App() {
       <Route path="/collections/edit/:id" element={<ProtectedRoute><EditCollectionForm /></ProtectedRoute>}/>
       <Route path="/items/:id/edit" element={<ProtectedRoute><EditItemForm /></ProtectedRoute>} />
       <Route path="/overview" element={<ProtectedRoute><OverviewPage /></ProtectedRoute>} />
+      <Route path="/overview" element={<ProtectedRoute><OverviewPage /></ProtectedRoute>} />
+      <Route path="/favorites" element={<ProtectedRoute><FavoritesPage /></ProtectedRoute>} />
     </Routes>
     </BrowserRouter>
     </AuthProvider>

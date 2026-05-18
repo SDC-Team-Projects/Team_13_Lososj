@@ -1,7 +1,22 @@
 import "../css/Sidebar.css";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { logoutUser } from "../api/auth";
+import Button from "../ui/Button";
 
 export default function Sidebar() {
+
+  const navigate = useNavigate();
+
+  const handleLogout = async () => {
+    try {
+      await logoutUser();
+      navigate("/login");
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+
   return (
     <aside className="sidebar">
       <div className="sidebar__header">
@@ -12,9 +27,9 @@ export default function Sidebar() {
         <Link to="/home">Home</Link>
         <Link to="/overview">Overview</Link>
         <Link to="/collections">My Collections</Link>
-        <a href="/settings">Favourites</a>
+        <Link to="/favorites">Favourites</Link>
         <Link to="/profile">Profile</Link>
-        <Link to="/collections/:id">Log Out</Link>
+        <Link onClick={handleLogout} className="logout-btn">Log Out</Link>
       </nav>
     </aside>
   );

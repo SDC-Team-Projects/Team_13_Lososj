@@ -1,42 +1,46 @@
-import { createContext, useContext, useEffect, useState } from "react";
+import {
+  createContext,
+  useState,
+  useEffect,
+  useContext,
+} from "react";
 
-const AuthContext = createContext();
+export const AuthContext = createContext();
 
 export function AuthProvider({ children }) {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [token, setToken] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-  // проверка при загрузке сайта
   useEffect(() => {
     const savedToken = localStorage.getItem("token");
 
     if (savedToken) {
       setToken(savedToken);
-      setIsAuthenticated(true);
     }
+
+    setLoading(false);
   }, []);
 
-  // login
   const login = (newToken) => {
     localStorage.setItem("token", newToken);
     setToken(newToken);
-    setIsAuthenticated(true);
   };
 
-  // logout
   const logout = () => {
     localStorage.removeItem("token");
     setToken(null);
-    setIsAuthenticated(false);
   };
+
+  const isAuthenticated = !!token;
 
   return (
     <AuthContext.Provider
       value={{
-        isAuthenticated,
         token,
+        isAuthenticated,
         login,
         logout,
+        loading,
       }}
     >
       {children}
@@ -44,4 +48,6 @@ export function AuthProvider({ children }) {
   );
 }
 
-export const useAuth = () => useContext(AuthContext);
+export function useAuth() {
+  return useContext(AuthContext);
+}

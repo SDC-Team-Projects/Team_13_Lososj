@@ -1,79 +1,57 @@
 import "../css/CollectionCard.css";
 import { Link, useNavigate } from "react-router-dom";
 import Button from "../ui/Button";
+import { deleteCollection } from "../api/collections";
+
+import React, { useState } from "react";
+
 import {
-  getCollectionAnalytics,
-  deleteCollection,
-} from "../api/collections";
-
-
-
-import React, { useEffect, useState } from "react";
+  Heart,
+  Download,
+  Pencil,
+  Trash2,
+} from "lucide-react";
 
 export default function CollectionCard({
   collection,
   variant = "square",
   onDelete,
+  isFavorite,
+  onToggleFavorite,
 }) {
-
-  const [analytics, setAnalytics] = useState({
-    items_count: 0,
-    collections_count: 0,
-    total_value: 0,
-  });
 
   const [deleting, setDeleting] = useState(false);
 
   const navigate = useNavigate();
 
-  useEffect(() => {
-    loadAnalytics();
-  }, []);
+  function handleFavorite(e) {
+    e.preventDefault();
+    e.stopPropagation();
 
-  async function loadAnalytics() {
-    try {
-
-      const data = await getCollectionAnalytics(
-        collection.id
-      );
-
-      setAnalytics(data);
-
-    } catch (err) {
-      console.error(err);
+    if (onToggleFavorite) {
+      onToggleFavorite(collection.id);
     }
   }
 
   async function handleDelete(e) {
-
     e.preventDefault();
+    e.stopPropagation();
 
-    const confirmDelete = window.confirm(
-      "Delete this collection?"
-    );
-
-    if (!confirmDelete) return;
+    if (!window.confirm("Delete this collection?")) return;
 
     try {
-
       setDeleting(true);
 
       await deleteCollection(collection.id);
 
-      if (onDelete) {
-  onDelete(collection.id);
-}
+      onDelete?.(collection.id);
 
-navigate("/collections");
+      navigate("/collections");
 
     } catch (err) {
-
       console.error(err);
 
-      alert("Failed to delete collection");
-
     } finally {
-
       setDeleting(false);
     }
   }
@@ -81,11 +59,26 @@ navigate("/collections");
   return (
     <div className={`collectionCard ${variant}`}>
 
+      {variant === "square" && (
+        <button
+          className={`favoriteIcon ${
+            isFavorite ? "active" : ""
+          }`}
+          onClick={handleFavorite}
+          type="button"
+        >
+          <Heart
+            size={20}
+            fill={isFavorite ? "#ef4444" : "none"}
+            color={isFavorite ? "#ef4444" : "currentColor"}
+          />
+        </button>
+      )}
+
       <Link
         to={`/collections/${collection.id}`}
         className="cardLink"
       >
-
         <div className="imageBlock">
           <img
             src={collection.image}
@@ -113,41 +106,56 @@ navigate("/collections");
 
             <div>
               <span>Items</span>
+
               <strong>
-                {analytics.items_count || 0}
+                {Number(collection.items_count) || 0}
               </strong>
             </div>
 
             <div>
               <span>Total cost</span>
+
               <strong>
-                ${analytics.total_value || 0}
+                ${(Number(collection.total_value) || 0).toFixed(2)}
               </strong>
             </div>
 
             <div>
               <span>Owner</span>
+
               <strong>
                 {collection.owner_name || "You"}
               </strong>
             </div>
 
           </div>
-
         </div>
-
       </Link>
 
       {variant === "horizontal" && (
         <div className="actions">
 
+          <Button
+            className="horizontalFavoriteButton"
+            variant="secondary"
+            onClick={handleFavorite}
+          >
+            <Heart
+              size={18}
+              fill={isFavorite ? "#ef4444" : "none"}
+              color={isFavorite ? "#ef4444" : "currentColor"}
+            />
+
+            {isFavorite ? "Saved" : "Favourites"}
+          </Button>
+
           <Button variant="secondary">
-            Download PDF
+            <Download size={18} />
           </Button>
 
           <Link to={`/collections/edit/${collection.id}`}>
-            <Button variant="primary">
-              Edit
+            <Button variant="secondary">
+              <Pencil size={18} />
             </Button>
           </Link>
 
@@ -156,12 +164,11 @@ navigate("/collections");
             onClick={handleDelete}
             disabled={deleting}
           >
-            {deleting ? "Deleting..." : "Delete"}
+            <Trash2 size={18} />
           </Button>
 
         </div>
       )}
-
     </div>
   );
 }
