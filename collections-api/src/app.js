@@ -462,20 +462,106 @@ app.delete("/api/collections/:id", auth, async (req, res) => {
   }
 });
 
-/* EXPORT COLLECTION */
+/* EXPORT COLLECTION PDF */
 
 app.get("/api/collections/:id/export", auth, async (req, res) => {
   try {
-    // пока mock (потом можно PDF сделать)
-    const fileUrl = `https://team-13-lososj.onrender.com/exports/collection-${req.params.id}.pdf`;
+    const collectionResult = await pool.query(
+      `
+      SELECT
+        collections.*,
+        users.username AS owner_name
+      FROM collections
 
-    res.json({
-      file_url: fileUrl
+      JOIN users
+      ON users.id = collections.user_id
+
+      WHERE collections.id = $1
+      `,
+      [req.params.id]
+    );
+
+    if (collectionResult.rows.length === 0) {
+      return res.status(404).json({
+        error: "Collection not found"
+      });
+    }
+
+    const collection = collectionResult.rows[0];
+
+    const itemsResult = await pool.query(
+      `
+      SELECT *
+      FROM items
+      WHERE collection_id = $1
+      ORDER BY created_at DESC
+      `,
+      [req.params.id]
+    );
+
+    const items = itemsResult.rows;
+
+    const doc = new PDFDocument();
+
+    res.setHeader(
+      "Content-Disposition",
+      `attachment; filename=collection-${collection.id}.pdf`
+    );
+
+    res.setHeader(
+      "Content-Type",
+      "application/pdf"
+    );
+
+    doc.pipe(res);
+
+    // TITLE
+    doc.fontSize(24).text(collection.name);
+
+    doc.moveDown();
+
+    doc.fontSize(14).text(`Owner: ${collection.owner_name}`);
+
+    doc.text(`Category: ${collection.category || "Unknown"}`);
+
+    doc.text(`Description: ${collection.description || "-"}`);
+
+    doc.moveDown();
+
+    doc.fontSize(18).text("Items");
+
+    doc.moveDown();
+
+    if (items.length === 0) {
+      doc.text("No items in collection");
+    }
+
+    items.forEach((item, index) => {
+      doc.fontSize(14).text(`${index + 1}. ${item.name}`);
+
+      doc.fontSize(12).text(
+        `Estimated value: ${item.estimated_value || 0}`
+      );
+
+      doc.text(
+        `Condition: ${item.condition || "-"}`
+      );
+
+      doc.text(
+        `Description: ${item.description || "-"}`
+      );
+
+      doc.moveDown();
     });
+
+    doc.end();
 
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: "Server error" });
+
+    res.status(500).json({
+      error: "Server error"
+    });
   }
 });
 
