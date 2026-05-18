@@ -1103,6 +1103,32 @@ app.get("/api/activity", auth, async (req, res) => {
   }
 });
 
+/* ---------------- NOTIFICATIONS ---------------- */
+
+/* GET NOTIFICATIONS */
+
+app.get("/api/notifications", auth, async (req, res) => {
+  try {
+    const result = await pool.query(
+      `
+      SELECT *
+      FROM notifications
+      WHERE user_id = $1
+      ORDER BY created_at DESC
+      `,
+      [req.user.id]
+    );
+
+    res.json(result.rows);
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({
+      error: "Server error"
+    });
+  }
+});
+
 /* ---------------- ADMIN ---------------- */
 
 /* BAN USER */
