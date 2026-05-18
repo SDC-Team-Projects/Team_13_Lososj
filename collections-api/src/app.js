@@ -398,6 +398,81 @@ app.get("/api/collections/:id/export", auth, async (req, res) => {
   }
 });
 
+/* SEARCH COLLECTIONS */
+
+app.get("/api/collections/search", async (req, res) => {
+  try {
+    const {
+      q,
+      category,
+      min_value,
+      max_value,
+      sort
+    } = req.query;
+
+    let orderBy = "collections.created_at DESC";
+
+    if (sort === "price_asc") {
+      orderBy = "total_value ASC";
+    }
+
+    if (sort === "price_desc") {
+      orderBy = "total_value DESC";
+    }
+
+    const result = await pool.query(
+      `
+      SELECT
+        collections.*,
+
+        collections.user_id,
+
+        users.username AS owner_name,
+
+        COUNT(items.id) AS items_count,
+
+        COALESCE(SUM(items.estimated_value), 0) AS total_value
+
+      FROM collections
+
+      JOIN users
+      ON users.id = collections.user_id
+
+      LEFT JOIN items
+      ON items.collection_id = collections.id
+
+      WHERE
+        ($1::text IS NULL OR collections.name ILIKE '%' || $1 || '%')
+        AND
+        ($2::text IS NULL OR collections.category = $2)
+
+      GROUP BY collections.id, users.username
+
+      HAVING
+        COALESCE(SUM(items.estimated_value), 0) >= COALESCE($3, 0)
+        AND
+        COALESCE(SUM(items.estimated_value), 0) <= COALESCE($4, 999999999)
+
+      ORDER BY ${orderBy}
+      `,
+      [
+        q || null,
+        category || null,
+        min_value || 0,
+        max_value || 999999999
+      ]
+    );
+
+    res.json(result.rows);
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({
+      error: "Server error"
+    });
+  }
+});
+
 /* ---------------- ITEMS ---------------- */
 
 /* CREATE ITEM */
