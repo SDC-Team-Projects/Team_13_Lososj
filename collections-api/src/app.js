@@ -202,6 +202,12 @@ app.post("/api/collections", auth, async (req, res) => {
     // ACTIVITY
     await addActivity(req.user.id, "created collection", name);
 
+    await addNotification(
+    req.user.id,
+  "Collection created",
+  `Collection "${name}" was created`
+);
+
     res.json(result.rows[0]);
   } catch (err) {
     console.error(err);
