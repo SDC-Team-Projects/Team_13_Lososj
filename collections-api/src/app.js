@@ -1105,6 +1105,17 @@ app.get("/api/activity", auth, async (req, res) => {
 
 /* ---------------- NOTIFICATIONS ---------------- */
 
+async function addNotification(userId, title, message) {
+  await pool.query(
+    `
+    INSERT INTO notifications
+    (user_id, title, message)
+    VALUES ($1, $2, $3)
+    `,
+    [userId, title, message]
+  );
+}
+
 /* GET NOTIFICATIONS */
 
 app.get("/api/notifications", auth, async (req, res) => {
