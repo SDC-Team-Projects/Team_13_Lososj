@@ -1,8 +1,7 @@
-/* ===== Sidebar ===== */
+/* ===== SIDEBAR ===== */
 
 .sidebar {
   position: fixed;
-
   top: 0;
   left: 0;
 
@@ -19,46 +18,39 @@
 
   display: flex;
   flex-direction: column;
+
+  transition: transform 0.35s ease;
+  z-index: 1000;
 }
 
-/* ===== Header ===== */
+/* ===== HEADER ===== */
 
 .sidebar__header {
   padding: 16px;
-
   font-size: 18px;
   font-weight: bold;
-
   border-bottom: 1px solid #e5e5e5;
 }
 
-/* ===== Nav ===== */
+/* ===== NAV ===== */
 
 .sidebar__nav {
   padding: 10px;
-
   display: flex;
   flex-direction: column;
-
   gap: 6px;
 }
 
-/* LINKS */
-
 .sidebar__nav a {
   padding: 10px;
-
   border-radius: 6px;
-
   text-decoration: none;
-
   color: white;
-
   transition: background 0.2s;
 }
 
 .sidebar__nav a:hover {
-  background: #f2f2f2;
+  background: rgba(255,255,255,0.2);
 }
 
 /* ===== SETTINGS ===== */
@@ -67,82 +59,64 @@
   position: relative;
 }
 
-/* SETTINGS BUTTON */
-
 .sidebarSettingsButton {
   width: 100%;
-
   background: transparent;
   border: none;
 
   color: white;
-
   text-align: left;
 
   cursor: pointer;
 
   padding: 10px;
-
   font-size: 16px;
   font-family: inherit;
 
   border-radius: 6px;
-
-  transition: background 0.2s;
 }
 
 .sidebarSettingsButton:hover {
-  background: #f2f2f2;
+  background: rgba(255,255,255,0.2);
 }
 
 /* DROPDOWN */
 
 .sidebarDropdown {
   position: absolute;
-
   left: 0;
   top: 100%;
 
   width: 220px;
 
   background: white;
-
   border-radius: 16px;
 
   padding: 10px;
 
   box-shadow: 0 10px 30px rgba(0,0,0,0.12);
-
   z-index: 100;
 }
-
-/* DROPDOWN ITEMS */
 
 .sidebarDropdown a,
 .sidebarDropdown button {
   width: 100%;
-
   display: block;
 
   padding: 12px;
-
   border: none;
   background: none;
 
   text-align: left;
-
   cursor: pointer;
 
   color: #111827;
-
   border-radius: 10px;
-
-  text-decoration: none;
 
   font-size: 14px;
   font-family: inherit;
 
-  transition: background 0.2s;
+  text-decoration: none;
 }
 
 .sidebarDropdown a:hover,
@@ -150,81 +124,49 @@
   background: #f3f4f6;
 }
 
-
-
-/* ================= MOBILE BUTTON ================= */
-
-.mobileMenuBtn {
-  display: none;
-
-  position: fixed;
-  top: 15px;
-  left: 15px;
-
-  width: 44px;
-  height: 44px;
-
-  border-radius: 10px;
-  border: none;
-
-  background: white;
-  box-shadow: 0 5px 20px rgba(0,0,0,0.15);
-
-  z-index: 2000;
-
-  align-items: center;
-  justify-content: center;
-}
-
-/* ================= OVERLAY ================= */
+/* ===== OVERLAY ===== */
 
 .sidebarOverlay {
   position: fixed;
   inset: 0;
-
   background: rgba(0,0,0,0.4);
   z-index: 999;
 }
 
-/* ================= CLOSE BUTTON ================= */
+/* ===== TOGGLE BUTTON ===== */
 
-.closeBtn {
+.menuToggleBtn {
   display: none;
 
-  position: absolute;
-  top: 10px;
-  right: 10px;
+  position: fixed;
+  top: 16px;
+  left: 16px;
 
   background: transparent;
   border: none;
 
   cursor: pointer;
+
+  z-index: 2001;
+
+  color: #111827;
 }
 
-/* ================= MOBILE ================= */
+/* ===== MOBILE ===== */
 
 @media (max-width: 768px) {
 
-  .mobileMenuBtn {
+  .menuToggleBtn {
     display: flex;
+    align-items: center;
+    justify-content: center;
   }
 
   .sidebar {
-    position: fixed;
-    left: 0;
-    top: 0;
-
     transform: translateX(-100%);
-    transition: 0.3s ease;
-
-    z-index: 1000;
   }
 
   .sidebar.open {
     transform: translateX(0);
-  }
-
-  .closeBtn {
-    display: block;
   }
 }
