@@ -1,102 +1,15 @@
-// import { useEffect, useState } from "react";
-
-// import Sidebar from "../components/Sidebar";
-// import SearchBar from "../components/SearchBar";
-// import CollectionCard from "../components/CollectionCard";
-
-// import {
-//   getPublicCollections,
-// } from "../api/collections";
-
-// import "../css/MyCollectionsPage.css";
-
-// export default function OverviewPage() {
-
-//   const [collections, setCollections] = useState([]);
-//   const [loading, setLoading] = useState(true);
-
-//   useEffect(() => {
-//     loadCollections();
-//   }, []);
-
-//   async function loadCollections() {
-
-//     try {
-
-//       const data =
-//         await getPublicCollections();
-
-//       setCollections(data);
-
-//     } catch (err) {
-
-//       console.error(err);
-
-//     } finally {
-
-//       setLoading(false);
-//     }
-//   }
-
-//   if (loading) {
-//     return <h2>Loading collections...</h2>;
-//   }
-
-//   return (
-//     <div className="layout">
-
-//       <Sidebar />
-
-//       <div className="content">
-
-//         <div className="title">
-
-//           <h2>
-//             Overview of collections
-//           </h2>
-
-//           <p>
-//             Discover amazing collections
-//             from users all over the world
-//           </p>
-
-//         </div>
-
-//         <div className="search">
-//           <SearchBar />
-//         </div>
-
-//         <div className="itemsGrid">
-
-//           {collections.map((collection) => (
-
-//             <CollectionCard
-//               key={collection.id}
-//               collection={collection}
-//               variant="square"
-//             />
-
-//           ))}
-
-//         </div>
-
-//       </div>
-
-//     </div>
-//   );
-// }
-
-
 
 import { useEffect, useState } from "react";
 
 import Sidebar from "../components/Sidebar";
 import SearchBar from "../components/SearchBar";
 import CollectionCard from "../components/CollectionCard";
+import UniversalGrid from "../components/UniversalGrid";
+
+import Button from "../ui/Button";
 
 import {
   getPublicCollections,
-  getCollections,
   getFavoriteCollections,
   addFavoriteCollection,
   removeFavoriteCollection,
@@ -109,6 +22,25 @@ export default function OverviewPage() {
   const [loading, setLoading] = useState(true);
   const [favoriteIds, setFavoriteIds] = useState([]);
 
+  /* GRID MODE */
+
+  const [gridMode, setGridMode] = useState(3);
+
+  const gridOptions = [
+    { label: "Large", value: 1 },
+    { label: "Compact", value: 3 },
+  ];
+
+  /* FILTERS */
+
+  const [filters, setFilters] = useState({
+    search: "",
+    category: "",
+    minValue: "",
+    maxValue: "",
+    sort: "",
+  });
+
   useEffect(() => {
     loadCollections();
     loadFavorites();
@@ -117,6 +49,7 @@ export default function OverviewPage() {
   async function loadCollections() {
     try {
       const data = await getPublicCollections();
+
       setCollections(data);
     } catch (err) {
       console.error(err);
@@ -125,46 +58,83 @@ export default function OverviewPage() {
     }
   }
 
+  async function loadFavorites() {
+    try {
+      const data = await getFavoriteCollections();
 
-  
-    async function loadFavorites() {
-      try {
-        const data = await getFavoriteCollections();
-        setFavoriteIds(data.map((c) => c.id));
-      } catch (err) {
-        console.error(err);
-      }
+      setFavoriteIds(data.map((c) => c.id));
+    } catch (err) {
+      console.error(err);
     }
-  
-    async function toggleFavorite(collectionId) {
-      const isFav = favoriteIds.includes(collectionId);
-  
-      try {
-        if (isFav) {
-          await removeFavoriteCollection(collectionId);
-          setFavoriteIds((prev) =>
-            prev.filter((id) => id !== collectionId)
-          );
-        } else {
-          await addFavoriteCollection(collectionId);
-          setFavoriteIds((prev) => [...prev, collectionId]);
-        }
-      } catch (err) {
-        console.error(err);
-      }
-    }
+  }
 
-    
+  async function toggleFavorite(collectionId) {
+    const isFav = favoriteIds.includes(collectionId);
+
+    try {
+      if (isFav) {
+        await removeFavoriteCollection(collectionId);
+
+        setFavoriteIds((prev) =>
+          prev.filter((id) => id !== collectionId)
+        );
+      } else {
+        await addFavoriteCollection(collectionId);
+
+        setFavoriteIds((prev) => [...prev, collectionId]);
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  }
 
   function handleDeleteCollection(id) {
-  setCollections((prev) => prev.filter((c) => c.id !== id));
+    setCollections((prev) =>
+      prev.filter((c) => c.id !== id)
+    );
 
     setFavoriteIds((prev) =>
-      prev.filter((favId) => favId !== id)
+      prev.filter((idFav) => idFav !== id)
     );
   }
-  
-    
+
+  /* FILTERED */
+
+  const filteredCollections = collections
+    .filter((c) =>
+      (c.name || "")
+        .toLowerCase()
+        .includes((filters.search || "").toLowerCase())
+    )
+    .filter(
+      (c) =>
+        !filters.category ||
+        c.category === filters.category
+    )
+    .filter(
+      (c) =>
+        !filters.minValue ||
+        Number(c.total_value) >=
+          Number(filters.minValue)
+    )
+    .filter(
+      (c) =>
+        !filters.maxValue ||
+        Number(c.total_value) <=
+          Number(filters.maxValue)
+    )
+    .sort((a, b) => {
+      if (filters.sort === "price_asc") {
+        return a.total_value - b.total_value;
+      }
+
+      if (filters.sort === "price_desc") {
+        return b.total_value - a.total_value;
+      }
+
+      return 0;
+    });
+
   if (loading) {
     return <h2>Loading collections...</h2>;
   }
@@ -174,34 +144,63 @@ export default function OverviewPage() {
       <Sidebar />
 
       <div className="content">
-
         <div className="title">
           <h2>Overview of collections</h2>
-          <p>Discover amazing collections from users all over the world</p>
+
+          <p>
+            Discover amazing collections from users
+            all over the world
+          </p>
         </div>
 
         <div className="search">
-          <SearchBar />
+          <SearchBar
+            filters={filters}
+            setFilters={setFilters}
+          />
         </div>
 
-        {collections.length === 0 ? (
-          <h3>No public collections yet</h3>
-        ) : (
-          <div className="itemsGrid">
-            {collections.map((collection) => (
-              <CollectionCard
-              key={collection.id}
-              collection={collection}
-              variant="square"
-              disableAnalytics={true}
-              onDelete={handleDeleteCollection}
-              isFavorite={favoriteIds.includes(collection.id)}
-              onToggleFavorite={toggleFavorite}
-/>
-            ))}
-          </div>
-        )}
+        {/* VIEW SWITCHER */}
 
+        <div className="viewSwitcher">
+          {gridOptions.map((opt) => (
+            <Button
+              key={opt.value}
+              variant={
+                gridMode === opt.value
+                  ? "primary"
+                  : "secondary"
+              }
+              onClick={() =>
+                setGridMode(opt.value)
+              }
+            >
+              {opt.label}
+            </Button>
+          ))}
+        </div>
+
+        {/* GRID */}
+
+        {filteredCollections.length === 0 ? (
+          <h3>No collections found</h3>
+        ) : (
+          <UniversalGrid columns={gridMode}>
+            {filteredCollections.map((collection) => (
+              <CollectionCard
+                key={collection.id}
+                collection={collection}
+                variant="square"
+                disableAnalytics={true}
+                onDelete={handleDeleteCollection}
+                isFavorite={favoriteIds.includes(
+                  collection.id
+                )}
+                onToggleFavorite={toggleFavorite}
+              />
+            ))}
+          </UniversalGrid>
+        )}
       </div>
     </div>
   );

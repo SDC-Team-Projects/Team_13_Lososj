@@ -1,0 +1,44 @@
+.notificationsPage {
+  padding: 40px;
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.notificationsPage h1 {
+  margin-bottom: 20px;
+}
+
+.empty {
+  color: gray;
+  font-size: 16px;
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.card {
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(12px);
+  padding: 16px;
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.title {
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+
+.message {
+  font-size: 14px;
+  opacity: 0.85;
+}
+
+.date {
+  margin-top: 8px;
+  font-size: 12px;
+  opacity: 0.6;
+}

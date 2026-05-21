@@ -16,8 +16,6 @@ export async function logoutUser() {
   if (!res.ok) {
     throw new Error("Logout failed");
   }
-
-  // важно: logout ВСЕГДА чистит фронт
   localStorage.removeItem("token");
 
   return res.json();

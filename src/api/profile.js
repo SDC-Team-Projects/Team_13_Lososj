@@ -51,3 +51,34 @@ export async function updateProfile(profileData) {
 
   return response.json();
 }
+
+
+/* ---------------- CHANGE PASSWORD ---------------- */
+
+export async function changePassword(passwordData) {
+
+  const token = localStorage.getItem("token");
+
+  const response = await fetch(
+    `${API_URL}/profile/password`,
+    {
+      method: "PUT",
+
+      headers: {
+        "Content-Type": "application/json",
+
+        Authorization: `Bearer ${token}`,
+      },
+
+      body: JSON.stringify(passwordData),
+    }
+  );
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(data.error || "Failed to change password");
+  }
+
+  return data;
+}

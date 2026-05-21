@@ -1,11 +1,10 @@
 
 // import { useEffect, useState } from "react";
-// import { useParams, useNavigate, Link } from "react-router-dom";
+// import { useParams, Link } from "react-router-dom";
 
 // import Sidebar from "../components/Sidebar";
 // import ItemCard from "../components/ItemCard";
 // import CollectionCard from "../components/CollectionCard";
-
 
 // import Button from "../ui/Button";
 
@@ -15,90 +14,110 @@
 // import { getCollectionById } from "../api/collections";
 // import { getItemsByCollection } from "../api/items";
 
-// export default function CollectionPage() {
+// import { useAuth } from "../context/AuthContext";
+// import { isOwner } from "../utils/permissions";
 
+// import {
+//   getFavoriteCollections,
+//   addFavoriteCollection,
+//   removeFavoriteCollection,
+// } from "../api/collections";
+
+// export default function CollectionPage() {
 //   const { id } = useParams();
 
-//   const navigate = useNavigate();
-
 //   const [collection, setCollection] = useState(null);
-
 //   const [items, setItems] = useState([]);
-
 //   const [loading, setLoading] = useState(true);
 
+//   const [favoriteIds, setFavoriteIds] = useState([]);
+
+//   const { user } = useAuth();
+
 //   useEffect(() => {
-
-//     const loadData = async () => {
-
-//       try {
-
-//         const [collectionData, itemsData] =
-//           await Promise.all([
-//             getCollectionById(id),
-//             getItemsByCollection(id),
-//           ]);
-
-//         setCollection(collectionData);
-
-//         setItems(itemsData);
-
-//       } catch (err) {
-//         console.error(err);
-//       } finally {
-//         setLoading(false);
-//       }
-//     };
-
 //     loadData();
-
+//     loadFavorites();
 //   }, [id]);
 
-//   if (loading) {
-//     return <h2>Loading collection...</h2>;
+//   const loadData = async () => {
+//     try {
+//       const [collectionData, itemsData] = await Promise.all([
+//         getCollectionById(id),
+//         getItemsByCollection(id),
+//       ]);
+
+//       setCollection(collectionData);
+//       setItems(itemsData);
+//     } catch (err) {
+//       console.error(err);
+//     } finally {
+//       setLoading(false);
+//     }
+//   };
+
+//   async function loadFavorites() {
+//     try {
+//       const data = await getFavoriteCollections();
+//       setFavoriteIds(data.map((c) => c.id));
+//     } catch (err) {
+//       console.error(err);
+//     }
 //   }
 
-//   if (!collection) {
-//     return <h2>Collection not found</h2>;
+//   async function toggleFavorite(collectionId) {
+//     const isFav = favoriteIds.includes(collectionId);
+
+//     try {
+//       if (isFav) {
+//         await removeFavoriteCollection(collectionId);
+//         setFavoriteIds((prev) =>
+//           prev.filter((id) => id !== collectionId)
+//         );
+//       } else {
+//         await addFavoriteCollection(collectionId);
+//         setFavoriteIds((prev) => [...prev, collectionId]);
+//       }
+//     } catch (err) {
+//       console.error(err);
+//     }
 //   }
+
+//   // ✅ SAFE OWNER CHECK (ВАЖНО)
+//   const owner =
+//     user && collection
+//       ? isOwner(user, collection.user_id)
+//       : false;
+
+//   if (loading) return <h2>Loading collection...</h2>;
+//   if (!collection) return <h2>Collection not found</h2>;
 
 //   return (
 //     <div className="layout">
-
 //       <Sidebar />
 
 //       <div className="content">
-
-//         <div
-//           style={{
-//             display: "flex",
-//             justifyContent: "space-between",
-//             alignItems: "center",
-//             marginBottom: "30px",
-//           }}
-//         >
-
-//           <h1>{collection.name}</h1>
-
-//         </div>
+//         <h1>{collection.name}</h1>
 
 //         <div className="itemsList">
-
 //           <CollectionCard
 //             collection={collection}
 //             variant="horizontal"
+//             isFavorite={favoriteIds.includes(collection.id)}
+//             onToggleFavorite={toggleFavorite}
 //           />
-
 //         </div>
 
-// <div className="button">
-//   <Link to={`/collections/${id}/items/new`}>
-//   <Button variant="primary">
-//     + Add Item
-//   </Button>
-// </Link>
+//         {/* ✅ только для владельца */}
+//         {owner && (
+//           <div className="button">
+//             <Link to={`/collections/${id}/items/new`}>
+//               <Button variant="primary">
+//                 + Add Item
+//               </Button>
+//             </Link>
+//           </div>
+//         )}
 
-// </div>
 //         <div
 //           style={{
 //             marginTop: "40px",
@@ -108,7 +127,6 @@
 //             gap: "24px",
 //           }}
 //         >
-
 //           {items.length > 0 ? (
 //             items.map((item) => (
 //               <ItemCard
@@ -126,11 +144,8 @@
 //           ) : (
 //             <p>No items yet</p>
 //           )}
-
 //         </div>
-
 //       </div>
-
 //     </div>
 //   );
 // }
@@ -152,6 +167,9 @@ import "../css/CollectionCard.css";
 import { getCollectionById } from "../api/collections";
 import { getItemsByCollection } from "../api/items";
 
+import { useAuth } from "../context/AuthContext";
+import { isOwner } from "../utils/permissions";
+
 import {
   getFavoriteCollections,
   addFavoriteCollection,
@@ -167,10 +185,12 @@ export default function CollectionPage() {
 
   const [favoriteIds, setFavoriteIds] = useState([]);
 
+  const { user } = useAuth();
+
   useEffect(() => {
     loadData();
     loadFavorites();
-  }, [id]);
+  }, [id, user]);
 
   const loadData = async () => {
     try {
@@ -215,17 +235,10 @@ export default function CollectionPage() {
     }
   }
 
-//   async function toggleFavorite(collectionId) {
-//   const isFav = favoriteIds.includes(collectionId);
-
-//   if (isFav) {
-//     setFavoriteIds((prev) =>
-//       prev.filter((id) => id !== collectionId)
-//     );
-//   } else {
-//     setFavoriteIds((prev) => [...prev, collectionId]);
-//   }
-// }
+  const owner =
+    user && collection
+      ? isOwner(user, collection.user_id)
+      : false;
 
   if (loading) return <h2>Loading collection...</h2>;
   if (!collection) return <h2>Collection not found</h2>;
@@ -246,11 +259,15 @@ export default function CollectionPage() {
           />
         </div>
 
-        <div className="button">
-          <Link to={`/collections/${id}/items/new`}>
-            <Button variant="primary">+ Add Item</Button>
-          </Link>
-        </div>
+        {owner && (
+          <div className="button">
+            <Link to={`/collections/${id}/items/new`}>
+              <Button variant="primary">
+                + Add Item
+              </Button>
+            </Link>
+          </div>
+        )}
 
         <div
           style={{
@@ -265,6 +282,7 @@ export default function CollectionPage() {
             items.map((item) => (
               <ItemCard
                 key={item.id}
+                variant="horizontal"
                 item={{
                   ...item,
                   image:

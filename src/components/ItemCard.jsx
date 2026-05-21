@@ -1,8 +1,11 @@
+
 import "../css/ItemCard.css";
 import Button from "../ui/Button";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { deleteItem } from "../api/items";
-import { useNavigate } from "react-router-dom";
+
+import { useAuth } from "../context/AuthContext";
+import { isOwner } from "../utils/permissions";
 
 export default function ItemCard({
   item,
@@ -14,24 +17,30 @@ export default function ItemCard({
 
   const navigate = useNavigate();
 
-async function handleDelete() {
-  const confirmDelete = window.confirm(
-    "Delete this item?"
-  );
+  const { user } = useAuth();
 
-  if (!confirmDelete) return;
+  const owner = user && item
+    ? isOwner(user, item.user_id || item.owner_id)
+    : false;
 
-  try {
-    await deleteItem(item.id);
+  async function handleDelete() {
+    const confirmDelete = window.confirm(
+      "Delete this item?"
+    );
 
-    alert("Item deleted");
+    if (!confirmDelete) return;
 
-    navigate(-1);
-  } catch (err) {
-    console.error(err);
-    alert("Failed to delete item");
+    try {
+      await deleteItem(item.id);
+
+      alert("Item deleted");
+
+      navigate(-1);
+    } catch (err) {
+      console.error(err);
+      alert("Failed to delete item");
+    }
   }
-}
 
   const card = (
     <div
@@ -54,7 +63,6 @@ async function handleDelete() {
           <div className="cardContent">
 
             <div className="topRow">
-
               <div className="categoryBadge">
                 {item.category}
               </div>
@@ -68,7 +76,6 @@ async function handleDelete() {
               {item.description}
             </p>
 
-            {/* PRICE ONLY IN PREVIEW */}
             {!isDetails && (
               <div className="stats">
                 <div className="statItem">
@@ -77,24 +84,28 @@ async function handleDelete() {
               </div>
             )}
 
-            {/* BUTTONS */}
             {!isDetails ? (
               <Button variant="primary">
                 View
               </Button>
             ) : (
               <div className="actions">
-                <Button variant="secondary">
-                  Download PDF
-                </Button>
 
-                <Button variant="primary">
-                  Edit
-                </Button>
+                {owner && (
+                  <>
+                    <Button variant="primary">
+                      Edit
+                    </Button>
 
-                <Button variant="danger" onClick={handleDelete}>
-                  Delete
-                </Button>
+                    <Button
+                      variant="danger"
+                      onClick={handleDelete}
+                    >
+                      Delete
+                    </Button>
+                  </>
+                )}
+
               </div>
             )}
 
@@ -128,7 +139,6 @@ async function handleDelete() {
                 {item.description}
               </p>
 
-              {/* PRICE ONLY IN PREVIEW */}
               {!isDetails && (
                 <div className="stats">
                   <div className="statItem">
@@ -137,24 +147,30 @@ async function handleDelete() {
                 </div>
               )}
 
-              {/* BUTTONS */}
               {!isDetails ? (
                 <Button variant="primary">
                   View
                 </Button>
               ) : (
                 <div className="actions">
-                  <Button variant="secondary">
-                    Download PDF
-                  </Button>
 
-                  <Button variant="primary">
-                    Edit
-                  </Button>
+                 
+                  {/* ONLY OWNER */}
+                  {owner && (
+                    <>
+                      <Button variant="primary">
+                        Edit
+                      </Button>
 
-                  <Button variant="danger">
-                    Delete
-                  </Button>
+                      <Button
+                        variant="danger"
+                        onClick={handleDelete}
+                      >
+                        Delete
+                      </Button>
+                    </>
+                  )}
+
                 </div>
               )}
 
@@ -165,7 +181,6 @@ async function handleDelete() {
     </div>
   );
 
-  // PREVIEW MODE => clickable card
   if (!isDetails) {
     return (
       <Link
@@ -177,6 +192,5 @@ async function handleDelete() {
     );
   }
 
-  // DETAILS MODE => no link
   return card;
 }

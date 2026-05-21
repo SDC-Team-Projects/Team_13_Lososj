@@ -1,4 +1,4 @@
-.title {
+/* .title {
     text-align: center;
     display: flex;
     flex-direction: column;
@@ -21,13 +21,11 @@
   min-height: 100vh;
 }
 
-/* сайдбар слева */
 .layout > :first-child {
   width: 240px;
   flex-shrink: 0;
 }
 
-/* контент справа */
 .content {
   flex: 1;
   display: flex;
@@ -47,16 +45,60 @@
 
   margin-top: 40px;
 }
+ */
 
 
-@media (max-width: 1000px) {
-  .itemsGrid {
-    grid-template-columns: repeat(2, 1fr);
-  }
+.title {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
 }
 
-@media (max-width: 700px) {
-  .itemsGrid {
-    grid-template-columns: 1fr;
-  }
+.title h1 {
+  color: black;
+  margin: 0;
+}
+
+.title p {
+  margin: 0;
+}
+
+.layout {
+  display: flex;
+  min-height: 100vh;
+}
+
+/* sidebar */
+.layout > :first-child {
+  width: 240px;
+  flex-shrink: 0;
+}
+
+/* content */
+.content {
+  flex: 1;
+
+  display: flex;
+  flex-direction: column;
+
+  align-items: center;
+
+  margin-left: 250px;
+  margin-top: 35px;
+
+  padding-right: 30px;
+}
+
+/* search */
+.search {
+  width: 100%;
+  margin-top: 30px;
+}
+
+/* view switcher */
+.viewSwitcher {
+  display: flex;
+  gap: 15px;
+  margin-top: 25px;
 }

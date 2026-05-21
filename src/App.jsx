@@ -12,11 +12,13 @@ import MyCollectionsPage from "./pages/MyCollectionsPage";
 import CollectionPage from "./pages/CollectionPage";
 import ItemForm from "./components/ItemForm";
 import ItemPage from "./components/ItemPage";
-import EditProfilePage from "./components/EditProfilePage";
 import EditCollectionForm from "./components/EditCollectionForm";
 import EditItemForm from "./components/EditItemForm";
 import OverviewPage from "./pages/OverviewPage";
 import FavoritesPage from "./pages/FavoritesPage";
+import EditProfilePage from "./pages/EditProfilePage";
+import ChangePasswordPage from "./pages/ChangePasswordPage";
+
 
 function App() {
 
@@ -35,12 +37,15 @@ function App() {
       <Route path="/collections/:id" element={<ProtectedRoute><CollectionPage /></ProtectedRoute>} />
       <Route path="/collections/:id/items/new" element={<ProtectedRoute><ItemForm /></ProtectedRoute>} />
       <Route path="/items/:id" element={<ProtectedRoute><ItemPage /></ProtectedRoute>} />
-      <Route path="/profile/edit" element={<ProtectedRoute>< EditProfilePage /></ProtectedRoute>} />
       <Route path="/collections/edit/:id" element={<ProtectedRoute><EditCollectionForm /></ProtectedRoute>}/>
       <Route path="/items/:id/edit" element={<ProtectedRoute><EditItemForm /></ProtectedRoute>} />
       <Route path="/overview" element={<ProtectedRoute><OverviewPage /></ProtectedRoute>} />
       <Route path="/overview" element={<ProtectedRoute><OverviewPage /></ProtectedRoute>} />
       <Route path="/favorites" element={<ProtectedRoute><FavoritesPage /></ProtectedRoute>} />
+      <Route path="/profile/edit" element={<ProtectedRoute><EditProfilePage /></ProtectedRoute>} />
+      <Route path="/users/:id" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>}/>
+      <Route path="/settings/password" element={<ProtectedRoute><ChangePasswordPage/></ProtectedRoute>}
+/>
     </Routes>
     </BrowserRouter>
     </AuthProvider>

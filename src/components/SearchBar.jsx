@@ -19,7 +19,6 @@ export default function SearchBar({ filters, setFilters }) {
   return (
     <div className={styles.wrapper}>
 
-      {/* 🔎 SEARCH + BUTTON */}
       <div className={styles.topRow}>
         <input
           type="text"
@@ -42,11 +41,9 @@ export default function SearchBar({ filters, setFilters }) {
         </button>
       </div>
 
-      {/* 📦 DROPDOWN PANEL */}
       {open && (
         <div className={styles.panel}>
 
-          {/* 🔽 CATEGORY (UPDATED) */}
           <select
             value={filters.category}
             onChange={(e) =>

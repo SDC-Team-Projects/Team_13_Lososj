@@ -51,7 +51,7 @@ const handleImageChange = async (e) => {
       return;
     }
 
-    setImage(data.secure_url); // 👈 сохраняем ссылку на картинку
+    setImage(data.secure_url); 
   } catch (err) {
     console.error("Upload failed:", err);
   }

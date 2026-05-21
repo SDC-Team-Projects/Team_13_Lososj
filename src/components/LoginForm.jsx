@@ -48,7 +48,7 @@ export default function LoginForm() {
 }
 
       
-      login(data.token);
+      login(data.token, data.user);
 
       toast.success("Login successful!");
 

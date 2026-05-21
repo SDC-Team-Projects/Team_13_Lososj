@@ -1,13 +1,20 @@
 /* ===== Sidebar ===== */
+
 .sidebar {
-  position: fixed;   /* всегда слева */
+  position: fixed;
+
   top: 0;
   left: 0;
+
   height: 100vh;
   width: 260px;
-  
 
-  background: linear-gradient(180deg, #A8D3FF 0%, #FFF4DF 100%);;
+  background: linear-gradient(
+    180deg,
+    #A8D3FF 0%,
+    #FFF4DF 100%
+  );
+
   border-right: 1px solid #e5e5e5;
 
   display: flex;
@@ -15,29 +22,130 @@
 }
 
 /* ===== Header ===== */
+
 .sidebar__header {
   padding: 16px;
+
   font-size: 18px;
   font-weight: bold;
+
   border-bottom: 1px solid #e5e5e5;
 }
 
 /* ===== Nav ===== */
+
 .sidebar__nav {
   padding: 10px;
+
   display: flex;
   flex-direction: column;
+
   gap: 6px;
 }
 
+/* LINKS */
+
 .sidebar__nav a {
   padding: 10px;
+
   border-radius: 6px;
+
   text-decoration: none;
+
   color: white;
+
   transition: background 0.2s;
 }
 
 .sidebar__nav a:hover {
   background: #f2f2f2;
+}
+
+/* ===== SETTINGS ===== */
+
+.sidebarSettings {
+  position: relative;
+}
+
+/* SETTINGS BUTTON */
+
+.sidebarSettingsButton {
+  width: 100%;
+
+  background: transparent;
+  border: none;
+
+  color: white;
+
+  text-align: left;
+
+  cursor: pointer;
+
+  padding: 10px;
+
+  font-size: 16px;
+  font-family: inherit;
+
+  border-radius: 6px;
+
+  transition: background 0.2s;
+}
+
+.sidebarSettingsButton:hover {
+  background: #f2f2f2;
+}
+
+/* DROPDOWN */
+
+.sidebarDropdown {
+  position: absolute;
+
+  left: 0;
+  top: 100%;
+
+  width: 220px;
+
+  background: white;
+
+  border-radius: 16px;
+
+  padding: 10px;
+
+  box-shadow: 0 10px 30px rgba(0,0,0,0.12);
+
+  z-index: 100;
+}
+
+/* DROPDOWN ITEMS */
+
+.sidebarDropdown a,
+.sidebarDropdown button {
+  width: 100%;
+
+  display: block;
+
+  padding: 12px;
+
+  border: none;
+  background: none;
+
+  text-align: left;
+
+  cursor: pointer;
+
+  color: #111827;
+
+  border-radius: 10px;
+
+  text-decoration: none;
+
+  font-size: 14px;
+  font-family: inherit;
+
+  transition: background 0.2s;
+}
+
+.sidebarDropdown a:hover,
+.sidebarDropdown button:hover {
+  background: #f3f4f6;
 }
