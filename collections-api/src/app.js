@@ -15,6 +15,18 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+
+
+app.get("/test-images", async (req, res) => {
+
+  const result = await pool.query(
+    "SELECT image FROM collections"
+  );
+
+  res.json(result.rows);
+});
+
+
 /* ---------------- ACTIVITY HELPER ---------------- */
 
 async function addActivity(userId, action, item = null) {
