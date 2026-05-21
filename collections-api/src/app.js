@@ -589,12 +589,10 @@ app.get("/api/collections/:id/export", auth, async (req, res) => {
 
         try {
 
-          const response = await axios.get(
-            item.image,
-            {
-              responseType: "arraybuffer"
-            }
-          );
+          const response = await axios({
+            url: item.image,
+            responseType: "arraybuffer"
+          });
 
           const imageBuffer = Buffer.from(
             response.data,
@@ -603,14 +601,17 @@ app.get("/api/collections/:id/export", auth, async (req, res) => {
 
           doc.image(imageBuffer, {
             fit: [250, 250],
-            align: "left"
+            align: "center"
           });
 
           doc.moveDown();
 
         } catch (e) {
 
-          console.log("Image load error:", e.message);
+          console.log(
+            "Image load error:",
+            e.message
+          );
 
           doc.text("Image could not be loaded");
 
