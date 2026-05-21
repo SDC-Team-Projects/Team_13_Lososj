@@ -7,6 +7,7 @@ const jwt = require("jsonwebtoken");
 const pool = require("./db");
 const auth = require("./middleware/auth");
 const PDFDocument = require("pdfkit");
+const axios = require("axios");
 
 const app = express();
 
@@ -468,6 +469,7 @@ app.delete("/api/collections/:id", auth, async (req, res) => {
 
 app.get("/api/collections/:id/export", auth, async (req, res) => {
   try {
+
     const collectionResult = await pool.query(
       `
       SELECT
@@ -503,7 +505,9 @@ app.get("/api/collections/:id/export", auth, async (req, res) => {
 
     const items = itemsResult.rows;
 
-    const doc = new PDFDocument();
+    const doc = new PDFDocument({
+      margin: 50
+    });
 
     res.setHeader(
       "Content-Disposition",
@@ -522,11 +526,17 @@ app.get("/api/collections/:id/export", auth, async (req, res) => {
 
     doc.moveDown();
 
-    doc.fontSize(14).text(`Owner: ${collection.owner_name}`);
+    doc.fontSize(14).text(
+      `Owner: ${collection.owner_name}`
+    );
 
-    doc.text(`Category: ${collection.category || "Unknown"}`);
+    doc.text(
+      `Category: ${collection.category || "Unknown"}`
+    );
 
-    doc.text(`Description: ${collection.description || "-"}`);
+    doc.text(
+      `Description: ${collection.description || "-"}`
+    );
 
     doc.moveDown();
 
@@ -538,8 +548,15 @@ app.get("/api/collections/:id/export", auth, async (req, res) => {
       doc.text("No items in collection");
     }
 
-    items.forEach((item, index) => {
-      doc.fontSize(14).text(`${index + 1}. ${item.name}`);
+    let totalValue = 0;
+
+    for (const [index, item] of items.entries()) {
+
+      totalValue += Number(item.estimated_value || 0);
+
+      doc.fontSize(16).text(
+        `${index + 1}. ${item.name}`
+      );
 
       doc.fontSize(12).text(
         `Estimated value: ${item.estimated_value || 0}`
@@ -554,11 +571,52 @@ app.get("/api/collections/:id/export", auth, async (req, res) => {
       );
 
       doc.moveDown();
-    });
+
+      // IMAGE
+      if (item.image) {
+
+        try {
+
+          const response = await axios.get(
+            item.image,
+            {
+              responseType: "arraybuffer"
+            }
+          );
+
+          const imageBuffer = Buffer.from(
+            response.data,
+            "binary"
+          );
+
+          doc.image(imageBuffer, {
+            fit: [250, 250],
+            align: "left"
+          });
+
+          doc.moveDown();
+
+        } catch (e) {
+
+          console.log("Image load error:", e.message);
+
+          doc.text("Image could not be loaded");
+
+          doc.moveDown();
+        }
+      }
+
+      doc.moveDown();
+    }
+
+    doc.fontSize(18).text(
+      `Total collection value: ${totalValue}`
+    );
 
     doc.end();
 
   } catch (err) {
+
     console.error(err);
 
     res.status(500).json({
@@ -1270,8 +1328,111 @@ app.post("/api/admin/users/:id/ban", auth, async (req, res) => {
   }
 });
 
+/* UNBAN USER */
 
+app.post("/api/admin/users/:id/unban", auth, async (req, res) => {
+  try {
 
+    const me = await pool.query(
+      "SELECT role FROM users WHERE id = $1",
+      [req.user.id]
+    );
+
+    if (me.rows[0].role !== "ADMIN") {
+      return res.status(403).json({
+        error: "No access"
+      });
+    }
+
+    await pool.query(
+      `
+      UPDATE users
+      SET status = 'active'
+      WHERE id = $1
+      `,
+      [req.params.id]
+    );
+
+    res.json({
+      message: "User unbanned"
+    });
+
+  } catch (err) {
+    console.error(err);
+
+    res.status(500).json({
+      error: "Server error"
+    });
+  }
+});
+
+/* ADMIN DELETE COLLECTION */
+
+app.delete("/api/admin/collections/:id", auth, async (req, res) => {
+  try {
+
+    const me = await pool.query(
+      "SELECT role FROM users WHERE id = $1",
+      [req.user.id]
+    );
+
+    if (me.rows[0].role !== "ADMIN") {
+      return res.status(403).json({
+        error: "No access"
+      });
+    }
+
+    await pool.query(
+      "DELETE FROM collections WHERE id = $1",
+      [req.params.id]
+    );
+
+    res.json({
+      message: "Collection deleted by admin"
+    });
+
+  } catch (err) {
+    console.error(err);
+
+    res.status(500).json({
+      error: "Server error"
+    });
+  }
+});
+
+/* ADMIN DELETE ITEM */
+
+app.delete("/api/admin/items/:id", auth, async (req, res) => {
+  try {
+
+    const me = await pool.query(
+      "SELECT role FROM users WHERE id = $1",
+      [req.user.id]
+    );
+
+    if (me.rows[0].role !== "ADMIN") {
+      return res.status(403).json({
+        error: "No access"
+      });
+    }
+
+    await pool.query(
+      "DELETE FROM items WHERE id = $1",
+      [req.params.id]
+    );
+
+    res.json({
+      message: "Item deleted by admin"
+    });
+
+  } catch (err) {
+    console.error(err);
+
+    res.status(500).json({
+      error: "Server error"
+    });
+  }
+});
 
 /* ---------------- START SERVER ---------------- */
 
