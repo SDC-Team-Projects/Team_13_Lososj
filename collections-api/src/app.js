@@ -585,39 +585,21 @@ app.get("/api/collections/:id/export", auth, async (req, res) => {
       doc.moveDown();
 
       // IMAGE
-      if (item.image) {
+      if (item.image && item.image.startsWith("http")) {
+  try {
+    doc.image(item.image, {
+      fit: [250, 250],
+      align: "center",
+      valign: "center"
+    });
 
-        try {
-
-          const response = await axios({
-            url: item.image,
-            responseType: "arraybuffer"
-          });
-
-          const imageBuffer = Buffer.from(
-            response.data,
-            "binary"
-          );
-
-          doc.image(imageBuffer, {
-            fit: [250, 250],
-            align: "center"
-          });
-
-          doc.moveDown();
-
-        } catch (e) {
-
-          console.log(
-            "Image load error:",
-            e.message
-          );
-
-          doc.text("Image could not be loaded");
-
-          doc.moveDown();
-        }
-      }
+    doc.moveDown();
+  } catch (e) {
+    console.log("Image error:", e.message);
+    doc.text("Image could not be loaded");
+    doc.moveDown();
+  }
+}
 
       doc.moveDown();
     }
