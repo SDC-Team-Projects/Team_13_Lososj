@@ -22,7 +22,7 @@ function auth(req, res, next) {
   }
 }
 
----
+// ---
 
 //  CREATE COLLECTION
 router.post("/", auth, async (req, res) => {
@@ -44,7 +44,7 @@ router.post("/", auth, async (req, res) => {
   }
 });
 
----
+// ---
 
 //  GET ALL COLLECTIONS (user)
 router.get("/", auth, async (req, res) => {
@@ -60,7 +60,7 @@ router.get("/", auth, async (req, res) => {
   }
 });
 
----
+// ---
 
 //  GET BY ID
 router.get("/:id", auth, async (req, res) => {
@@ -76,7 +76,7 @@ router.get("/:id", auth, async (req, res) => {
   }
 });
 
----
+// ---
 
 //  UPDATE
 router.put("/:id", auth, async (req, res) => {
@@ -97,7 +97,7 @@ router.put("/:id", auth, async (req, res) => {
   }
 });
 
----
+// ---
 
 //  DELETE
 router.delete("/:id", auth, async (req, res) => {
