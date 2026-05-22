@@ -139,4 +139,9 @@ describe('Authentication', () => {
       expect(response.body.message).toContain('Logged out');
     });
   });
+
+  afterAll(async () => {
+    // await db.close();
+    await new Promise(resolve => setTimeout(resolve, 100));
+  });
 });
