@@ -24,7 +24,7 @@ function auth(req, res, next) {
 
 ---
 
-#  CREATE COLLECTION
+//  CREATE COLLECTION
 router.post("/", auth, async (req, res) => {
   try {
     const { name, description, category, image, is_public } = req.body;
@@ -46,7 +46,7 @@ router.post("/", auth, async (req, res) => {
 
 ---
 
-#  GET ALL COLLECTIONS (user)
+//  GET ALL COLLECTIONS (user)
 router.get("/", auth, async (req, res) => {
   try {
     const result = await pool.query(
@@ -62,7 +62,7 @@ router.get("/", auth, async (req, res) => {
 
 ---
 
-#  GET BY ID
+//  GET BY ID
 router.get("/:id", auth, async (req, res) => {
   try {
     const result = await pool.query(
@@ -78,7 +78,7 @@ router.get("/:id", auth, async (req, res) => {
 
 ---
 
-#  UPDATE
+//  UPDATE
 router.put("/:id", auth, async (req, res) => {
   try {
     const { name, description } = req.body;
@@ -99,7 +99,7 @@ router.put("/:id", auth, async (req, res) => {
 
 ---
 
-# 🟢 DELETE
+//  DELETE
 router.delete("/:id", auth, async (req, res) => {
   try {
     await pool.query(
