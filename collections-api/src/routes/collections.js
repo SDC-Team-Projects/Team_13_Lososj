@@ -3,7 +3,7 @@ const router = express.Router();
 const pool = require("../db");
 const jwt = require("jsonwebtoken");
 
-// middleware проверки токена
+// middleware проверки токена 
 function auth(req, res, next) {
   const header = req.headers.authorization;
 
