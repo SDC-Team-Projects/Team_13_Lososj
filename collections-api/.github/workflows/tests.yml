@@ -2,9 +2,9 @@ name: Unit Tests & Coverage
 
 on:
   push:
-    branches: [ main, develop ]
+    branches: [ main, develop, develop-tests ]
   pull_request:
-    branches: [ main, develop ]
+    branches: [ main, develop, develop-tests ]
   workflow_dispatch:
       branches: [ main, develop, develop-tests ]
 
