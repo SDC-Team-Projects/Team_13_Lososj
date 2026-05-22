@@ -1431,6 +1431,13 @@ app.delete("/api/admin/items/:id", auth, async (req, res) => {
 
 /* ---------------- START SERVER ---------------- */
 
-app.listen(process.env.PORT || 5000, () => {
+/*app.listen(process.env.PORT || 5000, () => {
   console.log("Server running");
-});
+});*/
+if (process.env.NODE_ENV !== 'test') {
+  app.listen(process.env.PORT || 5000, () => {
+    console.log("Server running");
+  });
+}
+
+module.exports = app;
