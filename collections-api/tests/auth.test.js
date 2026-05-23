@@ -1,5 +1,6 @@
 const request = require('supertest');
 const app = require('../src/app');
+const pool = require('../src/db/index');
 
 describe('Authentication', () => {
   
@@ -10,7 +11,7 @@ describe('Authentication', () => {
       const response = await request(app)
         .post('/api/auth/register')
         .send({
-          email: 'newuser123@test.com',
+          email: `newuser_${Date.now()}@test.com`,
           password: 'validPassword123',
           username: 'newuser',
           city: 'Visaginas',
@@ -141,7 +142,7 @@ describe('Authentication', () => {
   });
 
   afterAll(async () => {
-    // await db.close();
-    await new Promise(resolve => setTimeout(resolve, 100));
-  });
+  await pool.end();
+});
+  
 });
