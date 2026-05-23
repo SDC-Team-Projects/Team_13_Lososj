@@ -1429,6 +1429,154 @@ app.delete("/api/admin/items/:id", auth, async (req, res) => {
   }
 });
 
+/* ADMIN GET ALL USERS */
+
+app.get("/api/admin/users", auth, async (req, res) => {
+  try {
+
+    const me = await pool.query(
+      "SELECT role FROM users WHERE id = $1",
+      [req.user.id]
+    );
+
+    if (me.rows[0].role !== "ADMIN") {
+      return res.status(403).json({
+        error: "No access"
+      });
+    }
+
+    const result = await pool.query(
+      `
+      SELECT
+        id,
+        email,
+        username,
+        city,
+        country,
+        role,
+        status,
+        created_at
+      FROM users
+      ORDER BY created_at DESC
+      `
+    );
+
+    res.json(result.rows);
+
+  } catch (err) {
+
+    console.error(err);
+
+    res.status(500).json({
+      error: "Server error"
+    });
+  }
+});
+
+/* ADMIN GET ALL COLLECTIONS */
+
+app.get("/api/admin/collections", auth, async (req, res) => {
+  try {
+
+    const me = await pool.query(
+      "SELECT role FROM users WHERE id = $1",
+      [req.user.id]
+    );
+
+    if (me.rows[0].role !== "ADMIN") {
+      return res.status(403).json({
+        error: "No access"
+      });
+    }
+
+    const result = await pool.query(
+      `
+      SELECT
+        collections.*,
+
+        users.username AS owner_name,
+
+        COUNT(items.id) AS items_count,
+
+        COALESCE(SUM(items.estimated_value), 0) AS total_value
+
+      FROM collections
+
+      JOIN users
+      ON users.id = collections.user_id
+
+      LEFT JOIN items
+      ON items.collection_id = collections.id
+
+      GROUP BY collections.id, users.username
+
+      ORDER BY collections.created_at DESC
+      `
+    );
+
+    res.json(result.rows);
+
+  } catch (err) {
+
+    console.error(err);
+
+    res.status(500).json({
+      error: "Server error"
+    });
+  }
+});
+
+/* ADMIN GET ALL ITEMS */
+
+app.get("/api/admin/items", auth, async (req, res) => {
+  try {
+
+    const me = await pool.query(
+      "SELECT role FROM users WHERE id = $1",
+      [req.user.id]
+    );
+
+    if (me.rows[0].role !== "ADMIN") {
+      return res.status(403).json({
+        error: "No access"
+      });
+    }
+
+    const result = await pool.query(
+      `
+      SELECT
+        items.*,
+
+        collections.name AS collection_name,
+
+        collections.user_id,
+
+        users.username AS owner_name
+
+      FROM items
+
+      JOIN collections
+      ON collections.id = items.collection_id
+
+      JOIN users
+      ON users.id = collections.user_id
+
+      ORDER BY items.created_at DESC
+      `
+    );
+
+    res.json(result.rows);
+
+  } catch (err) {
+
+    console.error(err);
+
+    res.status(500).json({
+      error: "Server error"
+    });
+  }
+});
+
 /* ---------------- START SERVER ---------------- */
 
 app.listen(process.env.PORT || 5000, () => {
