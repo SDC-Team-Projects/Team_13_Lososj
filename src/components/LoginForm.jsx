@@ -95,6 +95,13 @@ export default function LoginForm() {
           />
         </div>
 
+  <Link
+    to="/forgot-password"
+    className={styles.forgotLink}
+  >
+    Forgot password?
+  </Link>
+  
         <Button type="submit" variant="primary">
   Sign In
 </Button>

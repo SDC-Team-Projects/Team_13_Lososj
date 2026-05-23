@@ -8,64 +8,48 @@ import {
 export const AuthContext = createContext();
 
 export function AuthProvider({ children }) {
-
   const [token, setToken] = useState(null);
-
   const [user, setUser] = useState(null);
-
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    const savedToken = localStorage.getItem("token");
+    const savedUser = localStorage.getItem("user");
 
-    const savedToken =
-      localStorage.getItem("token");
-
-    const savedUser =
-      localStorage.getItem("user");
-
-    if (savedToken) {
-      setToken(savedToken);
-    }
-
-    if (savedUser) {
-      setUser(JSON.parse(savedUser));
-    }
+    if (savedToken) setToken(savedToken);
+    if (savedUser) setUser(JSON.parse(savedUser));
 
     setLoading(false);
-
   }, []);
 
   // LOGIN
   const login = (newToken, userData) => {
-
-    localStorage.setItem(
-      "token",
-      newToken
-    );
-
-    localStorage.setItem(
-      "user",
-      JSON.stringify(userData)
-    );
+    localStorage.setItem("token", newToken);
+    localStorage.setItem("user", JSON.stringify(userData));
 
     setToken(newToken);
-
     setUser(userData);
   };
 
   // LOGOUT
   const logout = () => {
-
     localStorage.removeItem("token");
-
     localStorage.removeItem("user");
 
     setToken(null);
-
     setUser(null);
   };
 
   const isAuthenticated = !!token;
+
+  // ROLE HELPERS
+  const getRole = () => {
+    return user?.role || null;
+  };
+
+  const isAdmin = () => {
+    return user?.role === "ADMIN";
+  };
 
   return (
     <AuthContext.Provider
@@ -76,6 +60,8 @@ export function AuthProvider({ children }) {
         login,
         logout,
         loading,
+        getRole,
+        isAdmin,
       }}
     >
       {children}

@@ -1,4 +1,4 @@
-/* .layout {
+.layout {
   display: flex;
   height: 100vh;
 }
@@ -17,57 +17,4 @@
   margin-top: 10px;
   gap: 60px;
   
-  } */
-
-
-  /* ===== LAYOUT ===== */
-
-.layout {
-  display: flex;
-  min-height: 100vh;
-}
-
-/* ===== MAIN CONTENT ===== */
-
-.content {
-  flex: 1;
-  margin-left: 260px; /* sidebar desktop */
-
-  padding: 20px;
-
-  display: flex;
-  flex-direction: column;
-  gap: 24px;
-}
-
-/* ===== INFO CARDS ROW ===== */
-
-.infoRow {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 20px;
-}
-
-/* ===== CHART WRAPPER ===== */
-
-.costChart {
-  width: 100%;
-}
-
-/* ================= MOBILE ================= */
-
-@media (max-width: 768px) {
-
-  .content {
-    margin-left: 0;
-    padding: 16px;
   }
-
-  .infoRow {
-    grid-template-columns: 1fr;
-  }
-
-  .costChart {
-    width: 100%;
-  }
-}

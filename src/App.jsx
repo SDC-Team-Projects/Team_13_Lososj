@@ -18,7 +18,10 @@ import OverviewPage from "./pages/OverviewPage";
 import FavoritesPage from "./pages/FavoritesPage";
 import EditProfilePage from "./pages/EditProfilePage";
 import ChangePasswordPage from "./pages/ChangePasswordPage";
-
+import AdminRoute from "./routes/AdminRoute";
+import AdminPage from "./pages/AdminPage";
+import ForgotPassword from "./components/ForgotPassword";
+import ResetPassword from "./components/ResetPassword";
 
 function App() {
 
@@ -44,8 +47,11 @@ function App() {
       <Route path="/favorites" element={<ProtectedRoute><FavoritesPage /></ProtectedRoute>} />
       <Route path="/profile/edit" element={<ProtectedRoute><EditProfilePage /></ProtectedRoute>} />
       <Route path="/users/:id" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>}/>
-      <Route path="/settings/password" element={<ProtectedRoute><ChangePasswordPage/></ProtectedRoute>}
-/>
+      <Route path="/settings/password" element={<ProtectedRoute><ChangePasswordPage/></ProtectedRoute>}/>
+      <Route path="/admin" element={<AdminRoute><AdminPage /></AdminRoute>}/>
+      <Route path="/forgot-password" element={<ProtectedRoute><ForgotPassword /></ProtectedRoute>}/>
+      <Route path="/reset-password/:token" element={<ProtectedRoute><ResetPassword /></ProtectedRoute>}/>
+
     </Routes>
     </BrowserRouter>
     </AuthProvider>

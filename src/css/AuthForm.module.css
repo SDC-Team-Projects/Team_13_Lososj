@@ -92,6 +92,18 @@
 }
 
 
+.forgotLink {
+  display: block;
+  margin-top: 8px;
+  font-size: 14px;
+  color: #777;
+  text-decoration: none;
+}
+
+.forgotLink:hover {
+  text-decoration: underline;
+}
+
 @media (max-width: 900px) {
     .page {
         flex-direction: column;
@@ -102,3 +114,5 @@
         text-align: center;
     }
 }
+
+
