@@ -7,6 +7,7 @@ const jwt = require("jsonwebtoken");
 const pool = require("./db");
 const auth = require("./middleware/auth");
 const PDFDocument = require("pdfkit");
+const axios = require("axios");
 
 
 const app = express();
