@@ -519,13 +519,16 @@ app.delete("/api/collections/:id", auth, async (req, res) => {
   }
 });
 
-/* EXPORT COLLECTION BY PDF */
+/* EXPORT COLLECTION PDF */
+
 app.get("/api/collections/:id/export", auth, async (req, res) => {
   try {
 
     const collectionResult = await pool.query(
       `
-      SELECT collections.*, users.username AS owner_name
+      SELECT
+        collections.*,
+        users.username AS owner_name
       FROM collections
       JOIN users ON users.id = collections.user_id
       WHERE collections.id = $1
@@ -570,8 +573,28 @@ app.get("/api/collections/:id/export", auth, async (req, res) => {
     doc.text(`Description: ${collection.description || "-"}`);
 
     doc.moveDown();
+
+    // 👉 COLLECTION IMAGE (ОДИН РАЗ В НАЧАЛЕ)
+    if (collection.image && collection.image.startsWith("http")) {
+      try {
+        doc.image(collection.image, {
+          fit: [400, 300],
+          align: "center"
+        });
+        doc.moveDown();
+      } catch (e) {
+        console.log("Collection image error:", e.message);
+        doc.text("Collection image could not be loaded");
+        doc.moveDown();
+      }
+    }
+
     doc.fontSize(18).text("Items");
     doc.moveDown();
+
+    if (items.length === 0) {
+      doc.text("No items in collection");
+    }
 
     let totalValue = 0;
 
@@ -585,36 +608,9 @@ app.get("/api/collections/:id/export", auth, async (req, res) => {
       doc.text(`Description: ${item.description || "-"}`);
 
       doc.moveDown();
-
-      // IMAGE
-      if (item.image && item.image.startsWith("http")) {
-        try {
-
-         
-          const currentY = doc.y;
-
-          const response = await axios.get(item.image, {
-            responseType: "arraybuffer"
-          });
-
-          const imageBuffer = Buffer.from(response.data);
-
-          doc.image(imageBuffer, {
-            fit: [300, 300],
-            align: "center"
-          });
-
-          doc.y = doc.y + 10;
-
-        } catch (e) {
-          console.log("Image error:", e.message);
-          doc.text("Image could not be loaded");
-        }
-      }
-
-      doc.moveDown(2);
     }
 
+    doc.moveDown();
     doc.fontSize(18).text(`Total collection value: ${totalValue}`);
 
     doc.end();
