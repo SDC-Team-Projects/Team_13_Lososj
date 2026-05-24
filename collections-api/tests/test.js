@@ -152,7 +152,8 @@ describe('API Automation Tests', () => {
 
   // COLLECTIONS TESTS
   describe('Collections', () => {
-    
+    let testCollectionId;
+
     it('GET /api/collections/public - should fetch public collections', async () => {
       const response = await request(app)
         .get('/api/collections/public');
@@ -189,6 +190,8 @@ describe('API Automation Tests', () => {
       expect(response.status).toBe(200);
       expect(response.body).toHaveProperty('id');
       expect(response.body.category).toBe('Coins');
+      
+      testCollectionId = response.body.id;
     });
 
     it('GET /api/collections/search - should search collections with query params', async () => {
@@ -198,6 +201,89 @@ describe('API Automation Tests', () => {
 
       expect(response.status).toBe(200);
       expect(Array.isArray(response.body)).toBe(true);
+    });
+
+    // Getting all user's collections
+    it('GET /api/collections - should fetch all user collections', async () => {
+      const response = await request(app)
+        .get('/api/collections')
+        .set('Authorization', `Bearer ${authToken}`);
+
+      expect(response.status).toBe(200);
+      expect(Array.isArray(response.body)).toBe(true);
+    });
+
+    // Getting collection by ID
+    it('GET /api/collections/:id - should fetch specific collection details', async () => {
+      const response = await request(app)
+        .get(`/api/collections/${testCollectionId}`)
+        .set('Authorization', `Bearer ${authToken}`);
+
+      expect(response.status).toBe(200);
+      expect(response.body).toHaveProperty('id', testCollectionId);
+    });
+
+    // Getting nonexistent collection by ID
+    it('GET /api/collections/:id - should return 404 for non-existent collection', async () => {
+      const response = await request(app)
+        .get('/api/collections/999999')
+        .set('Authorization', `Bearer ${authToken}`);
+
+      expect(response.status).toBe(404);
+      expect(response.body.error).toBe('Collection not found');
+    });
+
+    // Updating collection
+    it('PUT /api/collections/:id - should update collection fields', async () => {
+      const response = await request(app)
+        .put(`/api/collections/${testCollectionId}`)
+        .set('Authorization', `Bearer ${authToken}`)
+        .send({
+          name: 'Updated Coins Name',
+          description: 'Completely new description',
+          category: 'Coins',
+          image: 'http://example.com/new-image.jpg',
+          is_public: false
+        });
+
+      expect(response.status).toBe(200);
+      expect(response.body.name).toBe('Updated Coins Name');
+      expect(response.body.is_public).toBe(false);
+    });
+
+    // Updating nonexistent collection
+    it('PUT /api/collections/:id - should return 404 when updating non-existent collection', async () => {
+      const response = await request(app)
+        .put('/api/collections/999999')
+        .set('Authorization', `Bearer ${authToken}`)
+        .send({
+          name: 'Ghost Collection',
+          description: 'No description',
+          category: 'Other',
+          image: '',
+          is_public: true
+        });
+
+      expect(response.status).toBe(404);
+    });
+
+    // Deleting collection
+    it('DELETE /api/collections/:id - should delete user collection successfully', async () => {
+      const response = await request(app)
+        .delete(`/api/collections/${testCollectionId}`)
+        .set('Authorization', `Bearer ${authToken}`);
+
+      expect(response.status).toBe(200);
+      expect(response.body.message).toBe('Deleted successfully');
+    });
+
+    // Delete nonexistent collection
+    it('DELETE /api/collections/:id - should return 404 when deleting non-existent collection', async () => {
+      const response = await request(app)
+        .delete('/api/collections/999999')
+        .set('Authorization', `Bearer ${authToken}`);
+
+      expect(response.status).toBe(404);
     });
   });
 
