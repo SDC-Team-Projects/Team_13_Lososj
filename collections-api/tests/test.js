@@ -489,6 +489,51 @@ describe('API Automation Tests', () => {
     });
   });
 
+  // ANALYTICS TESTS
+  describe('Analytics Endpoints', () => {
+
+    // Analytics of a collection
+    it('GET /api/analytics/collection/:id - should return collection stats', async () => {
+      const response = await request(app)
+        .get('/api/analytics/collection/1')
+        .set('Authorization', `Bearer ${authToken}`);
+
+      expect(response.status).toBe(200);
+      expect(response.body).toHaveProperty('items_count');
+      expect(response.body).toHaveProperty('total_value');
+      expect(response.body).toHaveProperty('categories_distribution');
+      expect(Array.isArray(response.body.categories_distribution)).toBe(true);
+    });
+
+    // Analytics of a collection without token
+    it('GET /api/analytics/collection/:id - should fail without token', async () => {
+      const response = await request(app)
+        .get('/api/analytics/collection/1');
+
+      expect(response.status).toBe(401);
+    });
+
+    // User analytics 
+    it('GET /api/analytics/user - should return general user stats', async () => {
+      const response = await request(app)
+        .get('/api/analytics/user')
+        .set('Authorization', `Bearer ${authToken}`);
+
+      expect(response.status).toBe(200);
+      expect(response.body).toHaveProperty('collections_count');
+      expect(response.body).toHaveProperty('items_count');
+      expect(response.body).toHaveProperty('total_value');
+    });
+
+    // User analytics without token
+    it('GET /api/analytics/user - should fail without token', async () => {
+      const response = await request(app)
+        .get('/api/analytics/user');
+
+      expect(response.status).toBe(401);
+    });
+  });
+
   afterAll(async () => {
     await pool.end();
   });
