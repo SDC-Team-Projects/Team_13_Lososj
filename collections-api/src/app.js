@@ -7,7 +7,7 @@ const jwt = require("jsonwebtoken");
 const pool = require("./db");
 const auth = require("./middleware/auth");
 const PDFDocument = require("pdfkit");
-
+const axios = require("axios");
 
 const app = express();
 
@@ -104,10 +104,30 @@ app.post("/api/auth/register", async (req, res) => {
 
      
     const result = await pool.query(
-      `INSERT INTO users (email, password, username, city, country)
-       VALUES ($1, $2, $3, $4, $5)
-       RETURNING id, email, username, city, country`,
-      [email, hashedPassword, username, city, country]
+      `INSERT INTO users (
+        email,
+        password,
+        username,
+        city,
+        country
+      )
+      VALUES ($1, $2, $3, $4, $5)
+      RETURNING
+        id,
+        email,
+        username,
+        city,
+        country,
+        role,
+        status,
+        created_at`,
+      [
+        email,
+        hashedPassword,
+        username,
+        city,
+        country
+      ]
     );
 
     const user = result.rows[0];
@@ -116,7 +136,8 @@ app.post("/api/auth/register", async (req, res) => {
     const token = jwt.sign(
       {
         id: user.id,
-        email: user.email
+        email: user.email,
+        role: user.role
       },
       process.env.JWT_SECRET,
       { expiresIn: "7d" }
@@ -164,17 +185,34 @@ app.post("/api/auth/login", async (req, res) => {
     const user = userResult.rows[0];
 
     if (!user) {
-      return res.status(400).json({ error: "User not found" });
+      return res.status(400).json({
+        error: "User not found"
+      });
     }
 
-    const validPassword = await bcrypt.compare(password, user.password);
+    if (user.status === "banned") {
+      return res.status(403).json({
+        error: "User is banned"
+      });
+    }
+
+    const validPassword = await bcrypt.compare(
+      password,
+      user.password
+    );
 
     if (!validPassword) {
-      return res.status(400).json({ error: "Wrong password" });
+      return res.status(400).json({
+        error: "Wrong password"
+      });
     }
 
     const token = jwt.sign(
-      { id: user.id, email: user.email },
+      {
+        id: user.id,
+        email: user.email,
+        role: user.role
+      },
       process.env.JWT_SECRET,
       { expiresIn: "7d" }
     );
@@ -184,13 +222,22 @@ app.post("/api/auth/login", async (req, res) => {
       user: {
         id: user.id,
         email: user.email,
-        username: user.username
+        username: user.username,
+        city: user.city,
+        country: user.country,
+        role: user.role,
+        status: user.status,
+        bio: user.bio,
+        avatar_url: user.avatar_url,
+        created_at: user.created_at
       }
     });
 
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: "Server error" });
+    res.status(500).json({
+      error: "Server error"
+    });
   }
 });
 
@@ -484,13 +531,10 @@ app.get("/api/collections/:id/export", auth, async (req, res) => {
 
     const collectionResult = await pool.query(
       `
-      SELECT
-        collections.*,
-        users.username AS owner_name
+      SELECT collections.*, users.username AS owner_name
       FROM collections
 
-      JOIN users
-      ON users.id = collections.user_id
+      JOIN users ON users.id = collections.user_id
 
       WHERE collections.id = $1
       `,
@@ -498,9 +542,7 @@ app.get("/api/collections/:id/export", auth, async (req, res) => {
     );
 
     if (collectionResult.rows.length === 0) {
-      return res.status(404).json({
-        error: "Collection not found"
-      });
+      return res.status(404).json({ error: "Collection not found" });
     }
 
     const collection = collectionResult.rows[0];
@@ -517,48 +559,62 @@ app.get("/api/collections/:id/export", auth, async (req, res) => {
 
     const items = itemsResult.rows;
 
-    const doc = new PDFDocument({
-      margin: 50
-    });
+    const doc = new PDFDocument({ margin: 50 });
 
     res.setHeader(
       "Content-Disposition",
       `attachment; filename=collection-${collection.id}.pdf`
     );
 
-    res.setHeader(
-      "Content-Type",
-      "application/pdf"
-    );
+    res.setHeader("Content-Type", "application/pdf");
 
     doc.pipe(res);
 
     // TITLE
     doc.fontSize(24).text(collection.name);
+    doc.moveDown();
+
+    doc.fontSize(14).text(`Owner: ${collection.owner_name}`);
+    doc.text(`Category: ${collection.category || "Unknown"}`);
+    doc.text(`Description: ${collection.description || "-"}`);
+    doc.moveDown();
+
+    // COLLECTION IMAGE (FIXED LAYOUT SAFE)
+if (collection.image && collection.image.startsWith("http")) {
+  try {
+
+    const response = await axios.get(collection.image, {
+      responseType: "arraybuffer",
+      timeout: 10000
+    });
+
+    const buffer = Buffer.from(response.data, "binary");
+
+    
+    const imageY = doc.y;
+
+    doc.image(buffer, {
+      fit: [400, 300],
+      align: "center"
+    });
+
+     
+    doc.y = imageY + 320;
 
     doc.moveDown();
 
-    doc.fontSize(14).text(
-      `Owner: ${collection.owner_name}`
-    );
-
-    doc.text(
-      `Category: ${collection.category || "Unknown"}`
-    );
-
-    doc.text(
-      `Description: ${collection.description || "-"}`
-    );
-
+  } catch (e) {
+    console.log("Collection image error:", e.message);
+    doc.text("Collection image could not be loaded");
     doc.moveDown();
+  }
+}
 
+    // ITEMS
     doc.fontSize(18).text("Items");
-
     doc.moveDown();
-
-    if (items.length === 0) {
-      doc.text("No items in collection");
-    }
+    
+  
 
     let totalValue = 0;
 
@@ -566,47 +622,18 @@ app.get("/api/collections/:id/export", auth, async (req, res) => {
 
       totalValue += Number(item.estimated_value || 0);
 
-      doc.fontSize(16).text(
-        `${index + 1}. ${item.name}`
-      );
-
-      doc.fontSize(12).text(
-        `Estimated value: ${item.estimated_value || 0}`
-      );
-
-      doc.text(
-        `Condition: ${item.condition || "-"}`
-      );
-
-      doc.text(
-        `Description: ${item.description || "-"}`
-      );
+      doc.fontSize(16).text(`${index + 1}. ${item.name}`);
+      doc.fontSize(12).text(`Estimated value: ${item.estimated_value || 0}`);
+      doc.text(`Condition: ${item.condition || "-"}`);
+      doc.text(`Description: ${item.description || "-"}`);
 
       doc.moveDown();
 
-      // IMAGE
-      if (item.image && item.image.startsWith("http")) {
-  try {
-    doc.image(item.image, {
-      fit: [250, 250],
-      align: "center",
-      valign: "center"
-    });
-
-    doc.moveDown();
-  } catch (e) {
-    console.log("Image error:", e.message);
-    doc.text("Image could not be loaded");
-    doc.moveDown();
-  }
-}
-
-      doc.moveDown();
+    
     }
-
-    doc.fontSize(18).text(
-      `Total collection value: ${totalValue}`
-    );
+    doc.moveDown();
+    
+    doc.fontSize(18).text(`Total collection value: ${totalValue}`);
 
     doc.end();
 
@@ -614,9 +641,7 @@ app.get("/api/collections/:id/export", auth, async (req, res) => {
 
     console.error(err);
 
-    res.status(500).json({
-      error: "Server error"
-    });
+    res.status(500).json({ error: "Server error" });
   }
 });
 
@@ -630,29 +655,29 @@ app.post("/api/items", auth, async (req, res) => {
       name,
       description,
       notes,
+      image,
       condition,
       estimated_value,
-      categories,
       custom_fields
     } = req.body;
 
     const result = await pool.query(
       `INSERT INTO items 
-      (collection_id, name, description, notes, condition, estimated_value, custom_fields)
-      VALUES ($1,$2,$3,$4,$5,$6,$7)
+      (collection_id, name, description, notes, image, condition, estimated_value, custom_fields)
+      VALUES ($1,$2,$3,$4,$5,$6,$7,$8)
       RETURNING *`,
       [
         collection_id,
         name,
         description,
         notes,
+        image,
         condition,
         estimated_value,
         custom_fields
       ]
     );
 
-    // ACTIVITY
     await addActivity(req.user.id, "created item", name);
 
     res.json(result.rows[0]);
@@ -1421,6 +1446,154 @@ app.delete("/api/admin/items/:id", auth, async (req, res) => {
     });
 
   } catch (err) {
+    console.error(err);
+
+    res.status(500).json({
+      error: "Server error"
+    });
+  }
+});
+
+/* ADMIN GET ALL USERS */
+
+app.get("/api/admin/users", auth, async (req, res) => {
+  try {
+
+    const me = await pool.query(
+      "SELECT role FROM users WHERE id = $1",
+      [req.user.id]
+    );
+
+    if (me.rows[0].role !== "ADMIN") {
+      return res.status(403).json({
+        error: "No access"
+      });
+    }
+
+    const result = await pool.query(
+      `
+      SELECT
+        id,
+        email,
+        username,
+        city,
+        country,
+        role,
+        status,
+        created_at
+      FROM users
+      ORDER BY created_at DESC
+      `
+    );
+
+    res.json(result.rows);
+
+  } catch (err) {
+
+    console.error(err);
+
+    res.status(500).json({
+      error: "Server error"
+    });
+  }
+});
+
+/* ADMIN GET ALL COLLECTIONS */
+
+app.get("/api/admin/collections", auth, async (req, res) => {
+  try {
+
+    const me = await pool.query(
+      "SELECT role FROM users WHERE id = $1",
+      [req.user.id]
+    );
+
+    if (me.rows[0].role !== "ADMIN") {
+      return res.status(403).json({
+        error: "No access"
+      });
+    }
+
+    const result = await pool.query(
+      `
+      SELECT
+        collections.*,
+
+        users.username AS owner_name,
+
+        COUNT(items.id) AS items_count,
+
+        COALESCE(SUM(items.estimated_value), 0) AS total_value
+
+      FROM collections
+
+      JOIN users
+      ON users.id = collections.user_id
+
+      LEFT JOIN items
+      ON items.collection_id = collections.id
+
+      GROUP BY collections.id, users.username
+
+      ORDER BY collections.created_at DESC
+      `
+    );
+
+    res.json(result.rows);
+
+  } catch (err) {
+
+    console.error(err);
+
+    res.status(500).json({
+      error: "Server error"
+    });
+  }
+});
+
+/* ADMIN GET ALL ITEMS */
+
+app.get("/api/admin/items", auth, async (req, res) => {
+  try {
+
+    const me = await pool.query(
+      "SELECT role FROM users WHERE id = $1",
+      [req.user.id]
+    );
+
+    if (me.rows[0].role !== "ADMIN") {
+      return res.status(403).json({
+        error: "No access"
+      });
+    }
+
+    const result = await pool.query(
+      `
+      SELECT
+        items.*,
+
+        collections.name AS collection_name,
+
+        collections.user_id,
+
+        users.username AS owner_name
+
+      FROM items
+
+      JOIN collections
+      ON collections.id = items.collection_id
+
+      JOIN users
+      ON users.id = collections.user_id
+
+      ORDER BY items.created_at DESC
+      `
+    );
+
+    res.json(result.rows);
+
+  } catch (err) {
+
     console.error(err);
 
     res.status(500).json({
