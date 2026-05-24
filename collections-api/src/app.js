@@ -635,32 +635,33 @@ app.post("/api/items", auth, async (req, res) => {
       name,
       description,
       notes,
+      image,
       condition,
       estimated_value,
-      categories,
       custom_fields
     } = req.body;
 
     const result = await pool.query(
       `INSERT INTO items 
-      (collection_id, name, description, notes, condition, estimated_value, custom_fields)
-      VALUES ($1,$2,$3,$4,$5,$6,$7)
+      (collection_id, name, description, notes, image, condition, estimated_value, custom_fields)
+      VALUES ($1,$2,$3,$4,$5,$6,$7,$8)
       RETURNING *`,
       [
         collection_id,
         name,
         description,
         notes,
+        image,
         condition,
         estimated_value,
         custom_fields
       ]
     );
 
-    // ACTIVITY
     await addActivity(req.user.id, "created item", name);
 
     res.json(result.rows[0]);
+
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Server error" });
