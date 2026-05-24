@@ -354,23 +354,22 @@ describe('API Automation Tests', () => {
           collection_id: parentCollectionId,
           name: `Rare Item ${Date.now()}`,
           description: 'Unique artifact description',
-          notes: 'Bought at local market',
-          condition: 'good',
-          estimated_value: 100,
-          tags: ['rare', 'test', 'artifact']
+          notes: 'Some private notes',
+          condition: 'Mint',
+          estimated_value: 150,
+          custom_fields: JSON.stringify({ material: 'Gold' })
         });
 
-      expect(response.status).toBeDefined(); 
-      if (response.status === 200 || response.status === 201) {
-        expect(response.body).toHaveProperty('id');
-        itemId = response.body.id;
-      }
+      expect(response.status).toBe(200);
+      expect(response.body).toHaveProperty('id');
+      itemId = response.body.id;
     });
 
     // Getting collection items
     it('GET /api/collections/:id/items - should fetch items from specific collection', async () => {
       const response = await request(app)
-        .get(`/api/collections/${parentCollectionId}/items`);
+        .get(`/api/collections/${parentCollectionId}/items`)
+        .set('Authorization', `Bearer ${authToken}`);
 
       expect(response.status).toBe(200);
       expect(Array.isArray(response.body)).toBe(true);
@@ -380,12 +379,11 @@ describe('API Automation Tests', () => {
     it('GET /api/items/:id - should fetch single item details', async () => {
       const idToFetch = itemId || 1;
       const response = await request(app)
-        .get(`/api/items/${idToFetch}`);
+        .get(`/api/items/${idToFetch}`)
+        .set('Authorization', `Bearer ${authToken}`);
 
-      expect(response.status).toBeDefined();
-      if (response.status === 200) {
-        expect(response.body).toHaveProperty('id');
-      }
+      expect(response.status).toBe(200);
+      expect(response.body).toHaveProperty('id', idToFetch);
     });
 
     // Updating item
@@ -397,20 +395,33 @@ describe('API Automation Tests', () => {
         .send({
           name: 'Updated Item Name',
           description: 'Brand new description for this item',
-          tags: ['updated', 'test']
+          notes: 'Updated notes',
+          condition: 'Good',
+          estimated_value: 200,
+          custom_fields: JSON.stringify({ material: 'Silver' })
         });
 
-      expect(response.status).toBeDefined();
+      expect(response.status).toBe(200);
+      expect(response.body).toHaveProperty('name', 'Updated Item Name');
     });
 
-    // Search on tags or items
-    it('GET /api/items/search - should search items by query', async () => {
-      const response = await request(app)
-        .get('/api/items/search')
-        .query({ q: 'Item' });
+    // Adding and deleting item photo
+    it('POST & DELETE /api/items/:id/photos - should manage item photos', async () => {
+      const idToPhoto = itemId || 1;
+      const addPhotoRes = await request(app)
+        .post(`/api/items/${idToPhoto}/photos`)
+        .set('Authorization', `Bearer ${authToken}`)
+        .send({ url: 'http://example.com/photo.jpg' });
 
-      expect(response.status).toBe(200);
-      expect(Array.isArray(response.body)).toBe(true);
+      expect(addPhotoRes.status).toBe(200);
+      expect(addPhotoRes.body).toHaveProperty('id');
+
+      const deletePhotoRes = await request(app)
+        .delete(`/api/photos/${addPhotoRes.body.id}`)
+        .set('Authorization', `Bearer ${authToken}`);
+
+      expect(deletePhotoRes.status).toBe(200);
+      expect(deletePhotoRes.body.message).toBe('Photo deleted');
     });
 
     // Deleting item
@@ -420,7 +431,61 @@ describe('API Automation Tests', () => {
         .delete(`/api/items/${idToDelete}`)
         .set('Authorization', `Bearer ${authToken}`);
 
-      expect(response.status).toBeDefined();
+      expect(response.status).toBe(200);
+      expect(response.body).toHaveProperty('message', 'Deleted successfully');
+    });
+  });
+
+  // EXTRA FEATURES
+  describe('Extra Features from app.js', () => {
+
+    it('POST, GET & DELETE /api/favorites - should manage favorites', async () => {
+      // Adding collection to favorites
+      const favColRes = await request(app)
+        .post('/api/favorites/collections/1')
+        .set('Authorization', `Bearer ${authToken}`);
+      expect(favColRes.status).toBe(200);
+
+      // Get favorite collections
+      const getFavCols = await request(app)
+        .get('/api/favorites/collections')
+        .set('Authorization', `Bearer ${authToken}`);
+      expect(getFavCols.status).toBe(200);
+
+      // Delete from favorites
+      await request(app).delete('/api/favorites/1').set('Authorization', `Bearer ${authToken}`);
+      await request(app).delete('/api/favorites/collections/1').set('Authorization', `Bearer ${authToken}`);
+    });
+
+    // Notifications and activity
+    it('GET /api/activity & /api/notifications - should fetch logs', async () => {
+      const activityRes = await request(app)
+        .get('/api/activity')
+        .set('Authorization', `Bearer ${authToken}`);
+      expect(activityRes.status).toBe(200);
+
+      const notifyRes = await request(app)
+        .get('/api/notifications')
+        .set('Authorization', `Bearer ${authToken}`);
+      expect(notifyRes.status).toBe(200);
+    });
+
+    it('Password Management Endpoints', async () => {
+      // Request to reset password
+      const resetReq = await request(app)
+        .post('/api/auth/password-reset/request')
+        .send({ email: 'loginuser@test.com' });
+      expect(resetReq.status).toBeDefined();
+
+      // Reset confirm
+      const resetConfirm = await request(app)
+        .post('/api/auth/password-reset/confirm')
+        .send({
+          token: 'RESET_TOKEN_123',
+          new_password: 'newSecretPassword123',
+          confirm_new_password: 'newSecretPassword123'
+        });
+      expect(resetConfirm.status).toBeDefined();
     });
   });
 
