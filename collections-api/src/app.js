@@ -587,7 +587,7 @@ app.get("/api/collections/:id/export", auth, async (req, res) => {
       doc.moveDown();
 
       // IMAGE
-      if (collection.image && collection.image.startsWith("http")) {
+      if (item.image && item.image.startsWith("http")) {
         try {
 
          
