@@ -526,9 +526,7 @@ app.get("/api/collections/:id/export", auth, async (req, res) => {
 
     const collectionResult = await pool.query(
       `
-      SELECT
-        collections.*,
-        users.username AS owner_name
+      SELECT collections.*, users.username AS owner_name
       FROM collections
       JOIN users ON users.id = collections.user_id
       WHERE collections.id = $1
@@ -537,9 +535,7 @@ app.get("/api/collections/:id/export", auth, async (req, res) => {
     );
 
     if (collectionResult.rows.length === 0) {
-      return res.status(404).json({
-        error: "Collection not found"
-      });
+      return res.status(404).json({ error: "Collection not found" });
     }
 
     const collection = collectionResult.rows[0];
@@ -556,19 +552,14 @@ app.get("/api/collections/:id/export", auth, async (req, res) => {
 
     const items = itemsResult.rows;
 
-    const doc = new PDFDocument({
-      margin: 50
-    });
+    const doc = new PDFDocument({ margin: 50 });
 
     res.setHeader(
       "Content-Disposition",
       `attachment; filename=collection-${collection.id}.pdf`
     );
 
-    res.setHeader(
-      "Content-Type",
-      "application/pdf"
-    );
+    res.setHeader("Content-Type", "application/pdf");
 
     doc.pipe(res);
 
@@ -579,30 +570,69 @@ app.get("/api/collections/:id/export", auth, async (req, res) => {
     doc.fontSize(14).text(`Owner: ${collection.owner_name}`);
     doc.text(`Category: ${collection.category || "Unknown"}`);
     doc.text(`Description: ${collection.description || "-"}`);
+
+    doc.moveDown();
+    doc.fontSize(18).text("Items");
     doc.moveDown();
 
-    // IMAGE (FIX HERE)
-    if (collection.image && collection.image.startsWith("http")) {
-      try {
-        const response = await axios({
-          url: collection.image,
-          responseType: "arraybuffer"
-        });
-
-        const imageBuffer = Buffer.from(response.data, "binary");
-
-        doc.image(imageBuffer, {
-          fit: [300, 300],
-          align: "center"
-        });
-
-        doc.moveDown();
-      } catch (e) {
-        console.log("Collection image error:", e.message);
-        doc.text("Collection image could not be loaded");
-        doc.moveDown();
-      }
+    if (items.length === 0) {
+      doc.text("No items in collection");
     }
+
+    let totalValue = 0;
+
+    for (const [index, item] of items.entries()) {
+
+      totalValue += Number(item.estimated_value || 0);
+
+      // ITEM TEXT BLOCK
+      doc.fontSize(16).text(`${index + 1}. ${item.name}`);
+      doc.fontSize(12).text(`Estimated value: ${item.estimated_value || 0}`);
+      doc.text(`Condition: ${item.condition || "-"}`);
+      doc.text(`Description: ${item.description || "-"}`);
+
+      doc.moveDown();
+
+      // IMAGE FIX (IMPORTANT PART)
+      if (item.image && item.image.startsWith("http")) {
+        try {
+
+          const imageTop = doc.y;  
+
+          const response = await axios({
+            url: item.image,
+            responseType: "arraybuffer"
+          });
+
+          const imageBuffer = Buffer.from(response.data, "binary");
+
+          doc.image(imageBuffer, {
+            fit: [300, 200],
+            align: "center"
+          });
+
+          doc.moveDown(2); 
+
+        } catch (e) {
+          console.log("Image error:", e.message);
+          doc.text("Image could not be loaded");
+          doc.moveDown();
+        }
+      }
+
+      
+      doc.moveDown(1.5);
+    }
+
+    doc.fontSize(18).text(`Total collection value: ${totalValue}`);
+
+    doc.end();
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
 
     // ITEMS
     doc.fontSize(18).text("Items");
