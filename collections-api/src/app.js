@@ -530,10 +530,7 @@ app.get("/api/collections/:id/export", auth, async (req, res) => {
         collections.*,
         users.username AS owner_name
       FROM collections
-
-      JOIN users
-      ON users.id = collections.user_id
-
+      JOIN users ON users.id = collections.user_id
       WHERE collections.id = $1
       `,
       [req.params.id]
@@ -577,25 +574,38 @@ app.get("/api/collections/:id/export", auth, async (req, res) => {
 
     // TITLE
     doc.fontSize(24).text(collection.name);
-
     doc.moveDown();
 
-    doc.fontSize(14).text(
-      `Owner: ${collection.owner_name}`
-    );
-
-    doc.text(
-      `Category: ${collection.category || "Unknown"}`
-    );
-
-    doc.text(
-      `Description: ${collection.description || "-"}`
-    );
-
+    doc.fontSize(14).text(`Owner: ${collection.owner_name}`);
+    doc.text(`Category: ${collection.category || "Unknown"}`);
+    doc.text(`Description: ${collection.description || "-"}`);
     doc.moveDown();
 
+    // IMAGE (FIX HERE)
+    if (collection.image && collection.image.startsWith("http")) {
+      try {
+        const response = await axios({
+          url: collection.image,
+          responseType: "arraybuffer"
+        });
+
+        const imageBuffer = Buffer.from(response.data, "binary");
+
+        doc.image(imageBuffer, {
+          fit: [300, 300],
+          align: "center"
+        });
+
+        doc.moveDown();
+      } catch (e) {
+        console.log("Collection image error:", e.message);
+        doc.text("Collection image could not be loaded");
+        doc.moveDown();
+      }
+    }
+
+    // ITEMS
     doc.fontSize(18).text("Items");
-
     doc.moveDown();
 
     if (items.length === 0) {
@@ -608,54 +618,19 @@ app.get("/api/collections/:id/export", auth, async (req, res) => {
 
       totalValue += Number(item.estimated_value || 0);
 
-      doc.fontSize(16).text(
-        `${index + 1}. ${item.name}`
-      );
-
-      doc.fontSize(12).text(
-        `Estimated value: ${item.estimated_value || 0}`
-      );
-
-      doc.text(
-        `Condition: ${item.condition || "-"}`
-      );
-
-      doc.text(
-        `Description: ${item.description || "-"}`
-      );
-
-      doc.moveDown();
-
-      // IMAGE
-      if (item.image && item.image.startsWith("http")) {
-  try {
-    doc.image(item.image, {
-      fit: [250, 250],
-      align: "center",
-      valign: "center"
-    });
-
-    doc.moveDown();
-  } catch (e) {
-    console.log("Image error:", e.message);
-    doc.text("Image could not be loaded");
-    doc.moveDown();
-  }
-}
-
+      doc.fontSize(16).text(`${index + 1}. ${item.name}`);
+      doc.fontSize(12).text(`Estimated value: ${item.estimated_value || 0}`);
+      doc.text(`Condition: ${item.condition || "-"}`);
+      doc.text(`Description: ${item.description || "-"}`);
       doc.moveDown();
     }
 
-    doc.fontSize(18).text(
-      `Total collection value: ${totalValue}`
-    );
+    doc.fontSize(18).text(`Total collection value: ${totalValue}`);
 
     doc.end();
 
   } catch (err) {
-
     console.error(err);
-
     res.status(500).json({
       error: "Server error"
     });
