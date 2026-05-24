@@ -136,6 +136,15 @@ describe('API Automation Tests', () => {
         expect(response.status).toBe(400);
         expect(response.body.error).toContain('not found');
       });
+
+      it('should fail login if email or password missing', async () => {
+      const response = await request(app)
+        .post('/api/auth/login')
+        .send({ email: '' });
+
+      expect(response.status).toBe(400);
+      expect(response.body.error).toContain('Email and password are required');
+    });
     });
 
     // Logging out
@@ -199,11 +208,33 @@ describe('API Automation Tests', () => {
       expect(response.status).toBe(200);
       expect(Array.isArray(response.body)).toBe(true);
     });
+
+    it('POST /api/collections - should fail if name is missing', async () => {
+      const response = await request(app)
+        .post('/api/collections')
+        .set('Authorization', `Bearer ${authToken}`)
+        .send({
+          description: 'No name collection',
+          category: 'Other'
+        });
+
+      expect(response.status).toBe(400);
+      expect(response.body.error).toContain('Name and category are required');
+    });
+
+    it('GET /api/collections/:id - should return 404 for non-existent collection', async () => {
+      const response = await request(app)
+        .get('/api/collections/999999')
+        .set('Authorization', `Bearer ${authToken}`);
+
+      expect(response.status).toBe(404);
+    });
   });
 
   // PROFILE TESTS
   describe('User Profile', () => {
-    
+
+    // Getting user 
     it('GET /api/profile - should fetch user profile with valid token', async () => {
       const response = await request(app)
         .get('/api/profile')
@@ -214,6 +245,7 @@ describe('API Automation Tests', () => {
       expect(response.body).toHaveProperty('email');
     });
 
+    // Updating user
     it('PUT /api/profile - should update user profile', async () => {
       const response = await request(app)
         .put('/api/profile')
@@ -232,6 +264,7 @@ describe('API Automation Tests', () => {
       expect(response.body.city).toBe('Kaunas');
     });
 
+    // Updating without email
     it('PUT /api/profile - should fail update if email is missing', async () => {
       const response = await request(app)
         .put('/api/profile')
@@ -243,9 +276,26 @@ describe('API Automation Tests', () => {
       expect(response.status).toBe(400);
       expect(response.body.error).toContain('Email and username are required');
     });
+
+    // Getting all users
+    it('GET /api/users - should fetch all users list', async () => {
+      const response = await request(app)
+        .get('/api/users');
+
+      expect(response.status).toBe(200);
+      expect(Array.isArray(response.body)).toBe(true);
+    });
+
+    // Getting an auser by ID
+    it('GET /api/users/:id - should fetch specific user profile by ID', async () => {
+      const response = await request(app)
+        .get('/api/users/1');
+
+      expect(response.status).toBeDefined();
+    });
   });
 
-  // COLLECTIONS ROUTER TESTS
+  // COLLECTIONS TESTS
   describe('Collections Router (routes/collections.js)', () => {
     let testCollectionId;
 
@@ -434,6 +484,27 @@ describe('API Automation Tests', () => {
       expect(response.status).toBe(200);
       expect(response.body).toHaveProperty('message', 'Deleted successfully');
     });
+
+    // Missing name
+    it('POST /api/items - should fail if item name is missing', async () => {
+      const response = await request(app)
+        .post('/api/items')
+        .set('Authorization', `Bearer ${authToken}`)
+        .send({
+          collection_id: parentCollectionId
+        });
+
+      expect(response.status).toBe(400);
+      expect(response.body.error).toContain('Item name is required');
+    });
+
+    it('GET /api/items/:id - should return 404 for non-existent item', async () => {
+      const response = await request(app)
+        .get('/api/items/999999')
+        .set('Authorization', `Bearer ${authToken}`);
+
+      expect(response.status).toBe(404);
+    });
   });
 
   // EXTRA FEATURES
@@ -486,6 +557,16 @@ describe('API Automation Tests', () => {
           confirm_new_password: 'newSecretPassword123'
         });
       expect(resetConfirm.status).toBeDefined();
+
+      const badResetConfirm = await request(app)
+      .post('/api/auth/password-reset/confirm')
+      .send({
+        token: 'RESET_TOKEN_123',
+        new_password: 'Password1',
+        confirm_new_password: 'Password2'
+      });
+    expect(badResetConfirm.status).toBe(400);
+    expect(badResetConfirm.body.error).toContain('Passwords do not match');
     });
   });
 
