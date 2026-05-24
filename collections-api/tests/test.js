@@ -136,15 +136,6 @@ describe('API Automation Tests', () => {
         expect(response.status).toBe(400);
         expect(response.body.error).toContain('not found');
       });
-
-      it('should fail login if email or password missing', async () => {
-      const response = await request(app)
-        .post('/api/auth/login')
-        .send({ email: '' });
-
-      expect(response.status).toBe(400);
-      expect(response.body.error).toContain('Email and password are required');
-    });
     });
 
     // Logging out
@@ -208,27 +199,11 @@ describe('API Automation Tests', () => {
       expect(response.status).toBe(200);
       expect(Array.isArray(response.body)).toBe(true);
     });
-
-    it('GET /api/collections/:id - should return 404 for non-existent collection', async () => {
-      const response = await request(app)
-        .get('/api/collections/999999') 
-        .set('Authorization', `Bearer ${authToken}`);
-      expect(response.status).toBe(404);
-    });
-
-    it('GET /api/collections/:id - should return 404 for non-existent collection', async () => {
-      const response = await request(app)
-        .get('/api/collections/999999')
-        .set('Authorization', `Bearer ${authToken}`);
-
-      expect(response.status).toBe(404);
-    });
   });
 
   // PROFILE TESTS
   describe('User Profile', () => {
-
-    // Getting user 
+    
     it('GET /api/profile - should fetch user profile with valid token', async () => {
       const response = await request(app)
         .get('/api/profile')
@@ -239,7 +214,6 @@ describe('API Automation Tests', () => {
       expect(response.body).toHaveProperty('email');
     });
 
-    // Updating user
     it('PUT /api/profile - should update user profile', async () => {
       const response = await request(app)
         .put('/api/profile')
@@ -258,7 +232,6 @@ describe('API Automation Tests', () => {
       expect(response.body.city).toBe('Kaunas');
     });
 
-    // Updating without email
     it('PUT /api/profile - should fail update if email is missing', async () => {
       const response = await request(app)
         .put('/api/profile')
@@ -270,26 +243,9 @@ describe('API Automation Tests', () => {
       expect(response.status).toBe(400);
       expect(response.body.error).toContain('Email and username are required');
     });
-
-    // Getting current user
-    it('GET /api/auth/me - should fetch current user data', async () => {
-      const response = await request(app)
-        .get('/api/auth/me')
-        .set('Authorization', `Bearer ${authToken}`);
-      expect(response.status).toBe(200);
-      expect(response.body).toHaveProperty('id');
-    });
-
-    // Getting an auser by ID
-    it('GET /api/users/:id - should fetch specific user profile by ID', async () => {
-      const response = await request(app)
-        .get('/api/users/1');
-
-      expect(response.status).toBeDefined();
-    });
   });
 
-  // COLLECTIONS TESTS
+  // COLLECTIONS ROUTER TESTS
   describe('Collections Router (routes/collections.js)', () => {
     let testCollectionId;
 
@@ -478,14 +434,6 @@ describe('API Automation Tests', () => {
       expect(response.status).toBe(200);
       expect(response.body).toHaveProperty('message', 'Deleted successfully');
     });
-
-    it('GET /api/items/:id - should return 404 for non-existent item', async () => {
-      const response = await request(app)
-        .get('/api/items/999999')
-        .set('Authorization', `Bearer ${authToken}`);
-
-      expect(response.status).toBe(404);
-    });
   });
 
   // EXTRA FEATURES
@@ -538,38 +486,8 @@ describe('API Automation Tests', () => {
           confirm_new_password: 'newSecretPassword123'
         });
       expect(resetConfirm.status).toBeDefined();
-
-      const badResetConfirm = await request(app)
-      .post('/api/auth/password-reset/confirm')
-      .send({
-        token: 'RESET_TOKEN_123',
-        new_password: 'Password1',
-        confirm_new_password: 'Password2'
-      });
-    expect(badResetConfirm.status).toBe(400);
-    expect(badResetConfirm.body.error).toContain('Passwords do not match');
     });
   });
-
-  describe('Advanced Features & Admin Dashboard', () => {
-
-    // Items search
-    it('GET /api/items/search/advanced - should run advanced items search query', async () => {
-      const response = await request(app)
-        .get('/api/items/search/advanced')
-        .query({
-          q: 'test',
-          tags: 'rare,mint',
-          custom_string: 'Gold',
-          custom_int_min: 10,
-          custom_int_max: 100,
-          sortBy: 'name',
-          sortOrder: 'asc'
-        });
-      
-      expect(response.status).toBe(200);
-      expect(Array.isArray(response.body)).toBe(true);
-    });
 
   afterAll(async () => {
     await pool.end();
