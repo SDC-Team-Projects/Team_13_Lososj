@@ -3,7 +3,7 @@ module.exports = {
   collectCoverageFrom: [
     'src/**/*.js',
     '!src/**/*.test.js',
-    '!src/app.js'
+    'src/app.js'
   ],
   coveragePathIgnorePatterns: ['/node_modules/'],
   testMatch: ['**/tests/**/*.js', '**/?(*.)+(spec|test).js'],
