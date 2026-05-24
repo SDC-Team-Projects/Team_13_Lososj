@@ -151,6 +151,11 @@ Request:
 
 ---
 
+### GET /collections/all
+Получить всех коллекций на сайте для Overview
+
+---
+
 ### PUT /collections/{id}
 Обновить коллекцию
 
@@ -254,6 +259,21 @@ Request:
 
 ### GET /favorites
 Список избранных предметов
+
+---
+
+### POST /favorites{collection_id}
+Добавить коллекцию в избранное
+
+---
+
+### GET /favorites{collection_id}
+Список избранных коллекций
+
+---
+
+### DELETE /favorites{collection_id}
+Удалить коллекцию из избранного
 
 ---
 
