@@ -557,21 +557,19 @@ app.get("/api/collections/:id/export", auth, async (req, res) => {
       "Content-Disposition",
       `attachment; filename=collection-${collection.id}.pdf`
     );
-
     res.setHeader("Content-Type", "application/pdf");
 
     doc.pipe(res);
 
-    // HEADER
+    // TITLE
     doc.fontSize(24).text(collection.name);
     doc.moveDown();
 
-    doc.fontSize(12).text(`Owner: ${collection.owner_name}`);
+    doc.fontSize(14).text(`Owner: ${collection.owner_name}`);
     doc.text(`Category: ${collection.category || "Unknown"}`);
     doc.text(`Description: ${collection.description || "-"}`);
 
-    doc.moveDown(2);
-
+    doc.moveDown();
     doc.fontSize(18).text("Items");
     doc.moveDown();
 
@@ -581,40 +579,43 @@ app.get("/api/collections/:id/export", auth, async (req, res) => {
 
       totalValue += Number(item.estimated_value || 0);
 
-      doc.fontSize(14).text(`${index + 1}. ${item.name}`);
-      doc.fontSize(12).text(`Value: ${item.estimated_value || 0}`);
+      doc.fontSize(16).text(`${index + 1}. ${item.name}`);
+      doc.fontSize(12).text(`Estimated value: ${item.estimated_value || 0}`);
       doc.text(`Condition: ${item.condition || "-"}`);
       doc.text(`Description: ${item.description || "-"}`);
 
       doc.moveDown();
 
-      // IMAGE FIXED
+      // IMAGE
       if (item.image && item.image.startsWith("http")) {
         try {
 
-           
-          if (doc.y > 650) doc.addPage();
+         
+          const currentY = doc.y;
 
-          doc.image(item.image, {
-            fit: [300, 300],
-            align: "center",
-            valign: "center"
+          const response = await axios.get(item.image, {
+            responseType: "arraybuffer"
           });
 
-          doc.moveDown(2);
+          const imageBuffer = Buffer.from(response.data);
+
+          doc.image(imageBuffer, {
+            fit: [300, 300],
+            align: "center"
+          });
+
+          doc.y = doc.y + 10;
 
         } catch (e) {
           console.log("Image error:", e.message);
           doc.text("Image could not be loaded");
-          doc.moveDown();
         }
       }
 
       doc.moveDown(2);
     }
 
-    doc.moveDown();
-    doc.fontSize(16).text(`Total value: ${totalValue}`);
+    doc.fontSize(18).text(`Total collection value: ${totalValue}`);
 
     doc.end();
 
