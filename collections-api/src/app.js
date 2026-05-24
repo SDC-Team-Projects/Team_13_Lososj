@@ -526,9 +526,7 @@ app.get("/api/collections/:id/export", auth, async (req, res) => {
 
     const collectionResult = await pool.query(
       `
-      SELECT
-        collections.*,
-        users.username AS owner_name
+      SELECT collections.*, users.username AS owner_name
       FROM collections
       JOIN users ON users.id = collections.user_id
       WHERE collections.id = $1
@@ -571,17 +569,26 @@ app.get("/api/collections/:id/export", auth, async (req, res) => {
     doc.fontSize(14).text(`Owner: ${collection.owner_name}`);
     doc.text(`Category: ${collection.category || "Unknown"}`);
     doc.text(`Description: ${collection.description || "-"}`);
-
     doc.moveDown();
 
-    // 👉 COLLECTION IMAGE (ОДИН РАЗ В НАЧАЛЕ)
+     
+    // COLLECTION IMAGE (FIXED)
     if (collection.image && collection.image.startsWith("http")) {
       try {
-        doc.image(collection.image, {
+        const response = await axios.get(collection.image, {
+          responseType: "arraybuffer",
+          timeout: 10000
+        });
+
+        const buffer = Buffer.from(response.data, "binary");
+
+        doc.image(buffer, {
           fit: [400, 300],
           align: "center"
         });
+
         doc.moveDown();
+
       } catch (e) {
         console.log("Collection image error:", e.message);
         doc.text("Collection image could not be loaded");
@@ -589,12 +596,9 @@ app.get("/api/collections/:id/export", auth, async (req, res) => {
       }
     }
 
+    // ITEMS
     doc.fontSize(18).text("Items");
     doc.moveDown();
-
-    if (items.length === 0) {
-      doc.text("No items in collection");
-    }
 
     let totalValue = 0;
 
