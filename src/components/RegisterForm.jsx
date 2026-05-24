@@ -46,10 +46,10 @@ export default function RegisterForm() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (form.password !== form.confirmPassword) {
-      toast.error("Passwords do not match");
-      return;
-    }
+    if (!form.password || !form.confirmPassword || form.password !== form.confirmPassword) {
+  toast.error("Passwords do not match");
+  return;
+}
 
     try {
       const res = await fetch(
@@ -64,27 +64,30 @@ export default function RegisterForm() {
             password: form.password,
             username: form.username,
             city: form.city,
-            country: form.country, // ✅ FIX: value, not label
+            country: form.country, 
           }),
         }
       );
 
       const data = await res.json();
 
-      if (!res.ok) {
-        toast.error(data.error || "Register failed");
-        return;
-      }
-
-      // сохранить токен (если backend его возвращает)
-      if (data.token) {
-  login(data.token);
+     if (!res.ok) {
+  toast.error(data.error || "Register failed");
+  return;
 }
 
-      toast.success("Register successful!");
+const { token, user } = data;
 
-      // перейти на профиль
-      navigate("/home");
+if (!token) {
+  toast.error("No token received");
+  return;
+}
+
+login(token, user);
+
+toast.success("Register successful!");
+
+navigate("/home");
 
     } catch (err) {
       console.error(err);
