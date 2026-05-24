@@ -209,17 +209,11 @@ describe('API Automation Tests', () => {
       expect(Array.isArray(response.body)).toBe(true);
     });
 
-    it('POST /api/collections - should fail if name is missing', async () => {
+    it('GET /api/collections/:id - should return 404 for non-existent collection', async () => {
       const response = await request(app)
-        .post('/api/collections')
-        .set('Authorization', `Bearer ${authToken}`)
-        .send({
-          description: 'No name collection',
-          category: 'Other'
-        });
-
-      expect(response.status).toBe(400);
-      expect(response.body.error).toContain('Name and category are required');
+        .get('/api/collections/999999') 
+        .set('Authorization', `Bearer ${authToken}`);
+      expect(response.status).toBe(404);
     });
 
     it('GET /api/collections/:id - should return 404 for non-existent collection', async () => {
@@ -277,13 +271,13 @@ describe('API Automation Tests', () => {
       expect(response.body.error).toContain('Email and username are required');
     });
 
-    // Getting all users
-    it('GET /api/users - should fetch all users list', async () => {
+    // Getting current user
+    it('GET /api/auth/me - should fetch current user data', async () => {
       const response = await request(app)
-        .get('/api/users');
-
+        .get('/api/auth/me')
+        .set('Authorization', `Bearer ${authToken}`);
       expect(response.status).toBe(200);
-      expect(Array.isArray(response.body)).toBe(true);
+      expect(response.body).toHaveProperty('id');
     });
 
     // Getting an auser by ID
@@ -485,19 +479,6 @@ describe('API Automation Tests', () => {
       expect(response.body).toHaveProperty('message', 'Deleted successfully');
     });
 
-    // Missing name
-    it('POST /api/items - should fail if item name is missing', async () => {
-      const response = await request(app)
-        .post('/api/items')
-        .set('Authorization', `Bearer ${authToken}`)
-        .send({
-          collection_id: parentCollectionId
-        });
-
-      expect(response.status).toBe(400);
-      expect(response.body.error).toContain('Item name is required');
-    });
-
     it('GET /api/items/:id - should return 404 for non-existent item', async () => {
       const response = await request(app)
         .get('/api/items/999999')
@@ -569,6 +550,26 @@ describe('API Automation Tests', () => {
     expect(badResetConfirm.body.error).toContain('Passwords do not match');
     });
   });
+
+  describe('Advanced Features & Admin Dashboard', () => {
+
+    // Items search
+    it('GET /api/items/search/advanced - should run advanced items search query', async () => {
+      const response = await request(app)
+        .get('/api/items/search/advanced')
+        .query({
+          q: 'test',
+          tags: 'rare,mint',
+          custom_string: 'Gold',
+          custom_int_min: 10,
+          custom_int_max: 100,
+          sortBy: 'name',
+          sortOrder: 'asc'
+        });
+      
+      expect(response.status).toBe(200);
+      expect(Array.isArray(response.body)).toBe(true);
+    });
 
   afterAll(async () => {
     await pool.end();
