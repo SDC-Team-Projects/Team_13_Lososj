@@ -519,8 +519,7 @@ app.delete("/api/collections/:id", auth, async (req, res) => {
   }
 });
 
-/* EXPORT COLLECTION PDF */
-
+/* EXPORT COLLECTION BY PDF */
 app.get("/api/collections/:id/export", auth, async (req, res) => {
   try {
 
@@ -563,21 +562,18 @@ app.get("/api/collections/:id/export", auth, async (req, res) => {
 
     doc.pipe(res);
 
-    // TITLE
+    // HEADER
     doc.fontSize(24).text(collection.name);
     doc.moveDown();
 
-    doc.fontSize(14).text(`Owner: ${collection.owner_name}`);
+    doc.fontSize(12).text(`Owner: ${collection.owner_name}`);
     doc.text(`Category: ${collection.category || "Unknown"}`);
     doc.text(`Description: ${collection.description || "-"}`);
 
-    doc.moveDown();
+    doc.moveDown(2);
+
     doc.fontSize(18).text("Items");
     doc.moveDown();
-
-    if (items.length === 0) {
-      doc.text("No items in collection");
-    }
 
     let totalValue = 0;
 
@@ -585,33 +581,27 @@ app.get("/api/collections/:id/export", auth, async (req, res) => {
 
       totalValue += Number(item.estimated_value || 0);
 
-      // ITEM TEXT BLOCK
-      doc.fontSize(16).text(`${index + 1}. ${item.name}`);
-      doc.fontSize(12).text(`Estimated value: ${item.estimated_value || 0}`);
+      doc.fontSize(14).text(`${index + 1}. ${item.name}`);
+      doc.fontSize(12).text(`Value: ${item.estimated_value || 0}`);
       doc.text(`Condition: ${item.condition || "-"}`);
       doc.text(`Description: ${item.description || "-"}`);
 
       doc.moveDown();
 
-      // IMAGE FIX (IMPORTANT PART)
+      // IMAGE FIXED
       if (item.image && item.image.startsWith("http")) {
         try {
 
-          const imageTop = doc.y;  
+           
+          if (doc.y > 650) doc.addPage();
 
-          const response = await axios({
-            url: item.image,
-            responseType: "arraybuffer"
+          doc.image(item.image, {
+            fit: [300, 300],
+            align: "center",
+            valign: "center"
           });
 
-          const imageBuffer = Buffer.from(response.data, "binary");
-
-          doc.image(imageBuffer, {
-            fit: [300, 200],
-            align: "center"
-          });
-
-          doc.moveDown(2); 
+          doc.moveDown(2);
 
         } catch (e) {
           console.log("Image error:", e.message);
@@ -620,50 +610,17 @@ app.get("/api/collections/:id/export", auth, async (req, res) => {
         }
       }
 
-      
-      doc.moveDown(1.5);
+      doc.moveDown(2);
     }
 
-    doc.fontSize(18).text(`Total collection value: ${totalValue}`);
+    doc.moveDown();
+    doc.fontSize(16).text(`Total value: ${totalValue}`);
 
     doc.end();
 
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Server error" });
-  }
-});
-
-    // ITEMS
-    doc.fontSize(18).text("Items");
-    doc.moveDown();
-
-    if (items.length === 0) {
-      doc.text("No items in collection");
-    }
-
-    let totalValue = 0;
-
-    for (const [index, item] of items.entries()) {
-
-      totalValue += Number(item.estimated_value || 0);
-
-      doc.fontSize(16).text(`${index + 1}. ${item.name}`);
-      doc.fontSize(12).text(`Estimated value: ${item.estimated_value || 0}`);
-      doc.text(`Condition: ${item.condition || "-"}`);
-      doc.text(`Description: ${item.description || "-"}`);
-      doc.moveDown();
-    }
-
-    doc.fontSize(18).text(`Total collection value: ${totalValue}`);
-
-    doc.end();
-
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({
-      error: "Server error"
-    });
   }
 });
 
