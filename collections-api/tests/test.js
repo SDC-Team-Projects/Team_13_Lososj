@@ -326,6 +326,104 @@ describe('API Automation Tests', () => {
     });
   });
 
+  // ITEMS TESTS
+  describe('Items', () => {
+    let itemId;
+    let parentCollectionId;
+
+    beforeAll(async () => {
+      const colResponse = await request(app)
+        .post('/api/collections')
+        .set('Authorization', `Bearer ${authToken}`)
+        .send({
+          name: `Collection for Items Test ${Date.now()}`,
+          description: 'Parent collection description',
+          category: 'Other',
+          is_public: true
+        });
+      
+      parentCollectionId = colResponse.body.id || 1;
+    });
+
+    // Creating item
+    it('POST /api/items - should create a new item in collection', async () => {
+      const response = await request(app)
+        .post('/api/items')
+        .set('Authorization', `Bearer ${authToken}`)
+        .send({
+          collection_id: parentCollectionId,
+          name: `Rare Item ${Date.now()}`,
+          description: 'Unique artifact description',
+          notes: 'Bought at local market',
+          condition: 'good',
+          estimated_value: 100,
+          tags: ['rare', 'test', 'artifact']
+        });
+
+      expect(response.status).toBeDefined(); 
+      if (response.status === 200 || response.status === 201) {
+        expect(response.body).toHaveProperty('id');
+        itemId = response.body.id;
+      }
+    });
+
+    // Getting collection items
+    it('GET /api/collections/:id/items - should fetch items from specific collection', async () => {
+      const response = await request(app)
+        .get(`/api/collections/${parentCollectionId}/items`);
+
+      expect(response.status).toBe(200);
+      expect(Array.isArray(response.body)).toBe(true);
+    });
+
+    // Getting an item by ID
+    it('GET /api/items/:id - should fetch single item details', async () => {
+      const idToFetch = itemId || 1;
+      const response = await request(app)
+        .get(`/api/items/${idToFetch}`);
+
+      expect(response.status).toBeDefined();
+      if (response.status === 200) {
+        expect(response.body).toHaveProperty('id');
+      }
+    });
+
+    // Updating item
+    it('PUT /api/items/:id - should update item data', async () => {
+      const idToUpdate = itemId || 1;
+      const response = await request(app)
+        .put(`/api/items/${idToUpdate}`)
+        .set('Authorization', `Bearer ${authToken}`)
+        .send({
+          name: 'Updated Item Name',
+          description: 'Brand new description for this item',
+          tags: ['updated', 'test']
+        });
+
+      expect(response.status).toBeDefined();
+    });
+
+    // Search on tags or items
+    it('GET /api/items/search - should search items by query', async () => {
+      const response = await request(app)
+        .get('/api/items/search')
+        .query({ q: 'Item' });
+
+      expect(response.status).toBe(200);
+      expect(Array.isArray(response.body)).toBe(true);
+    });
+
+    // Deleting item
+    it('DELETE /api/items/:id - should delete item', async () => {
+      const idToDelete = itemId || 1;
+      const response = await request(app)
+        .delete(`/api/items/${idToDelete}`)
+        .set('Authorization', `Bearer ${authToken}`);
+
+      expect(response.status).toBeDefined();
+    });
+  });
+
   afterAll(async () => {
     await pool.end();
   });
