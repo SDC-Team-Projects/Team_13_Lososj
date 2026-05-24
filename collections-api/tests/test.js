@@ -277,7 +277,7 @@ describe('API Automation Tests', () => {
 
       expect(response.status).toBe(200);
       expect(Array.isArray(response.body)).toBe(true);
-      expect(response.body.length).getGreaterThanOrEqual(1);
+      expect(response.body.length).toBeGreaterThanOrEqual(1);
     });
 
     // Getting collection by ID
