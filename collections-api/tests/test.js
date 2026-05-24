@@ -245,6 +245,87 @@ describe('API Automation Tests', () => {
     });
   });
 
+  // COLLECTIONS ROUTER TESTS
+  describe('Collections Router (routes/collections.js)', () => {
+    let testCollectionId;
+
+    // Creating a collection
+    it('POST /api/collections - should create a new collection', async () => {
+      const response = await request(app)
+        .post('/api/collections')
+        .set('Authorization', `Bearer ${authToken}`)
+        .send({
+          name: `Router Test Collection ${Date.now()}`,
+          description: 'Testing endpoints in routes/collections.js',
+          category: 'Stamps',
+          image: 'http://example.com/stamps.jpg',
+          is_public: true
+        });
+
+      expect(response.status).toBe(200);
+      expect(response.body).toHaveProperty('id');
+      expect(response.body).toHaveProperty('name');
+      
+      testCollectionId = response.body.id;
+    });
+
+    // Getting all user collections
+    it('GET /api/collections - should get all user collections', async () => {
+      const response = await request(app)
+        .get('/api/collections')
+        .set('Authorization', `Bearer ${authToken}`);
+
+      expect(response.status).toBe(200);
+      expect(Array.isArray(response.body)).toBe(true);
+      expect(response.body.length).getGreaterThanOrEqual(1);
+    });
+
+    // Getting collection by ID
+    it('GET /api/collections/:id - should get single collection by ID', async () => {
+      const response = await request(app)
+        .get(`/api/collections/${testCollectionId}`)
+        .set('Authorization', `Bearer ${authToken}`);
+
+      expect(response.status).toBe(200);
+      expect(response.body).toHaveProperty('id', testCollectionId);
+    });
+
+    // Updating collection
+    it('PUT /api/collections/:id - should update collection name and description', async () => {
+      const response = await request(app)
+        .put(`/api/collections/${testCollectionId}`)
+        .set('Authorization', `Bearer ${authToken}`)
+        .send({
+          name: 'Completely Updated Name',
+          description: 'Updated description text'
+        });
+
+      expect(response.status).toBe(200);
+      expect(response.body).toHaveProperty('name', 'Completely Updated Name');
+      expect(response.body).toHaveProperty('description', 'Updated description text');
+    });
+
+    // Invalid token
+    it('GET /api/collections - should fail with invalid token', async () => {
+      const response = await request(app)
+        .get('/api/collections')
+        .set('Authorization', 'Bearer fake_invalid_token_123');
+
+      expect(response.status).toBe(401);
+      expect(response.body).toHaveProperty('error', 'Invalid token');
+    });
+
+    // Deleting collection
+    it('DELETE /api/collections/:id - should delete collection successfully', async () => {
+      const response = await request(app)
+        .delete(`/api/collections/${testCollectionId}`)
+        .set('Authorization', `Bearer ${authToken}`);
+
+      expect(response.status).toBe(200);
+      expect(response.body).toHaveProperty('message', 'Deleted successfully');
+    });
+  });
+
   afterAll(async () => {
     await pool.end();
   });
