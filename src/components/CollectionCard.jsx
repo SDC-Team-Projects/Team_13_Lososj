@@ -3,11 +3,10 @@ import "../css/CollectionCard.css";
 import { Link, useNavigate } from "react-router-dom";
 import Button from "../ui/Button";
 import { deleteCollection } from "../api/collections";
-
 import React, { useState } from "react";
-
 import { useAuth } from "../context/AuthContext";
 import { isOwner } from "../utils/permissions";
+import { downloadCollectionPdf } from "../api/collections";
 
 import {
   Heart,
@@ -24,6 +23,7 @@ export default function CollectionCard({
   onToggleFavorite,
 }) {
   const [deleting, setDeleting] = useState(false);
+  const [downloading, setDownloading] = useState(false);
   const navigate = useNavigate();
 
   const { user } = useAuth();
@@ -59,6 +59,39 @@ export default function CollectionCard({
       setDeleting(false);
     }
   }
+
+  async function handleDownload(e) {
+  e.preventDefault();
+  e.stopPropagation();
+
+  try {
+    setDownloading(true);
+
+    const blob = await downloadCollectionPdf(collection.id);
+
+    const url = window.URL.createObjectURL(blob);
+
+    const a = document.createElement("a");
+
+    a.href = url;
+
+    a.download = `${collection.name}.pdf`;
+
+    document.body.appendChild(a);
+
+    a.click();
+
+    a.remove();
+
+    window.URL.revokeObjectURL(url);
+
+  } catch (err) {
+    console.error(err);
+    alert("Failed to download PDF");
+  } finally {
+    setDownloading(false);
+  }
+}
 
   return (
     <div className={`collectionCard ${variant}`}>
@@ -106,7 +139,6 @@ export default function CollectionCard({
               : collection.description}
           </p>
 
-          {/* ===== STATS (как было в твоей оригинальной версии) ===== */}
           <div className="statsRow">
 
             <div>
@@ -154,9 +186,15 @@ export default function CollectionCard({
 
           {owner && (
             <>
-              <Button variant="secondary">
-                <Download size={18} />
-              </Button>
+              <Button
+                  variant="secondary"
+                  onClick={handleDownload}
+                  disabled={downloading} 
+                        >
+              <Download size={18} />
+
+                {downloading ? "Downloading..." : ""}
+                </Button>
 
               <Link to={`/collections/edit/${collection.id}`}>
                 <Button variant="secondary">
