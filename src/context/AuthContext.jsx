@@ -12,15 +12,29 @@ export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const savedToken = localStorage.getItem("token");
-    const savedUser = localStorage.getItem("user");
+ useEffect(() => {
+  const savedToken = localStorage.getItem("token");
 
-    if (savedToken) setToken(savedToken);
-    if (savedUser) setUser(JSON.parse(savedUser));
-
+  if (!savedToken) {
     setLoading(false);
-  }, []);
+    return;
+  }
+
+  setToken(savedToken);
+
+  fetch("https://team-13-lososj.onrender.com/api/profile", {
+    headers: {
+      Authorization: `Bearer ${savedToken}`,
+    },
+  })
+    .then((res) => res.json())
+    .then((data) => {
+      setUser(data);
+
+      localStorage.setItem("user", JSON.stringify(data));
+    })
+    .finally(() => setLoading(false));
+}, []);
 
   // LOGIN
   const login = (newToken, userData) => {

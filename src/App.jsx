@@ -50,7 +50,7 @@ function App() {
       <Route path="/settings/password" element={<ProtectedRoute><ChangePasswordPage/></ProtectedRoute>}/>
       <Route path="/admin" element={<AdminRoute><AdminPage /></AdminRoute>}/>
       <Route path="/forgot-password" element={<ProtectedRoute><ForgotPassword /></ProtectedRoute>}/>
-      <Route path="/reset-password/:token" element={<ProtectedRoute><ResetPassword /></ProtectedRoute>}/>
+      <Route path="/reset-password/:token" element={<ResetPassword />}/>
 
     </Routes>
     </BrowserRouter>

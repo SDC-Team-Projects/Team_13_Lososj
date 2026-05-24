@@ -131,3 +131,48 @@
   background: #1890ff;
   color: white;
 }
+
+@media (max-width: 768px) {
+
+  .profileCard {
+    padding: 16px;
+    max-width: 100%;
+  }
+
+  .top {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 12px;
+  }
+
+  .avatarWrapper {
+    width: 110px;
+    height: 110px;
+  }
+
+  .info {
+    width: 100%;
+  }
+
+  .headerRow {
+    flex-direction: column;
+    gap: 10px;
+    align-items: center;
+  }
+
+  .name {
+    font-size: 18px;
+  }
+
+  .description {
+    text-align: center;
+  }
+
+  .bottom {
+    flex-direction: column;
+    gap: 6px;
+    align-items: center;
+    text-align: center;
+  }
+}

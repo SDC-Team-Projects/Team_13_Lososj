@@ -32,8 +32,9 @@ export default function MainPage() {
 
   return (
     <>
+     <Sidebar />
    <div className="layout">
-         <Sidebar />
+        
           <div className="content">
 
            <div className="infoRow">

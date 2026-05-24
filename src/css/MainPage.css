@@ -1,20 +1,54 @@
 .layout {
   display: flex;
-  height: 100vh;
+  min-height: 100vh;
 }
+
 
 .content {
   flex: 1;
   padding: 20px;
+
   display: flex;
-  align-items: center;
+  flex-direction: column;
+
+  align-items: stretch;
   justify-content: flex-start;
-  gap: 50px;
+
+  gap: 24px;
+
+  box-sizing: border-box;
 }
 
-  .infoRow {
-    display: flex;
-  margin-top: 10px;
-  gap: 60px;
-  
+
+   .infoRow {
+  display: flex;
+  gap: 20px;
+
+  flex-wrap: wrap;
+}
+
+.costChart {
+  width: 100%;
+  display: flex;
+}
+
+
+@media (max-width: 768px) {
+
+  .layout {
+  margin-left: -250px; 
   }
+
+
+  .infoRow {
+    flex-direction: column;
+    width: 100%;
+    margin-left: 0;   /* FIX */
+  }
+
+  .costChart {
+    width: 100%;
+    padding: 0;
+    margin-left: 0;   /* FIX */
+  }
+}
