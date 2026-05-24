@@ -572,29 +572,36 @@ app.get("/api/collections/:id/export", auth, async (req, res) => {
     doc.moveDown();
 
      
-    // COLLECTION IMAGE (FIXED)
-    if (collection.image && collection.image.startsWith("http")) {
-      try {
-        const response = await axios.get(collection.image, {
-          responseType: "arraybuffer",
-          timeout: 10000
-        });
+    // COLLECTION IMAGE (FIXED LAYOUT SAFE)
+if (collection.image && collection.image.startsWith("http")) {
+  try {
 
-        const buffer = Buffer.from(response.data, "binary");
+    const response = await axios.get(collection.image, {
+      responseType: "arraybuffer",
+      timeout: 10000
+    });
 
-        doc.image(buffer, {
-          fit: [400, 300],
-          align: "center"
-        });
+    const buffer = Buffer.from(response.data, "binary");
 
-        doc.moveDown();
+    
+    const imageY = doc.y;
 
-      } catch (e) {
-        console.log("Collection image error:", e.message);
-        doc.text("Collection image could not be loaded");
-        doc.moveDown();
-      }
-    }
+    doc.image(buffer, {
+      fit: [400, 300],
+      align: "center"
+    });
+
+     
+    doc.y = imageY + 320;
+
+    doc.moveDown();
+
+  } catch (e) {
+    console.log("Collection image error:", e.message);
+    doc.text("Collection image could not be loaded");
+    doc.moveDown();
+  }
+}
 
     // ITEMS
     doc.fontSize(18).text("Items");
