@@ -461,6 +461,12 @@ app.get("/api/collections/:id", auth, async (req, res) => {
       });
     }
 
+    await addActivity(
+      req.user.id,
+      "viewed collection",
+      result.rows[0].name
+    );
+    
     res.json(result.rows[0]);
 
   } catch (err) {
@@ -702,6 +708,12 @@ app.get("/api/items/:id", auth, async (req, res) => {
       return res.status(404).json({ error: "Item not found" });
     }
 
+  await addActivity(
+    req.user.id,
+    "viewed item",
+    result.rows[0].name
+  );
+    
     res.json(result.rows[0]);
   } catch (err) {
     console.error(err);
