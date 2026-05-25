@@ -665,9 +665,9 @@ if (collection.image && collection.image.startsWith("http")) {
       doc.text(`Description: ${item.description || "-"}`);
 
       // ITEM IMAGE
-if (item.custom_fields?.image && item.custom_fields?.image.startsWith("http")) {
+if (item.custom_fields?.image && item.custom_fields.image.startsWith("http")) {
   try {
-    const response = await axios.get(item.image, {
+    const response = await axios.get(item.custom_fields.image, {
       responseType: "arraybuffer",
       timeout: 10000
     });
@@ -682,7 +682,6 @@ if (item.custom_fields?.image && item.custom_fields?.image.startsWith("http")) {
     });
 
     doc.y = imageY + 270;
-
     doc.moveDown();
 
   } catch (e) {
