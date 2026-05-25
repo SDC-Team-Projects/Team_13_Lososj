@@ -8,7 +8,7 @@ const pool = require("./db");
 const auth = require("./middleware/auth");
 const PDFDocument = require("pdfkit");
 const axios = require("axios");
-
+const crypto = require("crypto");
 
 const app = express();
 
@@ -974,6 +974,45 @@ app.get("/api/favorites/collections", auth, async (req, res) => {
 
 /* ---------------- PROFILE ---------------- */
 
+/* GET USER PROFILE BY ID */
+
+app.get("/api/users/:id", async (req, res) => {
+  try {
+
+    const result = await pool.query(
+      `
+      SELECT
+        id,
+        username,
+        city,
+        country,
+        bio,
+        avatar_url,
+        created_at
+      FROM users
+      WHERE id = $1
+      `,
+      [req.params.id]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({
+        error: "User not found"
+      });
+    }
+
+    res.json(result.rows[0]);
+
+  } catch (err) {
+
+    console.error(err);
+
+    res.status(500).json({
+      error: "Server error"
+    });
+  }
+});
+
 /* GET PROFILE */
 app.get("/api/profile", auth, async (req, res) => {
   try {
@@ -1100,8 +1139,10 @@ app.put("/api/profile/password", auth, async (req, res) => {
 });
 
 /* REQUEST RESET PASSWORD */
+
 app.post("/api/auth/password-reset/request", async (req, res) => {
   try {
+
     const { email } = req.body;
 
     const userResult = await pool.query(
@@ -1110,50 +1151,128 @@ app.post("/api/auth/password-reset/request", async (req, res) => {
     );
 
     if (userResult.rows.length === 0) {
-      return res.status(404).json({ error: "User not found" });
+      return res.status(404).json({
+        error: "User not found"
+      });
     }
 
-    
-    const resetToken = "RESET_TOKEN_123";
+    const user = userResult.rows[0];
+
+    // GENERATE TOKEN
+    const resetToken = crypto.randomBytes(32).toString("hex");
+
+    // EXPIRES IN 1 HOUR
+    const expires = new Date(
+      Date.now() + 1000 * 60 * 60
+    );
+
+    await pool.query(
+      `
+      UPDATE users
+      SET
+        reset_token = $1,
+        reset_token_expires = $2
+      WHERE id = $3
+      `,
+      [
+        resetToken,
+        expires,
+        user.id
+      ]
+    );
+
+     
 
     res.json({
       message: "Password reset link sent",
-      token: resetToken   // 👈 для теста
+      token: resetToken
     });
 
   } catch (err) {
+
     console.error(err);
-    res.status(500).json({ error: "Server error" });
+
+    res.status(500).json({
+      error: "Server error"
+    });
   }
 });
 
 /* CONFIRM RESET PASSWORD */
+
 app.post("/api/auth/password-reset/confirm", async (req, res) => {
   try {
-    const { token, new_password, confirm_new_password } = req.body;
+
+    const {
+      token,
+      new_password,
+      confirm_new_password
+    } = req.body;
 
     if (new_password !== confirm_new_password) {
-      return res.status(400).json({ error: "Passwords do not match" });
+      return res.status(400).json({
+        error: "Passwords do not match"
+      });
     }
 
-     
-    if (token !== "RESET_TOKEN_123") {
-      return res.status(400).json({ error: "Invalid token" });
-    }
-
-     
-    const hashedPassword = await bcrypt.hash(new_password, 10);
-
-    await pool.query(
-      "UPDATE users SET password = $1 WHERE id = $2",
-      [hashedPassword, 1]
+    const userResult = await pool.query(
+      `
+      SELECT *
+      FROM users
+      WHERE reset_token = $1
+      `,
+      [token]
     );
 
-    res.json({ message: "Password reset successful" });
+    if (userResult.rows.length === 0) {
+      return res.status(400).json({
+        error: "Invalid token"
+      });
+    }
+
+    const user = userResult.rows[0];
+
+    // CHECK EXPIRATION
+    if (
+      !user.reset_token_expires ||
+      new Date(user.reset_token_expires) < new Date()
+    ) {
+      return res.status(400).json({
+        error: "Token expired"
+      });
+    }
+
+    const hashedPassword = await bcrypt.hash(
+      new_password,
+      10
+    );
+
+    await pool.query(
+      `
+      UPDATE users
+      SET
+        password = $1,
+        reset_token = NULL,
+        reset_token_expires = NULL
+      WHERE id = $2
+      `,
+      [
+        hashedPassword,
+        user.id
+      ]
+    );
+
+    res.json({
+      message: "Password reset successful"
+    });
 
   } catch (err) {
+
     console.error(err);
-    res.status(500).json({ error: "Server error" });
+
+    res.status(500).json({
+      error: "Server error"
+    });
   }
 });
 
