@@ -46,7 +46,7 @@ jobs:
       env:
         JWT_SECRET: super_secret_test_key_123
         NODE_ENV: test
-        DATABASE_URL: postgresql://neondb_owner:npg_lWeMyvU4SA0g@ep-jolly-feather-am44949b-pooler.c-5.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require
+        DATABASE_URL: ${{ secrets.DATABASE_URL }}
       run: |
         cd collections-api
         npm run test:coverage
