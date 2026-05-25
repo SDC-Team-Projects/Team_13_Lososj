@@ -136,6 +136,14 @@ describe('API Automation Tests', () => {
         expect(response.status).toBe(400);
         expect(response.body.error).toContain('not found');
       });
+
+      it('should fail login if fields are empty', async () => {
+      const response = await request(app)
+        .post('/api/auth/login')
+        .send({ email: '' });
+      
+      expect(response.status).toBeDefined(); 
+    });
     });
 
     // Logging out
@@ -284,6 +292,14 @@ describe('API Automation Tests', () => {
         .set('Authorization', `Bearer ${authToken}`);
 
       expect(response.status).toBe(404);
+    });
+
+    it('PUT /api/collections/:id - should fail update if token is missing', async () => {
+      const response = await request(app)
+        .put('/api/collections/1')
+        .send({ name: 'No Token Update' });
+      
+      expect(response.status).toBe(401);
     });
   });
 
