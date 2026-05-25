@@ -712,6 +712,7 @@ app.get("/api/items/:id", auth, async (req, res) => {
 /* UPDATE ITEM */
 app.put("/api/items/:id", auth, async (req, res) => {
   try {
+
     const {
       name,
       description,
@@ -722,15 +723,25 @@ app.put("/api/items/:id", auth, async (req, res) => {
     } = req.body;
 
     const result = await pool.query(
-      `UPDATE items
-       SET name=$1,
-           description=$2,
-           notes=$3,
-           condition=$4,
-           estimated_value=$5,
-           custom_fields=$6
-       WHERE id=$7
-       RETURNING *`,
+      `
+      UPDATE items
+      SET
+        name = $1,
+        description = $2,
+        notes = $3,
+        condition = $4,
+        estimated_value = $5,
+        custom_fields = $6
+
+      FROM collections
+
+      WHERE
+        items.collection_id = collections.id
+        AND items.id = $7
+        AND collections.user_id = $8
+
+      RETURNING items.*
+      `,
       [
         name,
         description,
@@ -738,18 +749,26 @@ app.put("/api/items/:id", auth, async (req, res) => {
         condition,
         estimated_value,
         custom_fields,
-        req.params.id
+        req.params.id,
+        req.user.id
       ]
     );
 
     if (result.rows.length === 0) {
-      return res.status(404).json({ error: "Item not found" });
+      return res.status(403).json({
+        error: "No access to edit this item"
+      });
     }
 
     res.json(result.rows[0]);
+
   } catch (err) {
+
     console.error(err);
-    res.status(500).json({ error: "Server error" });
+
+    res.status(500).json({
+      error: "Server error"
+    });
   }
 });
 
