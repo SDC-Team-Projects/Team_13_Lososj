@@ -137,19 +137,25 @@ const gridOptions = [
           ))}
         </div>
 
-        {/* GRID */}
-        <UniversalGrid columns={gridMode}>
-          {filteredCollections.map((collection) => (
-            <CollectionCard
-              key={collection.id}
-              collection={collection}
-              variant="square"
-              onDelete={handleDeleteCollection}
-              isFavorite={favoriteIds.includes(collection.id)}
-              onToggleFavorite={toggleFavorite}
-            />
-          ))}
-        </UniversalGrid>
+        {/* EMPTY STATE */}
+{filteredCollections.length === 0 ? (
+  <div>
+    <h3>No collections yet</h3>
+  </div>
+) : (
+  <UniversalGrid columns={gridMode}>
+    {filteredCollections.map((collection) => (
+      <CollectionCard
+        key={collection.id}
+        collection={collection}
+        variant="square"
+        onDelete={handleDeleteCollection}
+        isFavorite={favoriteIds.includes(collection.id)}
+        onToggleFavorite={toggleFavorite}
+      />
+    ))}
+  </UniversalGrid>
+)}
       </div>
     </div>
   );

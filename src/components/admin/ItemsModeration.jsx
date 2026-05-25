@@ -72,7 +72,7 @@ export default function ItemsModeration() {
               <td>{item.name}</td>
               <td>{item.collection_name}</td>
               <td>{item.owner_name}</td>
-              <td>{item.value}</td>
+              <td>{item.estimated_value}</td>
 
               <td>
                 <button onClick={() => handleDelete(item.id)}>

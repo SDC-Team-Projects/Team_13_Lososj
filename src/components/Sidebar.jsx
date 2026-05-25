@@ -11,22 +11,34 @@ export default function Sidebar() {
 
   const [open, setOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
-  const { user } = useAuth();
+  // const { user } = useAuth();
   const [logoutOpen, setLogoutOpen] = useState(false);
+
+// const handleLogout = async () => {
+//   try {
+
+//     await logoutUser();
+
+//     localStorage.removeItem("token");
+
+//     navigate("/login");
+
+//   } catch (err) {
+
+//     console.error(err);
+
+//   }
+// };
+
+const { user, logout } = useAuth();
 
 const handleLogout = async () => {
   try {
-
     await logoutUser();
-
-    localStorage.removeItem("token");
-
+    logout();
     navigate("/login");
-
   } catch (err) {
-
     console.error(err);
-
   }
 };
 

@@ -5,7 +5,7 @@ import RegisterPage from "./pages/RegisterPage";
 import ProfilePage from "./pages/ProfilePage";
 import MainPage from "./pages/MainPage";
 import { AuthProvider } from "./context/AuthContext";
-
+import UserProfilePage from "./pages/UserProfilePage";
 import ProtectedRoute from "./routes/ProtectedRoute";
 import CollectionFormPage from "./pages/CollectionFormPage";
 import MyCollectionsPage from "./pages/MyCollectionsPage";
@@ -46,12 +46,12 @@ function App() {
       <Route path="/overview" element={<ProtectedRoute><OverviewPage /></ProtectedRoute>} />
       <Route path="/favorites" element={<ProtectedRoute><FavoritesPage /></ProtectedRoute>} />
       <Route path="/profile/edit" element={<ProtectedRoute><EditProfilePage /></ProtectedRoute>} />
-      <Route path="/users/:id" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>}/>
+     
       <Route path="/settings/password" element={<ProtectedRoute><ChangePasswordPage/></ProtectedRoute>}/>
       <Route path="/admin" element={<AdminRoute><AdminPage /></AdminRoute>}/>
       <Route path="/forgot-password" element={<ProtectedRoute><ForgotPassword /></ProtectedRoute>}/>
       <Route path="/reset-password/:token" element={<ResetPassword />}/>
-
+      <Route path="/users/:id" element={<UserProfilePage />} />
     </Routes>
     </BrowserRouter>
     </AuthProvider>
