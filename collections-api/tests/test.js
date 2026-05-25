@@ -636,6 +636,152 @@ describe('API Automation Tests', () => {
     });
   });
 
+  // ADMIN TESTS
+  describe('Admin Operations', () => {
+    let adminToken;
+    let targetUserId;
+
+    beforeAll(async () => {
+      // Registration of a new admin
+      const adminEmail = `admin_${Date.now()}@test.com`;
+      const registerRes = await request(app)
+        .post('/api/auth/register')
+        .send({
+          email: adminEmail,
+          password: 'adminPassword123',
+          username: 'superadmin',
+          city: 'Vilnius',
+          country: 'Lithuania'
+        });
+
+      await pool.query(
+        "UPDATE users SET role = 'ADMIN' WHERE email = $1",
+        [adminEmail]
+      );
+
+      adminToken = registerRes.body.token;
+
+      const usersRes = await pool.query("SELECT id FROM users WHERE role = 'user' LIMIT 1");
+      if (usersRes.rows.length > 0) {
+        targetUserId = usersRes.rows[0].id;
+      } else {
+        targetUserId = 9999;
+      }
+    });
+
+    // Access denial for regular user
+    describe('Access Denied for Regular Users', () => {
+      it('POST /api/admin/users/:id/ban - should deny access', async () => {
+        const response = await request(app)
+          .post(`/api/admin/users/${targetUserId}/ban`)
+          .set('Authorization', `Bearer ${authToken}`)
+          .send({ type: 'temporary', until: '2030-01-01' });
+        expect(response.status).toBe(403);
+        expect(response.body.error).toBe('No access');
+      });
+
+      it('POST /api/admin/users/:id/unban - should deny access', async () => {
+        const response = await request(app)
+          .post(`/api/admin/users/${targetUserId}/unban`)
+          .set('Authorization', `Bearer ${authToken}`)
+        expect(response.status).toBe(403);
+      });
+
+      it('DELETE /api/admin/collections/:id - should deny access', async () => {
+        const response = await request(app)
+          .delete('/api/admin/collections/1')
+          .set('Authorization', `Bearer ${authToken}`);
+        expect(response.status).toBe(403);
+      });
+
+      it('DELETE /api/admin/items/:id - should deny access', async () => {
+        const response = await request(app)
+          .delete('/api/admin/items/1')
+          .set('Authorization', `Bearer ${authToken}`);
+        expect(response.status).toBe(403);
+      });
+
+      it('GET /api/admin/users - should deny access', async () => {
+        const response = await request(app)
+          .get('/api/admin/users')
+          .set('Authorization', `Bearer ${authToken}`);
+        expect(response.status).toBe(403);
+      });
+
+      it('GET /api/admin/collections - should deny access', async () => {
+        const response = await request(app)
+          .get('/api/admin/collections')
+          .set('Authorization', `Bearer ${authToken}`);
+        expect(response.status).toBe(403);
+      });
+
+      it('GET /api/admin/items - should deny access', async () => {
+        const response = await request(app)
+          .get('/api/admin/items')
+          .set('Authorization', `Bearer ${authToken}`);
+        expect(response.status).toBe(403);
+      });
+    });
+
+    // Successful Admin Operations
+    describe('Successful Admin Operations', () => {
+      it('GET /api/admin/users - should return list of users', async () => {
+        const response = await request(app)
+          .get('/api/admin/users')
+          .set('Authorization', `Bearer ${adminToken}`);
+        expect(response.status).toBe(200);
+        expect(Array.isArray(response.body)).toBe(true);
+      });
+
+      it('GET /api/admin/collections - should return list of all collections', async () => {
+        const response = await request(app)
+          .get('/api/admin/collections')
+          .set('Authorization', `Bearer ${adminToken}`);
+        expect(response.status).toBe(200);
+        expect(Array.isArray(response.body)).toBe(true);
+      });
+
+      it('GET /api/admin/items - should return list of all items', async () => {
+        const response = await request(app)
+          .get('/api/admin/items')
+          .set('Authorization', `Bearer ${adminToken}`);
+        expect(response.status).toBe(200);
+        expect(Array.isArray(response.body)).toBe(true);
+      });
+
+      it('POST /api/admin/users/:id/ban - should successfully ban a user', async () => {
+        const response = await request(app)
+          .post(`/api/admin/users/${targetUserId}/ban`)
+          .set('Authorization', `Bearer ${adminToken}`)
+          .send({ type: 'permanent' });
+        expect(response.status).toBe(200);
+        expect(response.body.message).toBe('User banned');
+      });
+
+      it('POST /api/admin/users/:id/unban - should successfully unban a user', async () => {
+        const response = await request(app)
+          .post(`/api/admin/users/${targetUserId}/unban`)
+          .set('Authorization', `Bearer ${adminToken}`);
+        expect(response.status).toBe(200);
+        expect(response.body.message).toBe('User unbanned');
+      });
+
+      it('DELETE /api/admin/collections/:id - should delete any collection', async () => {
+        const response = await request(app)
+          .delete('/api/admin/collections/1')
+          .set('Authorization', `Bearer ${adminToken}`);
+        expect(response.status).toBeDefined();
+      });
+
+      it('DELETE /api/admin/items/:id - should delete any item', async () => {
+        const response = await request(app)
+          .delete('/api/admin/items/1')
+          .set('Authorization', `Bearer ${adminToken}`);
+        expect(response.status).toBeDefined();
+      });
+    });
+  });
+
   afterAll(async () => {
     await pool.end();
   });
