@@ -8,9 +8,12 @@ import CollectionForm from "../components/CollectionForm";
 import CollectionCard from "../components/CollectionCard";
 import { getUserAnalytics } from "../api/collections";
 import React, { useEffect, useState } from "react";
+import { apiFetch } from "../api/apiClient";
+
 
 export default function MainPage() {
 
+  const [recentCollections, setRecentCollections] = useState([]);
   const [analytics, setAnalytics] = useState({
     items_count: 0,
     collections_count: 0,
@@ -18,8 +21,9 @@ export default function MainPage() {
   });
 
   useEffect(() => {
-    loadAnalytics();
-  }, []);
+  loadAnalytics();
+  loadRecentCollections();
+}, []);
 
    async function loadAnalytics() {
     try {
@@ -29,6 +33,47 @@ export default function MainPage() {
       console.error(err);
     }
   }
+
+
+  async function loadRecentCollections() {
+  try {
+    const res = await apiFetch(
+      "https://team-13-lososj.onrender.com/api/views-history"
+    );
+
+    if (!res.ok) throw new Error("Failed");
+
+    const data = await res.json();
+
+    // 1. берём только коллекции
+    const collectionsOnly = data
+      .filter((v) => v.collection_id !== null)
+      .map((v) => ({
+        id: v.collection_id,
+        name: v.collection_name,
+        image: v.collection_image,
+        viewed_at: v.viewed_at,
+      }));
+
+    // 2. убираем дубли (берём последнюю версию)
+    const uniqueMap = new Map();
+
+    collectionsOnly.forEach((c) => {
+      uniqueMap.set(c.id, c);
+    });
+
+    const unique = Array.from(uniqueMap.values());
+
+    // 3. сортируем по времени (новые первые)
+    unique.sort(
+      (a, b) => new Date(b.viewed_at) - new Date(a.viewed_at)
+    );
+
+    setRecentCollections(unique);
+  } catch (err) {
+    console.error(err);
+  }
+}
 
   return (
     <>
@@ -46,6 +91,25 @@ export default function MainPage() {
          <div className="costChart">
                 <CostChart />
             </div>
+
+            {recentCollections.length > 0 && (
+  <div className="recentBlock">
+    <h2 className="sectionTitle">
+      Recently viewed collections
+    </h2>
+
+    <div className="recentScroll">
+      {recentCollections.map((col) => (
+        <div key={col.id} className="recentItem">
+          <CollectionCard
+              collection={col}
+              variant="mini"
+                          />
+        </div>
+      ))}
+    </div>
+  </div>
+)}
         </div>
          </div>
     </>

@@ -266,3 +266,17 @@
 .horizontalFavoriteButton svg {
   display: block;
 }
+
+.collectionCard.mini {
+  width: 220px;
+  height: auto;
+  font-size: 12px;
+}
+
+.collectionCard.mini .imageBlock {
+  height: 120px;
+}
+
+.collectionCard.mini .title {
+  font-size: 14px;
+}

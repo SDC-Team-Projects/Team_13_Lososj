@@ -46,7 +46,6 @@
 //   );
 // }
 
-
 import Sidebar from "../components/Sidebar";
 import ProfileCard from "../components/ProfileCard";
 import InfoCard from "../components/InfoCard";
@@ -56,7 +55,7 @@ import React, { useEffect, useState } from "react";
 import { useAuth } from "../context/AuthContext";
 
 export default function ProfilePage() {
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
 
   const [analytics, setAnalytics] = useState({
     items_count: 0,
@@ -77,7 +76,13 @@ export default function ProfilePage() {
     }
   }
 
-  if (!user) return <div>No user data</div>;
+  if (loading) {
+    return <div>Loading...</div>;
+  }
+
+  if (!user) {
+    return <div>No user data</div>;
+  }
 
   return (
     <div className="layout">

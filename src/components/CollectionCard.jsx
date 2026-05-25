@@ -225,8 +225,6 @@
 //   );
 // }
 
-
-
 import "../css/CollectionCard.css";
 import { Link, useNavigate } from "react-router-dom";
 import Button from "../ui/Button";
@@ -245,7 +243,7 @@ import {
 
 export default function CollectionCard({
   collection,
-  variant = "square",
+  variant = "square", // square | horizontal | mini
   onDelete,
   isFavorite,
   onToggleFavorite,
@@ -319,7 +317,7 @@ export default function CollectionCard({
   return (
     <div className={`collectionCard ${variant}`}>
 
-      {/* FAVORITE */}
+      {/* FAVORITE (only square) */}
       {variant === "square" && (
         <button
           className={`favoriteIcon ${isFavorite ? "active" : ""}`}
@@ -335,10 +333,8 @@ export default function CollectionCard({
       )}
 
       {/* MAIN CARD LINK */}
-      <Link
-        to={`/collections/${collection.id}`}
-        className="cardLink"
-      >
+      <Link to={`/collections/${collection.id}`} className="cardLink">
+
         <div className="imageBlock">
           <img src={collection.image} alt={collection.name} />
         </div>
@@ -355,47 +351,55 @@ export default function CollectionCard({
             {collection.name}
           </h2>
 
+          {/* mini = shorter text */}
           <p className="desc">
             {variant === "square"
               ? trimText(collection.description)
+              : variant === "mini"
+              ? trimText(collection.description, 60)
               : collection.description}
           </p>
 
-          <div className="statsRow">
+          {/* hide stats in mini */}
+          {variant !== "mini" && (
+            <div className="statsRow">
 
-            <div>
-              <span>Items</span>
-              <strong>{Number(collection.items_count) || 0}</strong>
+              <div>
+                <span>Items</span>
+                <strong>{Number(collection.items_count) || 0}</strong>
+              </div>
+
+              <div>
+                <span>Total cost</span>
+                <strong>
+                  ${(Number(collection.total_value) || 0).toFixed(2)}
+                </strong>
+              </div>
+
+              <div>
+                <span>Owner</span>
+                <strong>
+                  <Link
+                    to={
+                      user?.id === collection.user_id
+                        ? "/profile"
+                        : `/users/${collection.user_id}`
+                    }
+                    className="ownerLink"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    {collection.owner_name || "User"}
+                  </Link>
+                </strong>
+              </div>
+
             </div>
-
-            <div>
-              <span>Total cost</span>
-              <strong>
-                ${(Number(collection.total_value) || 0).toFixed(2)}
-              </strong>
-            </div>
-
-            <div>
-              <span>Owner</span>
-
-              <strong>
-                <Link
-                  to={`/users/${collection.user_id}`}
-                  className="ownerLink"
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  {collection.owner_name || "User"}
-                </Link>
-              </strong>
-
-            </div>
-
-          </div>
+          )}
 
         </div>
       </Link>
 
-      {/* ACTIONS */}
+      {/* ACTIONS only for horizontal */}
       {variant === "horizontal" && (
         <div className="actions">
 

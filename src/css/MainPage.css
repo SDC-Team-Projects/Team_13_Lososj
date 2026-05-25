@@ -33,6 +33,37 @@
 }
 
 
+.recentBlock {
+  margin-top: 30px;
+}
+
+.sectionTitle {
+  font-size: 20px;
+  margin-bottom: 12px;
+  font-weight: 600;
+}
+
+/* horizontal scroll */
+.recentScroll {
+  display: flex;
+  gap: 16px;
+  overflow-x: auto;
+  padding-bottom: 10px;
+
+  scroll-snap-type: x mandatory;
+}
+
+/* hide scrollbar */
+.recentScroll::-webkit-scrollbar {
+  display: none;
+}
+
+.recentItem {
+  flex: 0 0 auto;
+  width: 320px;
+  scroll-snap-align: start;
+}
+
 @media (max-width: 768px) {
 
   .layout {
@@ -52,3 +83,5 @@
     margin-left: 0;   /* FIX */
   }
 }
+
+
