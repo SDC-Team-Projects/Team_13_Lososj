@@ -6,23 +6,22 @@ on:
 jobs:
   seed:
     runs-on: ubuntu-latest
-
     steps:
-    - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-    - name: Setup Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: 20.x
-        
-    - name: Install dependencies
-      run: |
-        cd collections-api
-        npm install
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20.x
 
-    - name: Run Database Seeder
-      env:
-        DATABASE_URL: ${{ secrets.PRODUCTION_DATABASE_URL }}
-      run: |
-        cd collections-api
-        npm run db:seed
+      - name: Install dependencies
+        run: |
+          cd collections-api
+          npm install
+
+      - name: Run Database Seeder
+        env:
+          DATABASE_URL: ${{ secrets.PRODUCTION_DATABASE_URL }}
+        run: |
+          cd collections-api
+          npm run db:seed
