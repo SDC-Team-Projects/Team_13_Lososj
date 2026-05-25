@@ -707,7 +707,6 @@ if (item.image && item.image.startsWith("http")) {
 
 /* ---------------- ITEMS ---------------- */
 
-
 /* CREATE ITEM */
 app.post("/api/items", auth, async (req, res) => {
   try {
@@ -719,25 +718,14 @@ app.post("/api/items", auth, async (req, res) => {
       notes,
       image,
       condition,
-      estimated_value,
-      custom_fields
+      estimated_value
     } = req.body;
-
-     
-    const finalImage = image || null;
-
-     
-    const cleanedCustomFields = custom_fields || {};
-
-    if (cleanedCustomFields.image) {
-      delete cleanedCustomFields.image;
-    }
 
     const result = await pool.query(
       `
       INSERT INTO items
-      (collection_id, name, description, notes, image, condition, estimated_value, custom_fields)
-      VALUES ($1,$2,$3,$4,$5,$6,$7,$8)
+      (collection_id, name, description, notes, image, condition, estimated_value)
+      VALUES ($1,$2,$3,$4,$5,$6,$7)
       RETURNING *
       `,
       [
@@ -745,10 +733,9 @@ app.post("/api/items", auth, async (req, res) => {
         name,
         description,
         notes,
-        finalImage,
+        image || null,
         condition,
-        estimated_value,
-        cleanedCustomFields
+        estimated_value
       ]
     );
 
