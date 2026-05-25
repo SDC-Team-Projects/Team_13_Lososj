@@ -542,21 +542,31 @@ describe('API Automation Tests', () => {
   describe('Extra Features from app.js', () => {
 
     it('POST, GET & DELETE /api/favorites - should manage favorites', async () => {
-      // Adding collection to favorites
+      const newColRes = await request(app)
+        .post('/api/collections')
+        .set('Authorization', `Bearer ${authToken}`)
+        .send({
+          name: `Favorite Target Collection ${Date.now()}`,
+          description: 'Testing constraints',
+          category: 'Coins',
+          is_private: false
+        });
+
+      const realCollectionId = newColRes.body.id;
+
       const favColRes = await request(app)
-        .post('/api/favorites/collections/1')
+        .post(`/api/favorites/collections/${realCollectionId}`)
         .set('Authorization', `Bearer ${authToken}`);
       expect(favColRes.status).toBe(200);
 
-      // Get favorite collections
       const getFavCols = await request(app)
         .get('/api/favorites/collections')
         .set('Authorization', `Bearer ${authToken}`);
       expect(getFavCols.status).toBe(200);
 
-      // Delete from favorites
-      await request(app).delete('/api/favorites/1').set('Authorization', `Bearer ${authToken}`);
-      await request(app).delete('/api/favorites/collections/1').set('Authorization', `Bearer ${authToken}`);
+      await request(app)
+        .delete(`/api/favorites/collections/${realCollectionId}`)
+        .set('Authorization', `Bearer ${authToken}`);
     });
 
     // Notifications and activity
