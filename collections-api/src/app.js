@@ -770,7 +770,6 @@ app.get("/api/collections/:id/items", auth, async (req, res) => {
   }
 });
 
-/* GET ITEM BY ID */
 app.get("/api/items/:id", auth, async (req, res) => {
   try {
 
@@ -780,15 +779,14 @@ app.get("/api/items/:id", auth, async (req, res) => {
         items.*,
 
         collections.user_id,
-
         users.username AS owner_name
 
       FROM items
 
-      JOIN collections
+      LEFT JOIN collections
       ON collections.id = items.collection_id
 
-      JOIN users
+      LEFT JOIN users
       ON users.id = collections.user_id
 
       WHERE items.id = $1
@@ -823,7 +821,6 @@ app.get("/api/items/:id", auth, async (req, res) => {
   }
 });
 
-/* UPDATE ITEM */
 app.put("/api/items/:id", auth, async (req, res) => {
   try {
 
@@ -847,14 +844,13 @@ app.put("/api/items/:id", auth, async (req, res) => {
         estimated_value = $5,
         custom_fields = $6
 
-      FROM collections
+      WHERE id = $7
 
-      WHERE
-        items.collection_id = collections.id
-        AND items.id = $7
-        AND collections.user_id = $8
+      AND collection_id IN (
+        SELECT id FROM collections WHERE user_id = $8
+      )
 
-      RETURNING items.*
+      RETURNING *
       `,
       [
         name,
