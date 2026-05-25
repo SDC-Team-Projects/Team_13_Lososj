@@ -707,6 +707,8 @@ if (item.image && item.image.startsWith("http")) {
 
 /* ---------------- ITEMS ---------------- */
 
+
+/* CREATE ITEM */
 app.post("/api/items", auth, async (req, res) => {
   try {
 
@@ -721,18 +723,23 @@ app.post("/api/items", auth, async (req, res) => {
       custom_fields
     } = req.body;
 
-    
-    const finalImage = image || custom_fields?.image || null;
+     
+    const finalImage = image || null;
 
-    
+     
     const cleanedCustomFields = custom_fields || {};
-    delete cleanedCustomFields.image;
+
+    if (cleanedCustomFields.image) {
+      delete cleanedCustomFields.image;
+    }
 
     const result = await pool.query(
-      `INSERT INTO items 
+      `
+      INSERT INTO items
       (collection_id, name, description, notes, image, condition, estimated_value, custom_fields)
       VALUES ($1,$2,$3,$4,$5,$6,$7,$8)
-      RETURNING *`,
+      RETURNING *
+      `,
       [
         collection_id,
         name,
@@ -770,6 +777,7 @@ app.get("/api/collections/:id/items", auth, async (req, res) => {
   }
 });
 
+/* GET ITEMS BY ID */
 app.get("/api/items/:id", auth, async (req, res) => {
   try {
 
@@ -777,16 +785,15 @@ app.get("/api/items/:id", auth, async (req, res) => {
       `
       SELECT
         items.*,
-
         collections.user_id,
         users.username AS owner_name
 
       FROM items
 
-      LEFT JOIN collections
+      JOIN collections
       ON collections.id = items.collection_id
 
-      LEFT JOIN users
+      JOIN users
       ON users.id = collections.user_id
 
       WHERE items.id = $1
@@ -795,32 +802,23 @@ app.get("/api/items/:id", auth, async (req, res) => {
     );
 
     if (result.rows.length === 0) {
-      return res.status(404).json({
-        error: "Item not found"
-      });
+      return res.status(404).json({ error: "Item not found" });
     }
 
     const item = result.rows[0];
 
-    // VIEW HISTORY
-    await addViewHistory(
-      req.user.id,
-      item.id,
-      null
-    );
+    await addViewHistory(req.user.id, item.id, null);
 
     res.json(item);
 
   } catch (err) {
-
     console.error(err);
-
-    res.status(500).json({
-      error: "Server error"
-    });
+    res.status(500).json({ error: "Server error" });
   }
 });
 
+
+/* UPDATE ITEM */
 app.put("/api/items/:id", auth, async (req, res) => {
   try {
 
@@ -828,10 +826,17 @@ app.put("/api/items/:id", auth, async (req, res) => {
       name,
       description,
       notes,
+      image,
       condition,
       estimated_value,
       custom_fields
     } = req.body;
+
+    const cleanedCustomFields = custom_fields || {};
+
+    if (cleanedCustomFields.image) {
+      delete cleanedCustomFields.image;
+    }
 
     const result = await pool.query(
       `
@@ -840,14 +845,14 @@ app.put("/api/items/:id", auth, async (req, res) => {
         name = $1,
         description = $2,
         notes = $3,
-        condition = $4,
-        estimated_value = $5,
-        custom_fields = $6
+        image = $4,
+        condition = $5,
+        estimated_value = $6,
+        custom_fields = $7
 
-      WHERE id = $7
-
+      WHERE id = $8
       AND collection_id IN (
-        SELECT id FROM collections WHERE user_id = $8
+        SELECT id FROM collections WHERE user_id = $9
       )
 
       RETURNING *
@@ -856,9 +861,10 @@ app.put("/api/items/:id", auth, async (req, res) => {
         name,
         description,
         notes,
+        image || null,
         condition,
         estimated_value,
-        custom_fields,
+        cleanedCustomFields,
         req.params.id,
         req.user.id
       ]
@@ -873,12 +879,8 @@ app.put("/api/items/:id", auth, async (req, res) => {
     res.json(result.rows[0]);
 
   } catch (err) {
-
     console.error(err);
-
-    res.status(500).json({
-      error: "Server error"
-    });
+    res.status(500).json({ error: "Server error" });
   }
 });
 
