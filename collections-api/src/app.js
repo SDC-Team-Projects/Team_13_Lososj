@@ -773,13 +773,33 @@ app.get("/api/collections/:id/items", auth, async (req, res) => {
 /* GET ITEM BY ID */
 app.get("/api/items/:id", auth, async (req, res) => {
   try {
+
     const result = await pool.query(
-      "SELECT * FROM items WHERE id = $1",
+      `
+      SELECT
+        items.*,
+
+        collections.user_id,
+
+        users.username AS owner_name
+
+      FROM items
+
+      JOIN collections
+      ON collections.id = items.collection_id
+
+      JOIN users
+      ON users.id = collections.user_id
+
+      WHERE items.id = $1
+      `,
       [req.params.id]
     );
 
     if (result.rows.length === 0) {
-      return res.status(404).json({ error: "Item not found" });
+      return res.status(404).json({
+        error: "Item not found"
+      });
     }
 
     const item = result.rows[0];
@@ -794,8 +814,12 @@ app.get("/api/items/:id", auth, async (req, res) => {
     res.json(item);
 
   } catch (err) {
+
     console.error(err);
-    res.status(500).json({ error: "Server error" });
+
+    res.status(500).json({
+      error: "Server error"
+    });
   }
 });
 
