@@ -38,6 +38,21 @@ async function addActivity(userId, action, item = null) {
   );
 }
 
+
+/* ---------------- VIEWS HELPER ---------------- */
+
+async function addViewHistory(userId, itemId = null, collectionId = null) {
+  await pool.query(
+    `
+    INSERT INTO views_history
+    (user_id, item_id, collection_id)
+    VALUES ($1, $2, $3)
+    `,
+    [userId, itemId, collectionId]
+  );
+}
+
+
 /* ---------------- ROOT ---------------- */
 
 app.get("/", (req, res) => {
@@ -424,32 +439,20 @@ app.get("/api/collections/search", async (req, res) => {
 });
 
 /* GET COLLECTION BY ID */
-
 app.get("/api/collections/:id", auth, async (req, res) => {
   try {
     const result = await pool.query(
       `
       SELECT
         collections.*,
-
         collections.user_id,
-
         users.username AS owner_name,
-
         COUNT(items.id) AS items_count,
-
         COALESCE(SUM(items.estimated_value), 0) AS total_value
-
       FROM collections
-
-      JOIN users
-      ON users.id = collections.user_id
-
-      LEFT JOIN items
-      ON items.collection_id = collections.id
-
+      JOIN users ON users.id = collections.user_id
+      LEFT JOIN items ON items.collection_id = collections.id
       WHERE collections.id = $1
-
       GROUP BY collections.id, users.username
       `,
       [req.params.id]
@@ -461,13 +464,16 @@ app.get("/api/collections/:id", auth, async (req, res) => {
       });
     }
 
-    await addActivity(
+    const collection = result.rows[0];
+
+    // VIEW HISTORY
+    await addViewHistory(
       req.user.id,
-      "viewed collection",
-      result.rows[0].name
+      null,
+      collection.id
     );
-    
-    res.json(result.rows[0]);
+
+    res.json(collection);
 
   } catch (err) {
     console.error(err);
@@ -708,13 +714,17 @@ app.get("/api/items/:id", auth, async (req, res) => {
       return res.status(404).json({ error: "Item not found" });
     }
 
-  await addActivity(
-    req.user.id,
-    "viewed item",
-    result.rows[0].name
-  );
-    
-    res.json(result.rows[0]);
+    const item = result.rows[0];
+
+    // VIEW HISTORY
+    await addViewHistory(
+      req.user.id,
+      item.id,
+      null
+    );
+
+    res.json(item);
+
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Server error" });
@@ -1410,6 +1420,46 @@ app.get("/api/activity", auth, async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Server error" });
+  }
+});
+
+/* GET VIEWS HISTORY */
+app.get("/api/views-history", auth, async (req, res) => {
+  try {
+
+    const result = await pool.query(
+      `
+      SELECT
+        views_history.*,
+
+        items.name AS item_name,
+
+        collections.name AS collection_name
+
+      FROM views_history
+
+      LEFT JOIN items
+      ON items.id = views_history.item_id
+
+      LEFT JOIN collections
+      ON collections.id = views_history.collection_id
+
+      WHERE views_history.user_id = $1
+
+      ORDER BY viewed_at DESC
+      `,
+      [req.user.id]
+    );
+
+    res.json(result.rows);
+
+  } catch (err) {
+
+    console.error(err);
+
+    res.status(500).json({
+      error: "Server error"
+    });
   }
 });
 
