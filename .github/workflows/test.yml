@@ -1,0 +1,59 @@
+name: Unit Tests & Coverage
+on:
+  push:
+    branches: [ main, develop, develop-tests ]
+  pull_request:
+    branches: [ main, develop, develop-tests ]
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: test_password
+          POSTGRES_DB: collector_db
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    strategy:
+      matrix:
+        node-version: [18.x, 20.x]
+
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ matrix.node-version }}
+    
+    - name: Install dependencies
+      run: |
+        cd collections-api
+        npm install
+    
+    - name: Run tests
+      env:
+        JWT_SECRET: super_secret_test_key_123
+        NODE_ENV: test
+        DATABASE_URL: postgresql://neondb_owner:npg_lWeMyvU4SA0g@ep-jolly-feather-am44949b-pooler.c-5.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require
+      run: |
+        cd collections-api
+        npm run test:coverage
+    
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v3
+      with:
+        files: ./collections-api/coverage/lcov.info
+        flags: unittests
+        fail_ci_if_error: true
