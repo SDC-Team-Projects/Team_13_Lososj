@@ -665,9 +665,9 @@ if (collection.image && collection.image.startsWith("http")) {
       doc.text(`Description: ${item.description || "-"}`);
 
       // ITEM IMAGE
-if (item.custom_fields?.image && item.custom_fields.image.startsWith("http")) {
+if (item.image && item.image.startsWith("http")) {
   try {
-    const response = await axios.get(item.custom_fields.image, {
+    const response = await axios.get(item.image, {
       responseType: "arraybuffer",
       timeout: 10000
     });
