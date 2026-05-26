@@ -1,3 +1,18 @@
+/* .grid {
+  display: grid;
+
+  gap: 20px;
+
+  width: 100%;
+
+  margin-top: 20px;
+
+  justify-content: center;
+
+  align-items: start;
+} */
+
+
 .grid {
   display: grid;
 
@@ -10,4 +25,23 @@
   justify-content: center;
 
   align-items: start;
+}
+
+/* DESKTOP */
+
+.cols-1 {
+  grid-template-columns: repeat(1, minmax(0, 340px));
+}
+
+.cols-3 {
+  grid-template-columns: repeat(3, minmax(0, 340px));
+}
+
+/* MOBILE */
+
+@media (max-width: 768px) {
+  .grid {
+    grid-template-columns: 1fr !important;
+    justify-items: center;
+  }
 }

@@ -5,7 +5,7 @@ import Sidebar from "../components/Sidebar";
 import SearchBar from "../components/SearchBar";
 import CollectionCard from "../components/CollectionCard";
 import UniversalGrid from "../components/UniversalGrid";
-
+import "../css/OverviewPage.css";
 import Button from "../ui/Button";
 
 import {
