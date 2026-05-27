@@ -109,7 +109,7 @@ export default function ItemForm() {
         image,
 
         custom_fields: {
-          image,
+          // image,
         },
       });
 
