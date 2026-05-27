@@ -106,10 +106,9 @@ export default function ItemForm() {
         notes,
         condition,
         estimated_value: Number(price),
-        image,
 
         custom_fields: {
-          // image,
+           image,
         },
       });
 
