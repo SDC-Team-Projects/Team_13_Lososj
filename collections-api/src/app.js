@@ -1524,7 +1524,7 @@ app.get("/api/analytics/collection/:id", auth, async (req, res) => {
 });
 
 /* USER ANALYTICS */
-app.get("/api/analytics/user", auth, async (req, res) => {
+/*app.get("/api/analytics/user", auth, async (req, res) => {
   try {
     const userId = req.user.id;
 
@@ -1557,6 +1557,72 @@ app.get("/api/analytics/user", auth, async (req, res) => {
       collections_count: collections.rows[0].count,
       items_count: items.rows[0].count,
       total_value: value.rows[0].total_value
+    });
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Server error" });
+  }
+});*/
+
+/* USER ANALYTICS */
+app.get("/api/analytics/user", auth, async (req, res) => {
+  try {
+    const userId = req.user.id;
+
+    const collections = await pool.query(
+      "SELECT COUNT(*) FROM collections WHERE user_id = $1",
+      [userId]
+    );
+
+    const items = await pool.query(
+      `
+      SELECT COUNT(i.id)
+      FROM items i
+      JOIN collections c ON c.id = i.collection_id
+      WHERE c.user_id = $1
+      `,
+      [userId]
+    );
+
+    const value = await pool.query(
+      `
+      SELECT COALESCE(SUM(i.estimated_value), 0) AS total_value
+      FROM items i
+      JOIN collections c ON c.id = i.collection_id
+      WHERE c.user_id = $1
+      `,
+      [userId]
+    );
+
+    const chartQuery = await pool.query(
+      `
+      SELECT 
+        TO_CHAR(i.created_at, 'YYYY-MM-DD') AS date,
+        COALESCE(SUM(i.estimated_value), 0) AS daily_value
+      FROM items i
+      JOIN collections c ON c.id = i.collection_id
+      WHERE c.user_id = $1
+      GROUP BY TO_CHAR(i.created_at, 'YYYY-MM-DD')
+      ORDER BY date ASC
+      `,
+      [userId]
+    );
+
+    let runningTotal = 0;
+    const chartData = chartQuery.rows.map(row => {
+      runningTotal += parseFloat(row.daily_value);
+      return {
+        date: row.date,
+        value: runningTotal
+      };
+    });
+
+    res.json({
+      collections_count: collections.rows[0].count,
+      items_count: items.rows[0].count,
+      total_value: value.rows[0].total_value,
+      chart_data: chartData
     });
 
   } catch (err) {
