@@ -723,10 +723,15 @@ app.post("/api/items", auth, async (req, res) => {
     } = req.body;
 
     const safeImage = image || (custom_fields && custom_fields.image) || null;
+    let finalCustomFields = custom_fields || {};
+    if (safeImage && !finalCustomFields.image) {
+      finalCustomFields.image = safeImage;
+    }
+    
     const result = await pool.query(
       `
       INSERT INTO items
-      (collection_id, name, description, notes, image, condition, estimated_value)
+      (collection_id, name, description, notes, image, condition, estimated_value, custom_fields)
       VALUES ($1,$2,$3,$4,$5,$6,$7)
       RETURNING *
       `,
@@ -739,7 +744,7 @@ app.post("/api/items", auth, async (req, res) => {
         image || null,
         condition,
         estimated_value,
-        custom_fields ? JSON.stringify(custom_fields) : null
+        JSON.stringify(finalCustomFields)
       ]
     );
 
