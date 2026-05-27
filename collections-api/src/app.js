@@ -718,9 +718,11 @@ app.post("/api/items", auth, async (req, res) => {
       notes,
       image,
       condition,
-      estimated_value
+      estimated_value,
+      custom_fields
     } = req.body;
 
+    const safeImage = image || (custom_fields && custom_fields.image) || null;
     const result = await pool.query(
       `
       INSERT INTO items
@@ -733,9 +735,11 @@ app.post("/api/items", auth, async (req, res) => {
         name,
         description,
         notes,
+        safeImage,
         image || null,
         condition,
-        estimated_value
+        estimated_value,
+        custom_fields ? JSON.stringify(custom_fields) : null
       ]
     );
 
