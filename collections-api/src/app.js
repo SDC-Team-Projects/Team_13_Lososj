@@ -187,61 +187,71 @@ app.post("/api/auth/register", async (req, res) => {
 
 app.post("/api/auth/login", async (req, res) => {
   try {
+
     const { email, password } = req.body;
 
-    // VALIDATION
+    
     if (!email || !password) {
       return res.status(400).json({
-        error: "Email and password are required",
+        error: "Email and password are required"
       });
     }
 
     if (!email.trim() || !password.trim()) {
       return res.status(400).json({
-        error: "Fields cannot be empty",
+        error: "Fields cannot be empty"
       });
     }
 
+    const normalizedEmail = email.trim().toLowerCase();
+
+   
     const userResult = await pool.query(
       "SELECT * FROM users WHERE email = $1",
-      [email]
+      [normalizedEmail]
     );
 
     const user = userResult.rows[0];
 
     if (!user) {
-      return res.status(400).json({
+      return res.status(404).json({
         error: "User not found"
       });
     }
 
-    if (user.status === "banned") {
+     
+    if (user.status !== "active") {
       return res.status(403).json({
         error: "User is banned"
       });
     }
 
+    
     const validPassword = await bcrypt.compare(
       password,
       user.password
     );
 
     if (!validPassword) {
-      return res.status(400).json({
+      return res.status(401).json({
         error: "Wrong password"
       });
     }
 
+     
     const token = jwt.sign(
       {
         id: user.id,
         email: user.email,
-        role: user.role
+        role: user.role || "USER"
       },
       process.env.JWT_SECRET,
-      { expiresIn: "7d" }
+      {
+        expiresIn: "7d"
+      }
     );
 
+     
     res.json({
       token,
 
@@ -251,7 +261,7 @@ app.post("/api/auth/login", async (req, res) => {
         username: user.username,
         city: user.city,
         country: user.country,
-        role: user.role,
+        role: user.role || "USER",
         status: user.status,
         bio: user.bio,
         avatar_url: user.avatar_url,
@@ -260,6 +270,7 @@ app.post("/api/auth/login", async (req, res) => {
     });
 
   } catch (err) {
+
     console.error(err);
 
     res.status(500).json({
