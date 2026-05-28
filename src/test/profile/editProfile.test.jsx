@@ -16,7 +16,7 @@ vi.mock("../../context/AuthContext", () => ({
       city: "Vilnius",
       country: "LT",
       bio: "test bio",
-      avatar_url: "",
+      avatar_url: "https://example.com/avatar.jpg",
     },
   }),
 }));
@@ -44,18 +44,6 @@ describe("edit profile flow", () => {
   });
 
   test("user can edit profile successfully", async () => {
-    /* ---- LOAD PROFILE ---- */
-    fetch.mockResolvedValueOnce({
-      json: async () => ({
-        username: "Old User",
-        email: "old@example.com",
-        city: "Vilnius",
-        country: "Lithuania",
-        bio: "Old bio",
-        avatar_url: "https://example.com/avatar.jpg",
-      }),
-    });
-
     /* ---- UPDATE PROFILE ---- */
     fetch.mockResolvedValueOnce({
       ok: true,
@@ -68,24 +56,30 @@ describe("edit profile flow", () => {
       </MemoryRouter>
     );
 
+    /* ================= INITIAL VALUES (from AuthContext) ================= */
+
     expect(
-      await screen.findByDisplayValue("Old User")
+      await screen.findByDisplayValue("testuser")
     ).toBeInTheDocument();
 
-    const usernameInput = screen.getByDisplayValue("Old User");
+    const usernameInput = screen.getByDisplayValue("testuser");
     await userEvent.clear(usernameInput);
     await userEvent.type(usernameInput, "New Username");
 
-    const bioInput = screen.getByDisplayValue("Old bio");
+    const bioInput = screen.getByDisplayValue("test bio");
     await userEvent.clear(bioInput);
     await userEvent.type(bioInput, "Updated bio");
+
+    /* ================= SUBMIT ================= */
 
     await userEvent.click(
       screen.getByRole("button", { name: /save changes/i })
     );
 
+    /* ================= ASSERT API ================= */
+
     await waitFor(() => {
-      expect(fetch).toHaveBeenLastCalledWith(
+      expect(fetch).toHaveBeenCalledWith(
         "https://team-13-lososj.onrender.com/api/profile",
         expect.objectContaining({
           method: "PUT",
@@ -94,15 +88,17 @@ describe("edit profile flow", () => {
           }),
           body: JSON.stringify({
             username: "New Username",
-            email: "old@example.com",
+            email: "test@mail.com",
             city: "Vilnius",
-            country: "Lithuania",
+            country: "LT",
             bio: "Updated bio",
             avatar_url: "https://example.com/avatar.jpg",
           }),
         })
       );
     });
+
+    /* ================= REDIRECT ================= */
 
     expect(mockNavigate).toHaveBeenCalledWith("/profile");
   });
