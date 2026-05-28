@@ -103,16 +103,37 @@
 .forgotLink:hover {
   text-decoration: underline;
 }
-
 @media (max-width: 900px) {
-    .page {
-        flex-direction: column;
-        text-align: center;
-    }
 
-    .main {
-        text-align: center;
-    }
+  .page {
+    flex-direction: column;
+    padding: 18px 14px;
+    gap: 22px;
+  }
+
+  .form {
+    width: 100%;
+    max-width: 92%;
+
+    margin: 0 auto;
+
+    padding: 20px;
+    border-radius: 20px;
+
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+  }
+
+  .main {
+    text-align: center;
+  }
+
+  .main h1 {
+    font-size: 28px;
+  }
+
+  .main p {
+    font-size: 14px;
+    line-height: 1.5;
+    opacity: 0.85;
+  }
 }
-
-
