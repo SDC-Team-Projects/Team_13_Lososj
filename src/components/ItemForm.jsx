@@ -104,12 +104,9 @@ export default function ItemForm() {
         name,
         description,
         notes,
+        image,
         condition,
         estimated_value: Number(price),
-
-        custom_fields: {
-           image,
-        },
       });
 
       navigate(`/collections/${id}`);
