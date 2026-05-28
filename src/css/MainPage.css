@@ -20,7 +20,7 @@
 }
 
 
-   .infoRow {
+  .infoRow {
   display: flex;
   gap: 20px;
 
@@ -35,6 +35,11 @@
 
 .recentBlock {
   margin-top: 30px;
+
+  background: #f3f4f6;
+  border-radius: 24px;
+
+  padding: 20px;
 }
 
 .sectionTitle {
@@ -47,22 +52,24 @@
 .recentScroll {
   display: flex;
   overflow-x: auto;
-  padding-bottom: 10px;
+
+  padding: 20px 20px 20px 20px;
+  gap: 23px;
 
   scroll-snap-type: x mandatory;
+  scroll-padding-left: 16px;
+  scroll-padding-right: 16px;
+
+  box-sizing: border-box;
+  background-color: rgba(0, 0, 0, 0.034);
+  border-radius: 20px;
 }
 
 .recentItem {
-  flex: 0 0 auto;
-  width: 300px;
+  flex: 0 0 calc((100% - 32px) / 3);
   scroll-snap-align: start;
-
-  transition: transform 0.2s ease;
 }
 
-.recentItem:hover {
-  transform: translateY(-2px);
-}
 
 /* hide scrollbar */
 .recentScroll::-webkit-scrollbar {

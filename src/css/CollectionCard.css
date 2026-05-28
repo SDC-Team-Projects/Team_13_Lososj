@@ -260,6 +260,10 @@
   transition: 0.2s ease;
 }
 
+.recentBlock .collectionCard:hover {
+  transform: none;
+}
+
 .favoriteIcon:hover {
   transform: scale(1.08);
 }

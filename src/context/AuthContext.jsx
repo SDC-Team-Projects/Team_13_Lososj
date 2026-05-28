@@ -88,10 +88,6 @@
 // }
 
 
-
-
-
-
 import { createContext, useState, useEffect, useContext } from "react";
 
 export const AuthContext = createContext();
@@ -101,7 +97,7 @@ export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // INIT
+  // INIT AUTH
   useEffect(() => {
     const savedToken = sessionStorage.getItem("token");
 
@@ -118,16 +114,20 @@ export function AuthProvider({ children }) {
       },
     })
       .then((res) => {
-        if (!res.ok) throw new Error();
+        if (!res.ok) throw new Error("Auth failed");
         return res.json();
       })
-      .then((data) => setUser(data))
+      .then((data) => {
+        setUser(data);
+      })
       .catch(() => {
         sessionStorage.removeItem("token");
         setToken(null);
         setUser(null);
       })
-      .finally(() => setLoading(false));
+      .finally(() => {
+        setLoading(false);
+      });
   }, []);
 
   // LOGIN
@@ -144,7 +144,9 @@ export function AuthProvider({ children }) {
     setUser(null);
   };
 
+  // ✅ ВАЖНО: auth = token, не user
   const isAuthenticated = !!token;
+
   const isAdmin = user?.role === "ADMIN";
 
   return (
