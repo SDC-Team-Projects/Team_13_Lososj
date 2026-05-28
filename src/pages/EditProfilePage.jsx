@@ -131,11 +131,15 @@ export default function EditProfileForm() {
 
       {/* RIGHT */}
       <div className={styles.right}>
-        <label className={styles.labelRequired}>Username</label>
-        <Input
-          value={username}
-          onChange={(e) => setUsername(e.target.value)}
-        />
+        <label htmlFor="username" className={styles.labelRequired}>
+            Username
+              </label>
+
+<Input
+  id="username"
+  value={username}
+  onChange={(e) => setUsername(e.target.value)}
+/>
 
         <label className={styles.labelRequired}>Email</label>
         <Input
