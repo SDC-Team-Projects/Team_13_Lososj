@@ -1,4 +1,8 @@
 
+/* =======================
+   HERO / TITLE
+======================= */
+
 .title {
   text-align: center;
   display: flex;
@@ -6,60 +10,43 @@
   gap: 20px;
 }
 
- .heroTitle {
+.heroTitle {
   display: flex;
-
   flex-direction: column;
-
   align-items: center;
-
   justify-content: center;
 
   margin-bottom: 32px;
-
   text-align: center;
 }
 
 .title h1 {
-   font-size: 48px;
-
+  font-size: 48px;
   font-weight: 800;
-
   color: #0f172a;
-
   line-height: 1.1;
-
   margin-bottom: 14px;
-
   letter-spacing: -1px;
 }
 
 .title p {
- font-size: 18px;
-
+  font-size: 18px;
   font-weight: 400;
-
   color: #475569;
-
   line-height: 1.7;
-
   max-width: 700px;
-
-  
 }
 
+/* =======================
+   LAYOUT
+======================= */
 
 .layout {
   display: flex;
   min-height: 100vh;
 }
 
-/* sidebar */
-.layout {
-  display: flex;
-  min-height: 100vh;
-}
-
+/* MAIN CONTENT */
 .content {
   flex: 1;
 
@@ -73,21 +60,48 @@
   box-sizing: border-box;
 }
 
-/* search */
+/* SEARCH */
 .search {
   width: 100%;
   margin-top: 30px;
 }
 
-/* view switcher */
+/* VIEW SWITCHER */
 .viewSwitcher {
   display: flex;
   gap: 15px;
   margin-top: 25px;
 }
 
+/* =======================
+   MOBILE
+======================= */
+
 @media (max-width: 768px) {
+
+  /* IMPORTANT: remove sidebar offset */
   .content {
     padding: 80px 16px 20px 16px;
+    align-items: stretch;
+  }
+
+  /* HERO TEXT FIX */
+  .title h1 {
+    font-size: 28px;
+    line-height: 1.2;
+    margin-bottom: 10px;
+  }
+
+  .title p {
+    font-size: 14px;
+    line-height: 1.5;
+    max-width: 100%;
+  }
+
+  /* BUTTONS WRAP */
+  .viewSwitcher {
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 10px;
   }
 }
