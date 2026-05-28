@@ -92,10 +92,12 @@ export default function ItemPage() {
           {owner && (
             <div className="itemActions">
 
-              <Button variant="secondary">
-                <Pencil size={18} />
-                Edit
-              </Button>
+              <Button
+  variant="primary"
+  onClick={() => navigate(`/items/${item.id}/edit`)}
+>
+  Edit
+</Button>
 
               <Button
                 variant="danger"
@@ -140,3 +142,4 @@ export default function ItemPage() {
     </div>
   );
 }
+

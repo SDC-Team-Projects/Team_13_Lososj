@@ -37,7 +37,7 @@ export default function SearchBar({ filters, setFilters }) {
           className={styles.filterBtn}
           onClick={() => setOpen((prev) => !prev)}
         >
-          ⚙️ Filters
+          Filters
         </button>
       </div>
 

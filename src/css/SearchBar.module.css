@@ -23,9 +23,9 @@
   border-radius: 12px;
   border: none;
   cursor: pointer;
-  background: #5aacff;
+  background-color: rgb(125, 187, 253);
   color: white;
-  font-weight: 500;
+  font-weight: 16px;
 }
 
 .panel {

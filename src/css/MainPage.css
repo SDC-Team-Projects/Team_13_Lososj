@@ -46,23 +46,34 @@
 /* horizontal scroll */
 .recentScroll {
   display: flex;
-  gap: 16px;
   overflow-x: auto;
   padding-bottom: 10px;
 
   scroll-snap-type: x mandatory;
 }
 
+.recentItem {
+  flex: 0 0 auto;
+  width: 300px;
+  scroll-snap-align: start;
+
+  transition: transform 0.2s ease;
+}
+
+.recentItem:hover {
+  transform: translateY(-2px);
+}
+
 /* hide scrollbar */
 .recentScroll::-webkit-scrollbar {
   display: none;
 }
-
+/* 
 .recentItem {
   flex: 0 0 auto;
   width: 320px;
   scroll-snap-align: start;
-}
+} */
 
 @media (max-width: 768px) {
 

@@ -64,12 +64,12 @@ export default function MainPage() {
 
     const unique = Array.from(uniqueMap.values());
 
-    // 3. сортируем по времени (новые первые)
-    unique.sort(
-      (a, b) => new Date(b.viewed_at) - new Date(a.viewed_at)
-    );
+// 3. сортируем по времени (новые первые)
+unique.sort(
+  (a, b) => new Date(b.viewed_at) - new Date(a.viewed_at)
+);
 
-    setRecentCollections(unique);
+setRecentCollections(unique);
   } catch (err) {
     console.error(err);
   }

@@ -1,8 +1,5 @@
-  .viewSwitcher {
-    display: none;
-  }
 
-  .heroText {
+ .heroTitle {
   display: flex;
 
   flex-direction: column;
@@ -16,8 +13,8 @@
   text-align: center;
 }
 
-.mainTitle {
-  font-size: 48px;
+.title h1 {
+   font-size: 48px;
 
   font-weight: 800;
 
@@ -30,8 +27,8 @@
   letter-spacing: -1px;
 }
 
-.subTitle {
-  font-size: 18px;
+.title p {
+ font-size: 18px;
 
   font-weight: 400;
 
@@ -41,17 +38,5 @@
 
   max-width: 700px;
 
-  text-align: center;
-}
-
-@media (min-width: 768px) {
-
-  .viewSwitcher {
-    display: flex;
-
-    gap: 12px;
-
-    margin-bottom: 20px;
-  }
-
+  
 }

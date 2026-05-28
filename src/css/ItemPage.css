@@ -38,15 +38,16 @@
 .itemCategory {
   width: fit-content;
 
+  border-color: #00238e;
   padding: 8px 16px;
 
-  background: #e8eefc;
+  background: #b4ddff;
 
-  border-radius: 10px;
+  border-radius: 15px;
 
-  font-size: 13px;font-weight: 600;
+  font-size: 18px;font-weight: 600;
 
-  color: #4169e1;
+  color: #255bff;
 }
 
 /* TITLE */
@@ -147,6 +148,8 @@
 
   font-weight: 500;
 }
+
+
 
 @media (max-width: 768px) {
 .itemPage {

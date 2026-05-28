@@ -144,14 +144,18 @@ export default function OverviewPage() {
       <Sidebar />
 
       <div className="content">
-        <div className="title">
-          <h2>Overview of collections</h2>
+        <div className="heroText">
 
-          <p>
-            Discover amazing collections from users
-            all over the world
-          </p>
-        </div>
+  <h2 className="mainTitle">
+    Overview of collections
+  </h2>
+
+  <p className="subTitle">
+    Discover amazing collections from users
+    all over the world
+  </p>
+
+</div>
 
         <div className="search">
           <SearchBar

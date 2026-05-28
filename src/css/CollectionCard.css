@@ -219,6 +219,18 @@
   gap: 8px;
 }
 
+.ownerLink {
+  text-decoration: none;
+  color: inherit;
+  opacity: 0.85;
+  transition: 0.2s;
+}
+
+.ownerLink:hover {
+  opacity: 1;
+  color: #73a4ff;
+}
+
 .collectionCard {
   position: relative;
 }

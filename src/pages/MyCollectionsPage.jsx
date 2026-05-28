@@ -112,8 +112,10 @@ const gridOptions = [
 
       <div className="content">
         <div className="title">
+          <div className="heroTitle">
           <h1>My Collections</h1>
           <p>Here you can manage your collections</p>
+          </div>
 
           <Link to="/collectionForm">
             <Button>+ Create New Collection</Button>

@@ -93,9 +93,13 @@ export default function ItemCard({
 
                 {owner && (
                   <>
-                    <Button variant="primary">
-                      Edit
-                    </Button>
+                  <Button
+  variant="secondary"
+  onClick={() => navigate(`/items/${item.id}/edit`)}
+>
+  <Pencil size={18} />
+  Edit
+</Button>
 
                     <Button
                       variant="danger"
@@ -158,10 +162,17 @@ export default function ItemCard({
                   {/* ONLY OWNER */}
                   {owner && (
                     <>
-                      <Button variant="primary">
-                        Edit
-                      </Button>
+                   <Button
+  variant="primary"
+  onClick={(e) => {
+    e.preventDefault();
+    e.stopPropagation();
 
+    navigate(`/items/${item.id}/edit`);
+  }}
+>
+  Edit
+</Button>
                       <Button
                         variant="danger"
                         onClick={handleDelete}

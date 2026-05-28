@@ -6,14 +6,48 @@
   gap: 20px;
 }
 
+ .heroTitle {
+  display: flex;
+
+  flex-direction: column;
+
+  align-items: center;
+
+  justify-content: center;
+
+  margin-bottom: 32px;
+
+  text-align: center;
+}
+
 .title h1 {
-  color: black;
-  margin: 0;
+   font-size: 48px;
+
+  font-weight: 800;
+
+  color: #0f172a;
+
+  line-height: 1.1;
+
+  margin-bottom: 14px;
+
+  letter-spacing: -1px;
 }
 
 .title p {
-  margin: 0;
+ font-size: 18px;
+
+  font-weight: 400;
+
+  color: #475569;
+
+  line-height: 1.7;
+
+  max-width: 700px;
+
+  
 }
+
 
 .layout {
   display: flex;
