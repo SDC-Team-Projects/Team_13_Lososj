@@ -1736,34 +1736,72 @@ app.get("/api/notifications", auth, async (req, res) => {
 /* BAN USER */
 app.post("/api/admin/users/:id/ban", auth, async (req, res) => {
   try {
+
      
     const me = await pool.query(
       "SELECT role FROM users WHERE id = $1",
       [req.user.id]
     );
 
-    if (me.rows[0].role !== "ADMIN") {
-      return res.status(403).json({ error: "No access" });
+    if (
+      me.rows.length === 0 ||
+      me.rows[0].role !== "ADMIN"
+    ) {
+      return res.status(403).json({
+        error: "No access"
+      });
+    }
+
+     
+    if (Number(req.params.id) === req.user.id) {
+      return res.status(400).json({
+        error: "You cannot ban yourself"
+      });
     }
 
     const { type, until } = req.body;
 
-    await pool.query(
-      `UPDATE users
-       SET status = 'banned'
-       WHERE id = $1`,
+     
+    const userResult = await pool.query(
+      `
+      SELECT id, username, status
+      FROM users
+      WHERE id = $1
+      `,
+      [req.params.id]
+    );
+
+    if (userResult.rows.length === 0) {
+      return res.status(404).json({
+        error: "User not found"
+      });
+    }
+
+     
+    const result = await pool.query(
+      `
+      UPDATE users
+      SET status = 'banned'
+      WHERE id = $1
+      RETURNING id, username, status
+      `,
       [req.params.id]
     );
 
     res.json({
       message: "User banned",
-      type,
-      until: until || null
+      type: type || "permanent",
+      until: until || null,
+      user: result.rows[0]
     });
 
   } catch (err) {
+
     console.error(err);
-    res.status(500).json({ error: "Server error" });
+
+    res.status(500).json({
+      error: "Server error"
+    });
   }
 });
 
