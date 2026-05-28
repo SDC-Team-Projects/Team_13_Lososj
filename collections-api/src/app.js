@@ -617,12 +617,9 @@ app.get("/api/collections/:id/export", auth, async (req, res) => {
     doc.text(`Description: ${collection.description || "-"}`);
     doc.moveDown();
 
-
-console.log("COLLECTION IMAGE:", collection.image);
-console.log("TYPE:", typeof collection.image);
-    
+     
     // COLLECTION IMAGE (FIXED LAYOUT SAFE)
-if (typeof collection.image === "string" && collection.image.trim().startsWith("http")) {
+if (collection.image && collection.image.startsWith("http")) {
   try {
 
     const response = await axios.get(collection.image, {
@@ -666,6 +663,33 @@ if (typeof collection.image === "string" && collection.image.trim().startsWith("
       doc.fontSize(12).text(`Estimated value: ${item.estimated_value || 0}`);
       doc.text(`Condition: ${item.condition || "-"}`);
       doc.text(`Description: ${item.description || "-"}`);
+
+      // ITEM IMAGE
+if (item.image && item.image.startsWith("http")) {
+  try {
+    const response = await axios.get(item.image, {
+      responseType: "arraybuffer",
+      timeout: 10000
+    });
+
+    const buffer = Buffer.from(response.data, "binary");
+
+    const imageY = doc.y;
+
+    doc.image(buffer, {
+      fit: [300, 250],
+      align: "center"
+    });
+
+    doc.y = imageY + 270;
+    doc.moveDown();
+
+  } catch (e) {
+    console.log("Item image error:", e.message);
+    doc.text("Item image could not be loaded");
+    doc.moveDown();
+  }
+}
 
       doc.moveDown();
     }
