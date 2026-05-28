@@ -617,9 +617,12 @@ app.get("/api/collections/:id/export", auth, async (req, res) => {
     doc.text(`Description: ${collection.description || "-"}`);
     doc.moveDown();
 
-     
+
+console.log("COLLECTION IMAGE:", collection.image);
+console.log("TYPE:", typeof collection.image);
+    
     // COLLECTION IMAGE (FIXED LAYOUT SAFE)
-if (collection.image && collection.image.startsWith("http")) {
+if (typeof collection.image === "string" && collection.image.trim().startsWith("http")) {
   try {
 
     const response = await axios.get(collection.image, {
