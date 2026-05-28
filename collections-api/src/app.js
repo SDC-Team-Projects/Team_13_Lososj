@@ -604,11 +604,12 @@ app.get("/api/collections/:id/export", auth, async (req, res) => {
       "Content-Disposition",
       `attachment; filename=collection-${collection.id}.pdf`
     );
+
     res.setHeader("Content-Type", "application/pdf");
 
     doc.pipe(res);
 
-    // TITLE
+    /* TITLE */
     doc.fontSize(24).text(collection.name);
     doc.moveDown();
 
@@ -617,39 +618,28 @@ app.get("/api/collections/:id/export", auth, async (req, res) => {
     doc.text(`Description: ${collection.description || "-"}`);
     doc.moveDown();
 
-     
-    // COLLECTION IMAGE (FIXED LAYOUT SAFE)
-if (collection.image && collection.image.startsWith("http")) {
-  try {
+    /* COLLECTION IMAGE (FIXED - NO AXIOS) */
+    if (collection.image && collection.image.startsWith("http")) {
+      try {
 
-    const response = await axios.get(collection.image, {
-      responseType: "arraybuffer",
-      timeout: 10000
-    });
+        const imageY = doc.y;
 
-    const buffer = Buffer.from(response.data, "binary");
+        doc.image(collection.image, {
+          fit: [400, 300],
+          align: "center"
+        });
 
-    
-    const imageY = doc.y;
+        doc.y = imageY + 320;
+        doc.moveDown();
 
-    doc.image(buffer, {
-      fit: [400, 300],
-      align: "center"
-    });
+      } catch (e) {
+        console.log("Collection image error:", e.message);
+        doc.text("Collection image could not be loaded");
+        doc.moveDown();
+      }
+    }
 
-     
-    doc.y = imageY + 320;
-
-    doc.moveDown();
-
-  } catch (e) {
-    console.log("Collection image error:", e.message);
-    doc.text("Collection image could not be loaded");
-    doc.moveDown();
-  }
-}
-
-    // ITEMS
+    /* ITEMS */
     doc.fontSize(18).text("Items");
     doc.moveDown();
 
@@ -664,32 +654,26 @@ if (collection.image && collection.image.startsWith("http")) {
       doc.text(`Condition: ${item.condition || "-"}`);
       doc.text(`Description: ${item.description || "-"}`);
 
-      // ITEM IMAGE
-if (item.image && item.image.startsWith("http")) {
-  try {
-    const response = await axios.get(item.image, {
-      responseType: "arraybuffer",
-      timeout: 10000
-    });
+      /* ITEM IMAGE (ALSO FIXED) */
+      if (item.image && item.image.startsWith("http")) {
+        try {
 
-    const buffer = Buffer.from(response.data, "binary");
+          const imageY = doc.y;
 
-    const imageY = doc.y;
+          doc.image(item.image, {
+            fit: [300, 250],
+            align: "center"
+          });
 
-    doc.image(buffer, {
-      fit: [300, 250],
-      align: "center"
-    });
+          doc.y = imageY + 270;
+          doc.moveDown();
 
-    doc.y = imageY + 270;
-    doc.moveDown();
-
-  } catch (e) {
-    console.log("Item image error:", e.message);
-    doc.text("Item image could not be loaded");
-    doc.moveDown();
-  }
-}
+        } catch (e) {
+          console.log("Item image error:", e.message);
+          doc.text("Item image could not be loaded");
+          doc.moveDown();
+        }
+      }
 
       doc.moveDown();
     }
