@@ -9,6 +9,7 @@ const auth = require("./middleware/auth");
 const PDFDocument = require("pdfkit");
 const axios = require("axios");
 const crypto = require("crypto");
+const sharp = require("sharp");
 
 const app = express();
 
@@ -26,6 +27,22 @@ app.get("/test-images", async (req, res) => {
 
   res.json(result.rows);
 });
+
+
+async function fetchImageAsPngBuffer(url) {
+  const response = await axios.get(url, {
+    responseType: "arraybuffer",
+    timeout: 10000,
+  });
+
+  const inputBuffer = Buffer.from(response.data);
+
+  const outputBuffer = await sharp(inputBuffer)
+    .png()
+    .toBuffer();
+
+  return outputBuffer;
+}
 
 
 /* ---------------- ACTIVITY HELPER ---------------- */
@@ -622,12 +639,7 @@ app.get("/api/collections/:id/export", auth, async (req, res) => {
 if (collection.image && collection.image.startsWith("http")) {
   try {
 
-    const response = await axios.get(collection.image, {
-      responseType: "arraybuffer",
-      timeout: 10000
-    });
-
-    const buffer = Buffer.from(response.data, "binary");
+    const buffer = await fetchImageAsPngBuffer(collection.image);
 
     
     const imageY = doc.y;
@@ -667,12 +679,7 @@ if (collection.image && collection.image.startsWith("http")) {
       // ITEM IMAGE
 if (item.image && item.image.startsWith("http")) {
   try {
-    const response = await axios.get(item.image, {
-      responseType: "arraybuffer",
-      timeout: 10000
-    });
-
-    const buffer = Buffer.from(response.data, "binary");
+    const buffer = await fetchImageAsPngBuffer(item.image);
 
     const imageY = doc.y;
 
