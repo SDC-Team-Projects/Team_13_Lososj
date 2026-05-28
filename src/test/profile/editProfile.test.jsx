@@ -1,13 +1,25 @@
 import { describe, test, expect, vi, beforeEach } from "vitest";
-import {
-  render,
-  screen,
-  waitFor,
-} from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router-dom";
 
 import EditProfilePage from "../../pages/EditProfilePage";
+
+/* ================= MOCK AUTH ================= */
+
+vi.mock("../../context/AuthContext", () => ({
+  useAuth: () => ({
+    user: {
+      id: 1,
+      username: "testuser",
+      email: "test@mail.com",
+      city: "Vilnius",
+      country: "LT",
+      bio: "test bio",
+      avatar_url: "",
+    },
+  }),
+}));
 
 /* ================= MOCK NAVIGATE ================= */
 
@@ -27,17 +39,12 @@ vi.mock("react-router-dom", async () => {
 global.fetch = vi.fn();
 
 describe("edit profile flow", () => {
-
   beforeEach(() => {
     vi.clearAllMocks();
-
-    localStorage.setItem("token", "fake-token");
   });
 
   test("user can edit profile successfully", async () => {
-
-    /* ---- FIRST FETCH = LOAD PROFILE ---- */
-
+    /* ---- LOAD PROFILE ---- */
     fetch.mockResolvedValueOnce({
       json: async () => ({
         username: "Old User",
@@ -49,8 +56,7 @@ describe("edit profile flow", () => {
       }),
     });
 
-    /* ---- SECOND FETCH = UPDATE PROFILE ---- */
-
+    /* ---- UPDATE PROFILE ---- */
     fetch.mockResolvedValueOnce({
       ok: true,
       json: async () => ({}),
@@ -62,53 +68,29 @@ describe("edit profile flow", () => {
       </MemoryRouter>
     );
 
-    /* ================= WAIT FOR DATA ================= */
-
     expect(
       await screen.findByDisplayValue("Old User")
     ).toBeInTheDocument();
 
-    /* ================= EDIT FIELDS ================= */
-
-    const usernameInput =
-      screen.getByDisplayValue("Old User");
-
+    const usernameInput = screen.getByDisplayValue("Old User");
     await userEvent.clear(usernameInput);
+    await userEvent.type(usernameInput, "New Username");
 
-    await userEvent.type(
-      usernameInput,
-      "New Username"
-    );
-
-    const bioInput =
-      screen.getByDisplayValue("Old bio");
-
+    const bioInput = screen.getByDisplayValue("Old bio");
     await userEvent.clear(bioInput);
-
-    await userEvent.type(
-      bioInput,
-      "Updated bio"
-    );
-
-    /* ================= SUBMIT ================= */
+    await userEvent.type(bioInput, "Updated bio");
 
     await userEvent.click(
-      screen.getByRole("button", {
-        name: /save changes/i,
-      })
+      screen.getByRole("button", { name: /save changes/i })
     );
 
-    /* ================= ASSERT API ================= */
-
     await waitFor(() => {
-
       expect(fetch).toHaveBeenLastCalledWith(
         "https://team-13-lososj.onrender.com/api/profile",
         expect.objectContaining({
           method: "PUT",
           headers: expect.objectContaining({
             "Content-Type": "application/json",
-            Authorization: "Bearer fake-token",
           }),
           body: JSON.stringify({
             username: "New Username",
@@ -116,20 +98,12 @@ describe("edit profile flow", () => {
             city: "Vilnius",
             country: "Lithuania",
             bio: "Updated bio",
-            avatar_url:
-              "https://example.com/avatar.jpg",
+            avatar_url: "https://example.com/avatar.jpg",
           }),
         })
       );
-
     });
 
-    /* ================= REDIRECT ================= */
-
-    expect(mockNavigate).toHaveBeenCalledWith(
-      "/profile"
-    );
-
+    expect(mockNavigate).toHaveBeenCalledWith("/profile");
   });
-
 });
