@@ -1,19 +1,10 @@
-
 import "../css/CollectionCard.css";
 import { Link, useNavigate } from "react-router-dom";
 import Button from "../ui/Button";
-import { deleteCollection } from "../api/collections";
 import React, { useState } from "react";
-import { useAuth } from "../context/AuthContext";
-import { isOwner } from "../utils/permissions";
 import { downloadCollectionPdf } from "../api/collections";
 
-import {
-  Heart,
-  Download,
-  Pencil,
-  Trash2,
-} from "lucide-react";
+import { Heart, Download } from "lucide-react";
 
 export default function CollectionCard({
   collection,
@@ -22,12 +13,8 @@ export default function CollectionCard({
   isFavorite,
   onToggleFavorite,
 }) {
-  const [deleting, setDeleting] = useState(false);
   const [downloading, setDownloading] = useState(false);
   const navigate = useNavigate();
-
-  const { user } = useAuth();
-  const owner = isOwner(user, collection.user_id);
 
   function trimText(text, maxLength = 30) {
     if (!text) return "";
@@ -42,24 +29,6 @@ export default function CollectionCard({
     onToggleFavorite?.(collection.id);
   }
 
-  async function handleDelete(e) {
-    e.preventDefault();
-    e.stopPropagation();
-
-    if (!window.confirm("Delete this collection?")) return;
-
-    try {
-      setDeleting(true);
-      await deleteCollection(collection.id);
-      onDelete?.(collection.id);
-      navigate("/collections");
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setDeleting(false);
-    }
-  }
-
   async function handleDownload(e) {
     e.preventDefault();
     e.stopPropagation();
@@ -68,7 +37,6 @@ export default function CollectionCard({
       setDownloading(true);
 
       const blob = await downloadCollectionPdf(collection.id);
-
       const url = window.URL.createObjectURL(blob);
 
       const a = document.createElement("a");
@@ -91,7 +59,7 @@ export default function CollectionCard({
   return (
     <div className={`collectionCard ${variant}`}>
 
-      {/* FAVORITE (only square) */}
+      {/* FAVORITE */}
       {variant === "square" && (
         <button
           className={`favoriteIcon ${isFavorite ? "active" : ""}`}
@@ -121,11 +89,8 @@ export default function CollectionCard({
             </div>
           </div>
 
-          <h2 className="title">
-            {collection.name}
-          </h2>
+          <h2 className="title">{collection.name}</h2>
 
-          {/* mini = shorter text */}
           <p className="desc">
             {variant === "square"
               ? trimText(collection.description)
@@ -134,7 +99,6 @@ export default function CollectionCard({
               : collection.description}
           </p>
 
-          {/* hide stats in mini */}
           {variant !== "mini" && (
             <div className="statsRow">
 
@@ -153,22 +117,20 @@ export default function CollectionCard({
               <div>
                 <span>Owner</span>
                 <strong>
-  <span
-    className="ownerLink"
-    onClick={(e) => {
-      e.preventDefault();
-      e.stopPropagation();
+                  <span
+                    className="ownerLink"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
 
-      navigate(
-        user?.id === collection.user_id
-          ? "/profile"
-          : `/users/${collection.user_id}`
-      );
-    }}
-  >
-    {collection.owner_name || "User"}
-  </span>
-</strong>
+                      navigate(
+                        `/users/${collection.user_id}`
+                      );
+                    }}
+                  >
+                    {collection.owner_name || "User"}
+                  </span>
+                </strong>
               </div>
 
             </div>
@@ -177,7 +139,7 @@ export default function CollectionCard({
         </div>
       </Link>
 
-      {/* ACTIONS only for horizontal */}
+      {/* ACTIONS (ALL USERS) */}
       {variant === "horizontal" && (
         <div className="actions">
 
@@ -194,32 +156,14 @@ export default function CollectionCard({
             {isFavorite ? "Saved" : "Favourites"}
           </Button>
 
-          {owner && (
-            <>
-              <Button
-                variant="secondary"
-                onClick={handleDownload}
-                disabled={downloading}
-              >
-                <Download size={18} />
-                {downloading ? "Downloading..." : ""}
-              </Button>
-
-              <Link to={`/collections/edit/${collection.id}`}>
-                <Button variant="secondary">
-                  <Pencil size={18} />
-                </Button>
-              </Link>
-
-              <Button
-                variant="danger"
-                onClick={handleDelete}
-                disabled={deleting}
-              >
-                <Trash2 size={18} />
-              </Button>
-            </>
-          )}
+          <Button
+            variant="secondary"
+            onClick={handleDownload}
+            disabled={downloading}
+          >
+            <Download size={18} />
+            {downloading ? "Downloading..." : "Download"}
+          </Button>
 
         </div>
       )}

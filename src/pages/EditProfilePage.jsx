@@ -14,7 +14,7 @@ import { apiFetch } from "../api/apiClient";
 
 export default function EditProfileForm() {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, setUser } = useAuth();
 
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
@@ -82,11 +82,15 @@ export default function EditProfileForm() {
         }
       );
 
-      if (!res.ok) {
-        throw new Error("Failed to update profile");
-      }
+     if (!res.ok) {
+  throw new Error("Failed to update profile");
+}
 
-      navigate("/profile");
+const updatedUser = await res.json();
+
+setUser(updatedUser);
+
+navigate("/profile");
     } catch (err) {
       console.error(err);
     }

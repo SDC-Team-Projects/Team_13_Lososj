@@ -221,7 +221,7 @@
 
 .ownerLink {
   text-decoration: none;
-  color: inherit;
+  color: rgba(0, 0, 0, 0.612);
   opacity: 0.85;
   transition: 0.2s;
 }
