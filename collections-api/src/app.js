@@ -664,33 +664,6 @@ if (collection.image && collection.image.startsWith("http")) {
       doc.text(`Condition: ${item.condition || "-"}`);
       doc.text(`Description: ${item.description || "-"}`);
 
-      // ITEM IMAGE
-if (item.image && item.image.startsWith("http")) {
-  try {
-    const response = await axios.get(item.image, {
-      responseType: "arraybuffer",
-      timeout: 10000
-    });
-
-    const buffer = Buffer.from(response.data, "binary");
-
-    const imageY = doc.y;
-
-    doc.image(buffer, {
-      fit: [300, 250],
-      align: "center"
-    });
-
-    doc.y = imageY + 270;
-    doc.moveDown();
-
-  } catch (e) {
-    console.log("Item image error:", e.message);
-    doc.text("Item image could not be loaded");
-    doc.moveDown();
-  }
-}
-
       doc.moveDown();
     }
 
@@ -704,7 +677,6 @@ if (item.image && item.image.startsWith("http")) {
     res.status(500).json({ error: "Server error" });
   }
 });
-
 /* ---------------- ITEMS ---------------- */
 
 /* CREATE ITEM */
