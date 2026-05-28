@@ -1653,23 +1653,25 @@ app.get("/api/views-history", auth, async (req, res) => {
     const result = await pool.query(
       `
       SELECT
-        views_history.*,
+  views_history.*,
 
-        items.name AS item_name,
+  items.name AS item_name,
+  items.image AS item_image,
 
-        collections.name AS collection_name
+  collections.name AS collection_name,
+  collections.image AS collection_image
 
-      FROM views_history
+FROM views_history
 
-      LEFT JOIN items
-      ON items.id = views_history.item_id
+LEFT JOIN items
+ON items.id = views_history.item_id
 
-      LEFT JOIN collections
-      ON collections.id = views_history.collection_id
+LEFT JOIN collections
+ON collections.id = views_history.collection_id
 
-      WHERE views_history.user_id = $1
+WHERE views_history.user_id = $1
 
-      ORDER BY viewed_at DESC
+ORDER BY viewed_at DESC
       `,
       [req.user.id]
     );
