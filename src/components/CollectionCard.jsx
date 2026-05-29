@@ -89,9 +89,9 @@ export default function CollectionCard({
     e.preventDefault();
     e.stopPropagation();
 
-    navigate(
-      `/collections/${collection.id}/edit`
-    );
+   navigate(
+  `/collections/edit/${collection.id}`
+);
   }
 
   function handleDelete(e) {

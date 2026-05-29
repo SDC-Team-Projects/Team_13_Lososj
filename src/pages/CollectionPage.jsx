@@ -5,8 +5,9 @@
 // import Sidebar from "../components/Sidebar";
 // import ItemCard from "../components/ItemCard";
 // import CollectionCard from "../components/CollectionCard";
-
+// import { deleteCollection } from "../api/collections";
 // import Button from "../ui/Button";
+// import { useParams, Link, useNavigate } from "react-router-dom";
 
 // import "../css/CollectionPage.css";
 // import "../css/CollectionCard.css";
@@ -24,6 +25,7 @@
 // } from "../api/collections";
 
 // export default function CollectionPage() {
+
 //   const { id } = useParams();
 
 //   const [collection, setCollection] = useState(null);
@@ -37,7 +39,7 @@
 //   useEffect(() => {
 //     loadData();
 //     loadFavorites();
-//   }, [id]);
+//   }, [id, user]);
 
 //   const loadData = async () => {
 //     try {
@@ -54,6 +56,18 @@
 //       setLoading(false);
 //     }
 //   };
+
+//   async function handleDelete(collectionId) {
+//   try {
+
+//     await deleteCollection(collectionId);
+
+//     navigate("/collections");
+
+//   } catch (err) {
+//     console.error(err);
+//   }
+// }
 
 //   async function loadFavorites() {
 //     try {
@@ -82,7 +96,6 @@
 //     }
 //   }
 
-//   // ✅ SAFE OWNER CHECK (ВАЖНО)
 //   const owner =
 //     user && collection
 //       ? isOwner(user, collection.user_id)
@@ -104,10 +117,10 @@
 //             variant="horizontal"
 //             isFavorite={favoriteIds.includes(collection.id)}
 //             onToggleFavorite={toggleFavorite}
+//             onDelete={handleDelete}
 //           />
 //         </div>
 
-//         {/* ✅ только для владельца */}
 //         {owner && (
 //           <div className="button">
 //             <Link to={`/collections/${id}/items/new`}>
@@ -131,6 +144,7 @@
 //             items.map((item) => (
 //               <ItemCard
 //                 key={item.id}
+//                 variant="horizontal"
 //                 item={{
 //                   ...item,
 //                   image:
@@ -153,7 +167,12 @@
 
 
 import { useEffect, useState } from "react";
-import { useParams, Link } from "react-router-dom";
+
+import {
+  useParams,
+  Link,
+  useNavigate
+} from "react-router-dom";
 
 import Sidebar from "../components/Sidebar";
 import ItemCard from "../components/ItemCard";
@@ -164,20 +183,23 @@ import Button from "../ui/Button";
 import "../css/CollectionPage.css";
 import "../css/CollectionCard.css";
 
-import { getCollectionById } from "../api/collections";
-import { getItemsByCollection } from "../api/items";
-
-import { useAuth } from "../context/AuthContext";
-import { isOwner } from "../utils/permissions";
-
 import {
+  getCollectionById,
+  deleteCollection,
   getFavoriteCollections,
   addFavoriteCollection,
   removeFavoriteCollection,
 } from "../api/collections";
 
+import { getItemsByCollection } from "../api/items";
+
+import { useAuth } from "../context/AuthContext";
+import { isOwner } from "../utils/permissions";
+
 export default function CollectionPage() {
+
   const { id } = useParams();
+  const navigate = useNavigate();
 
   const [collection, setCollection] = useState(null);
   const [items, setItems] = useState([]);
@@ -194,42 +216,79 @@ export default function CollectionPage() {
 
   const loadData = async () => {
     try {
-      const [collectionData, itemsData] = await Promise.all([
-        getCollectionById(id),
-        getItemsByCollection(id),
-      ]);
+
+      const [collectionData, itemsData] =
+        await Promise.all([
+          getCollectionById(id),
+          getItemsByCollection(id),
+        ]);
 
       setCollection(collectionData);
       setItems(itemsData);
+
     } catch (err) {
       console.error(err);
+
     } finally {
       setLoading(false);
     }
   };
 
+  async function handleDelete(collectionId) {
+    try {
+
+      await deleteCollection(collectionId);
+
+      navigate("/collections");
+
+    } catch (err) {
+      console.error(err);
+    }
+  }
+
   async function loadFavorites() {
     try {
+
       const data = await getFavoriteCollections();
-      setFavoriteIds(data.map((c) => c.id));
+
+      setFavoriteIds(
+        data.map((c) => c.id)
+      );
+
     } catch (err) {
       console.error(err);
     }
   }
 
   async function toggleFavorite(collectionId) {
-    const isFav = favoriteIds.includes(collectionId);
+
+    const isFav =
+      favoriteIds.includes(collectionId);
 
     try {
+
       if (isFav) {
-        await removeFavoriteCollection(collectionId);
+
+        await removeFavoriteCollection(
+          collectionId
+        );
+
         setFavoriteIds((prev) =>
           prev.filter((id) => id !== collectionId)
         );
+
       } else {
-        await addFavoriteCollection(collectionId);
-        setFavoriteIds((prev) => [...prev, collectionId]);
+
+        await addFavoriteCollection(
+          collectionId
+        );
+
+        setFavoriteIds((prev) => [
+          ...prev,
+          collectionId
+        ]);
       }
+
     } catch (err) {
       console.error(err);
     }
@@ -240,32 +299,48 @@ export default function CollectionPage() {
       ? isOwner(user, collection.user_id)
       : false;
 
-  if (loading) return <h2>Loading collection...</h2>;
-  if (!collection) return <h2>Collection not found</h2>;
+  if (loading) {
+    return <h2>Loading collection...</h2>;
+  }
+
+  if (!collection) {
+    return <h2>Collection not found</h2>;
+  }
 
   return (
     <div className="layout">
+
       <Sidebar />
 
       <div className="content">
+
         <h1>{collection.name}</h1>
 
         <div className="itemsList">
+
           <CollectionCard
             collection={collection}
             variant="horizontal"
-            isFavorite={favoriteIds.includes(collection.id)}
+            isFavorite={
+              favoriteIds.includes(collection.id)
+            }
             onToggleFavorite={toggleFavorite}
+            onDelete={handleDelete}
           />
+
         </div>
 
         {owner && (
           <div className="button">
-            <Link to={`/collections/${id}/items/new`}>
+
+            <Link
+              to={`/collections/${id}/items/new`}
+            >
               <Button variant="primary">
                 + Add Item
               </Button>
             </Link>
+
           </div>
         )}
 
@@ -278,25 +353,37 @@ export default function CollectionPage() {
             gap: "24px",
           }}
         >
+
           {items.length > 0 ? (
+
             items.map((item) => (
+
               <ItemCard
                 key={item.id}
                 variant="horizontal"
                 item={{
                   ...item,
+
                   image:
                     item.custom_fields?.image ||
                     "https://placehold.co/600x400",
+
                   price: item.estimated_value,
+
                   category: item.condition,
                 }}
               />
+
             ))
+
           ) : (
+
             <p>No items yet</p>
+
           )}
+
         </div>
+
       </div>
     </div>
   );
