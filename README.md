@@ -31,12 +31,13 @@ Roles:
 ## TEAM ROLES
 # Name - Role - GitHub nickname
 
-# Ilya Yakubski - TL + Backend - DP-63-A
-# Ialanta Pushchayenka - Frontend - iolanta-pushchayenka
-# Kiryl Verkhavodka - Backend - Bruh-2
+- Ilya Yakubski - TL + Backend - DP-63-A
+- Ialanta Pushchayenka - Frontend - iolanta-pushchayenka
+- Kiryl Verkhavodka - Backend - Bruh-2
 
 
 ## TECHNOLOGIES USED
+
 Technologies used:
 
 ## Frontend:
