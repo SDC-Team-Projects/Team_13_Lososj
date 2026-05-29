@@ -1820,37 +1820,33 @@ app.post("/api/admin/users/:id/ban", auth, async (req, res) => {
 
 app.post("/api/admin/users/:id/unban", auth, async (req, res) => {
   try {
-
     const me = await pool.query(
       "SELECT role FROM users WHERE id = $1",
       [req.user.id]
     );
 
     if (me.rows[0].role !== "ADMIN") {
-      return res.status(403).json({
-        error: "No access"
-      });
+      return res.status(403).json({ error: "No access" });
     }
 
-    await pool.query(
+    const result = await pool.query(
       `
       UPDATE users
       SET status = 'active'
       WHERE id = $1
+      RETURNING id, status
       `,
       [req.params.id]
     );
 
-    res.json({
-      message: "User unbanned"
+    return res.json({
+      message: "User unbanned",
+      user: result.rows[0]
     });
 
   } catch (err) {
     console.error(err);
-
-    res.status(500).json({
-      error: "Server error"
-    });
+    res.status(500).json({ error: "Server error" });
   }
 });
 
