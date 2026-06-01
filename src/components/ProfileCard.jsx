@@ -62,6 +62,7 @@
 
 import "../css/ProfileCard.css";
 import { Link } from "react-router-dom";
+import { User } from "lucide-react";
 
 export default function ProfileCard({ user, isMe }) {
   if (!user) {
@@ -72,21 +73,17 @@ export default function ProfileCard({ user, isMe }) {
     <div className="profileCard">
 
       <div className="top">
-        <div className="avatarWrapper">
-
-          {user.avatar_url ? (
-            <img
-              className="avatar"
-              src={user.avatar_url}
-              alt="profile"
-            />
-          ) : (
-            <div className="avatarPlaceholder">
-              <span className="userIcon">👤</span>
-            </div>
-          )}
-
-        </div>
+      <div className="avatarWrapper">
+  {user.avatar_url ? (
+    <img
+      src={user.avatar_url}
+      alt="owner"
+      className="avatar"
+    />
+  ) : (
+    <User size={42} />
+  )}
+</div>
 
         <div className="info">
 

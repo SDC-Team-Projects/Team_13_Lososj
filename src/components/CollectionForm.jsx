@@ -123,9 +123,10 @@ const handleSubmit = async (e) => {
             Collection Name
           </label>
 
-          <Input
+  <Input
   placeholder="e.g. Books collection"
   value={name}
+  maxLength={60}
   onChange={(e) => setName(e.target.value)}
 />
         </div>
@@ -145,9 +146,10 @@ const handleSubmit = async (e) => {
           Description
         </label>
 
-        <Input
+ <Input
   placeholder="Describe your collection in detail..."
   value={description}
+  maxLength={300}
   onChange={(e) => setDescription(e.target.value)}
 />
 

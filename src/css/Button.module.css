@@ -13,7 +13,8 @@
 }
 
 .primary {
-  background-color: rgb(125, 187, 253);
+  /* background-color: rgb(125, 187, 253); */
+  background-color: #2563eb;
   color: white;
 }
 

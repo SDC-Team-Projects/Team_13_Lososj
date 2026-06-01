@@ -23,7 +23,8 @@
   border-radius: 12px;
   border: none;
   cursor: pointer;
-  background-color: rgb(125, 187, 253);
+  /* background-color: rgb(125, 187, 253); */
+  background-color: #2563eb;
   color: white;
   font-weight: 16px;
 }

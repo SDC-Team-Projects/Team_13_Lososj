@@ -9,7 +9,7 @@ import CollectionCard from "../components/CollectionCard";
 import { getUserAnalytics } from "../api/collections";
 import React, { useEffect, useState } from "react";
 import { apiFetch } from "../api/apiClient";
-
+import { ChartNoAxesCombined } from "lucide-react";
 
 export default function MainPage() {
 
@@ -83,9 +83,9 @@ setRecentCollections(unique);
           <div className="content">
 
            <div className="infoRow">
-           <InfoCard title="Items" count={analytics.items_count}/>
+           <InfoCard title="Items" count={analytics.items_count}></InfoCard>
            <InfoCard title="Collections" count={analytics.collections_count}/>
-           <InfoCard title="Total value" count={analytics.total_value}/>
+           <InfoCard title="Total value" count={analytics.total_value}></InfoCard>
          </div>
 
          <div className="costChart">
