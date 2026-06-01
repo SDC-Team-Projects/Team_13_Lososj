@@ -2,8 +2,9 @@
 
 .sidebar {
   top: 0;
-  left: 0; 
+  left: 0;
   position: fixed;
+
   height: 100vh;
   width: 260px;
 
@@ -13,43 +14,105 @@
     #FFF4DF 100%
   );
 
-  border-right: 1px solid #e5e5e5;
+  border-right: 1px solid rgba(255,255,255,0.4);
 
   display: flex;
   flex-direction: column;
+
   transition: transform 0.35s ease;
+
   z-index: 1000;
+
+  backdrop-filter: blur(10px);
 }
 
 /* ===== HEADER ===== */
 
 .sidebar__header {
-  padding: 16px;
-  font-size: 18px;
-  font-weight: bold;
-  border-bottom: 1px solid #e5e5e5;
-  color: #1e3a8a;
+  padding: 18px 20px;
+
+  font-size: 20px;
+  font-weight: 700;
+
+  border-bottom: 1px solid rgba(255,255,255,0.35);
+
+  color: #111827;
+
+  letter-spacing: -0.3px;
 }
 
 /* ===== NAV ===== */
 
 .sidebar__nav {
-  padding: 10px;
+  padding: 14px;
+
   display: flex;
   flex-direction: column;
-  gap: 6px;
+
+  gap: 8px;
 }
+
+/* LINKS */
 
 .sidebar__nav a {
-  padding: 10px;
-  border-radius: 6px;
+  display: flex;
+  align-items: center;
+
+  gap: 12px;
+
+  padding: 12px 14px;
+
+  border-radius: 14px;
+
   text-decoration: none;
-  color: white;
-  transition: background 0.2s;
+
+  color: #1f2937;
+
+  font-weight: 600;
+
+  font-size: 15px;
+
+  line-height: 1;
+
+  transition:
+    background 0.2s ease,
+    color 0.2s ease,
+    transform 0.2s ease;
 }
 
-.sidebar__nav a:hover {
-  background: rgba(255,255,255,0.2);
+/* ICONS */
+
+.sidebar__nav a svg,
+.sidebarSettingsButton svg,
+.sidebarDropdown a svg,
+.sidebarDropdown button svg {
+  flex-shrink: 0;
+
+  width: 18px;
+  height: 18px;
+
+  position: relative;
+  top: -1px;
+}
+
+/* HOVER */
+
+.sidebar__nav a:hover,
+.sidebarSettingsButton:hover {
+  background: rgba(255,255,255,0.6);
+}
+
+/* ACTIVE PAGE */
+
+.sidebar__nav a.active {
+  background: white;
+
+  color: #2563eb;
+
+  box-shadow:
+    0 4px 14px rgba(0,0,0,0.08);
+
+  font-weight: 700;
 }
 
 /* ===== SETTINGS ===== */
@@ -58,64 +121,99 @@
   position: relative;
 }
 
+/* SETTINGS BUTTON */
+
 .sidebarSettingsButton {
   width: 100%;
+
+  display: flex;
+  align-items: center;
+
+  gap: 12px;
+
   background: transparent;
   border: none;
 
-  color: white;
+  color: #1f2937;
+
   text-align: left;
 
   cursor: pointer;
 
-  padding: 10px;
-  font-size: 16px;
+  padding: 12px 14px;
+
+  font-size: 15px;
+  font-weight: 600;
+
+  line-height: 1;
+
   font-family: inherit;
 
-  border-radius: 6px;
+  border-radius: 14px;
+
+  transition:
+    background 0.2s ease,
+    color 0.2s ease;
 }
 
 .sidebarSettingsButton:hover {
-  background: rgba(255,255,255,0.2);
+  background: rgba(255,255,255,0.6);
 }
 
-/* DROPDOWN */
+/* ===== DROPDOWN ===== */
 
 .sidebarDropdown {
   position: absolute;
+
   left: 0;
   top: 100%;
 
   width: 220px;
 
   background: white;
-  border-radius: 16px;
+
+  border-radius: 18px;
 
   padding: 10px;
 
-  box-shadow: 0 10px 30px rgba(0,0,0,0.12);
+  box-shadow:
+    0 12px 30px rgba(0,0,0,0.12);
+
   z-index: 100;
 }
+
+/* DROPDOWN ITEMS */
 
 .sidebarDropdown a,
 .sidebarDropdown button {
   width: 100%;
-  display: block;
+
+  display: flex;
+  align-items: center;
+
+  gap: 10px;
 
   padding: 12px;
+
   border: none;
   background: none;
 
   text-align: left;
+
   cursor: pointer;
 
   color: #111827;
-  border-radius: 10px;
+
+  border-radius: 12px;
 
   font-size: 14px;
+  font-weight: 500;
+
   font-family: inherit;
 
   text-decoration: none;
+
+  transition: background 0.2s ease;
 }
 
 .sidebarDropdown a:hover,
@@ -128,7 +226,9 @@
 .sidebarOverlay {
   position: fixed;
   inset: 0;
+
   background: rgba(0,0,0,0.4);
+
   z-index: 999;
 }
 
@@ -138,6 +238,7 @@
   display: none;
 
   position: fixed;
+
   top: 16px;
   left: 16px;
 
@@ -158,21 +259,18 @@
   .menuToggleBtn {
     display: flex;
     justify-content: flex-start;
-  } 
+  }
 
-.sidebar {
+  .sidebar {
     transform: translateX(-100%);
-  }  
-
+  }
 
   .sidebar.open {
     transform: translateX(0);
   }
 }
 
-
-
-/* OVERLAY */
+/* ===== LOGOUT MODAL ===== */
 
 .logoutModalOverlay {
   position: fixed;
@@ -201,7 +299,8 @@
 
   padding: 28px;
 
-  box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+  box-shadow:
+    0 20px 40px rgba(0,0,0,0.15);
 
   animation: modalShow 0.2s ease;
 }
@@ -268,7 +367,7 @@
   background: #dc2626;
 }
 
-/* ANIMATION */
+/* ===== ANIMATION ===== */
 
 @keyframes modalShow {
   from {

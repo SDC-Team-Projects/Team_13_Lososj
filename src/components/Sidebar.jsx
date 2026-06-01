@@ -1,36 +1,29 @@
 import "../css/Sidebar.css";
 
-import { Link, useNavigate } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
 import { logoutUser } from "../api/auth";
 import { useState } from "react";
-import { Menu, X } from "lucide-react";
+import {
+  Menu,
+  X,
+  House,
+  LayoutDashboard,
+  FolderOpen,
+  Heart,
+  User,
+  Settings,
+  Shield,
+  LogOut,
+  KeyRound,
+} from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 
 export default function Sidebar() {
   const navigate = useNavigate();
-
   const [open, setOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
-  // const { user } = useAuth();
   const [logoutOpen, setLogoutOpen] = useState(false);
-
-// const handleLogout = async () => {
-//   try {
-
-//     await logoutUser();
-
-//     localStorage.removeItem("token");
-
-//     navigate("/login");
-
-//   } catch (err) {
-
-//     console.error(err);
-
-//   }
-// };
-
-const { user, logout } = useAuth();
+  const { user, logout } = useAuth();
 
 const handleLogout = async () => {
   try {
@@ -68,16 +61,17 @@ const handleLogout = async () => {
 
         <nav className="sidebar__nav">
           {user?.role === "ADMIN" && (
-  <Link to="/admin" onClick={closeSidebar}>
-    Admin Panel
-  </Link>
-)}
+            <NavLink to="/admin" onClick={closeSidebar}>
+                  <Shield size={18} />
+                <span>Admin Panel</span>
+            </NavLink>
+          )}
 
-          <Link to="/home" onClick={closeSidebar}>Home</Link>
-          <Link to="/overview" onClick={closeSidebar}>Overview</Link>
-          <Link to="/collections" onClick={closeSidebar}>My Collections</Link>
-          <Link to="/favorites" onClick={closeSidebar}>Favourites</Link>
-          <Link to="/profile" onClick={closeSidebar}>Profile</Link>
+          <NavLink to="/home" onClick={closeSidebar}> <House size={18} /> Home</NavLink>
+          <NavLink to="/overview" onClick={closeSidebar}>  <LayoutDashboard size={18} /> Overview</NavLink>
+          <NavLink to="/collections" onClick={closeSidebar}> <FolderOpen size={18} /> My Collections</NavLink>
+          <NavLink to="/favorites" onClick={closeSidebar}>  <Heart size={18} /> Favourites</NavLink>
+          <NavLink to="/profile" onClick={closeSidebar}> <User size={18} /> Profile</NavLink>
 
           {/* SETTINGS */}
           <div
@@ -86,18 +80,21 @@ const handleLogout = async () => {
             onMouseLeave={() => setSettingsOpen(false)}
           >
             <button className="sidebarSettingsButton">
+              <Settings size={18} />
               Settings
             </button>
 
             {settingsOpen && (
               <div className="sidebarDropdown">
-                <Link to="/settings/password" onClick={closeSidebar}>
+                <NavLink to="/settings/password" onClick={closeSidebar}>
+                  <KeyRound size={16} />
                   Change Password
-                </Link>
+                </NavLink>
 
                 <button onClick={() => setLogoutOpen(true)}>
+                    <LogOut size={16} />
                       Log Out
-                        </button>
+                      </button>
               </div>
             )}
           </div>
