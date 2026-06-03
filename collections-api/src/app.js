@@ -1676,7 +1676,9 @@ app.get("/api/views-history", auth, async (req, res) => {
   items.image AS item_image,
 
   collections.name AS collection_name,
-  collections.image AS collection_image
+  collections.image AS collection_image,
+
+  collections.category AS category
 
 FROM views_history
 
