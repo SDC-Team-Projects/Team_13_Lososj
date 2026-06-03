@@ -3,6 +3,8 @@ import { useAuth } from "../../context/AuthContext";
 import {
   getAdminCollections,
 } from "../../api/admin";
+import styles from "../../css/AdminPage.module.css";
+
 
 const API_URL = "https://team-13-lososj.onrender.com/api";
 
@@ -77,8 +79,11 @@ export default function CollectionsModeration() {
               <td>{c.total_value}</td>
 
               <td>
-                <button onClick={() => handleDelete(c.id)}>
-                  Delete
+                <button
+                  className={`${styles.actionBtn} ${styles.deleteBtn}`}
+                  onClick={() => handleDelete(c.id)}
+                  >
+                Delete
                 </button>
               </td>
             </tr>

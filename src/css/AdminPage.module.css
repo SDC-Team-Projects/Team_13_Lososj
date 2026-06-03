@@ -1,0 +1,123 @@
+.page {
+  min-height: 100vh;
+  padding: 60px;
+  background: linear-gradient(180deg, #A8D3FF 0%, #FFF4DF 100%);
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
+}
+
+.title {
+  margin: 0;
+}
+
+.container {
+  display: flex;
+  gap: 30px;
+  align-items: flex-start;
+}
+
+/* LEFT NAV */
+.sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+
+  padding: 20px;
+  border-radius: 30px;
+
+  background: rgba(64, 64, 64, 0.08);
+  backdrop-filter: blur(10px);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+}
+
+.sidebar button {
+  border: 1px solid transparent;
+  padding: 12px 18px;
+  border-radius: 16px;
+  cursor: pointer;
+
+  background: rgba(255, 255, 255, 0.4);
+  backdrop-filter: blur(6px);
+
+  font-weight: 500;
+  color: #333;
+
+  transition: all 0.2s ease;
+
+  box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+}
+
+.sidebar button:hover {
+  transform: translateY(-1px);
+  background: rgba(255, 255, 255, 0.7);
+  box-shadow: 0 6px 16px rgba(0,0,0,0.08);
+}
+
+.sidebar button:active {
+  transform: scale(0.98);
+}
+
+.active {
+  background: linear-gradient(135deg, #4f46e5, #7c3aed);
+  color: white;
+  font-weight: 600;
+
+  box-shadow: 0 8px 20px rgba(79, 70, 229, 0.35);
+}
+
+.actionBtn {
+  padding: 8px 14px;
+  border: none;
+  border-radius: 12px;
+
+  cursor: pointer;
+  font-weight: 500;
+
+  transition: all 0.2s ease;
+
+  box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+}
+
+.banBtn {
+  background: linear-gradient(135deg, #ff1f1fc3, #b2402c);
+  color: white;
+}
+
+.banBtn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(239, 68, 68, 0.35);
+}
+
+.unbanBtn {
+  background: linear-gradient(135deg, #0fa050, #186836);
+  color: white;
+}
+
+.unbanBtn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(53, 173, 97, 0.804);
+}
+
+.deleteBtn {
+  background: linear-gradient(135deg, #6b7280, #374151);
+  color: white;
+}
+
+.deleteBtn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(107, 114, 128, 0.35);
+}
+
+/* CONTENT AREA */
+.content {
+  flex: 1;
+  padding: 30px;
+
+  border-radius: 30px;
+
+  background: rgba(64, 64, 64, 0.06);
+  backdrop-filter: blur(10px);
+
+  box-shadow: 0 8px 24px rgba(0,0,0,0.06);
+}

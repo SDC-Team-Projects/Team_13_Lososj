@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "../../context/AuthContext";
 import { getAdminItems } from "../../api/admin";
+import styles from "../../css/AdminPage.module.css";
+
 
 const API_URL = "https://team-13-lososj.onrender.com/api";
 
@@ -75,8 +77,11 @@ export default function ItemsModeration() {
               <td>{item.estimated_value}</td>
 
               <td>
-                <button onClick={() => handleDelete(item.id)}>
-                  Delete
+                <button
+                className={`${styles.actionBtn} ${styles.deleteBtn}`}
+                onClick={() => handleDelete(c.id)}
+                >
+                Delete
                 </button>
               </td>
             </tr>

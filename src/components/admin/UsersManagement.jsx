@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { getUsers, banUser, unbanUser } from "../../api/admin";
 import { useAuth } from "../../context/AuthContext";
+import styles from "../../css/AdminPage.module.css";
+
 
 export default function UsersManagement() {
   const { token } = useAuth();
@@ -27,14 +29,24 @@ export default function UsersManagement() {
 
   /* ---------------- ACTIONS ---------------- */
   const handleBan = async (id) => {
+  try {
     await banUser(id, token);
-    fetchUsers();
-  };
+    await fetchUsers();
+  } catch (err) {
+    console.error(err.message);
+    alert(err.message);
+  }
+};
 
-  const handleUnban = async (id) => {
+const handleUnban = async (id) => {
+  try {
     await unbanUser(id, token);
-    fetchUsers();
-  };
+    await fetchUsers();
+  } catch (err) {
+    console.error(err.message);
+    alert(err.message);
+  }
+};
 
   if (loading) return <p>Loading users...</p>;
 
@@ -63,13 +75,19 @@ export default function UsersManagement() {
 
               <td>
                 {user.status === "active" ? (
-                  <button onClick={() => handleBan(user.id)}>
-                    Ban
-                  </button>
+                  <button
+  className={`${styles.actionBtn} ${styles.banBtn}`}
+  onClick={() => handleBan(user.id)}
+>
+  Ban
+</button>
                 ) : (
-                  <button onClick={() => handleUnban(user.id)}>
-                    Unban
-                  </button>
+                  <button
+  className={`${styles.actionBtn} ${styles.unbanBtn}`}
+  onClick={() => handleUnban(user.id)}
+>
+  Unban
+</button>
                 )}
               </td>
             </tr>

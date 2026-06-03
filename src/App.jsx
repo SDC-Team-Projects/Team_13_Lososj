@@ -22,6 +22,7 @@ import AdminRoute from "./routes/AdminRoute";
 import AdminPage from "./pages/AdminPage";
 import ForgotPassword from "./components/ForgotPassword";
 import ResetPassword from "./components/ResetPassword";
+import PublicCollectionPage from "./pages/PublicCollectionPage";
 
 function App() {
 
@@ -46,7 +47,7 @@ function App() {
       <Route path="/overview" element={<ProtectedRoute><OverviewPage /></ProtectedRoute>} />
       <Route path="/favorites" element={<ProtectedRoute><FavoritesPage /></ProtectedRoute>} />
       <Route path="/profile/edit" element={<ProtectedRoute><EditProfilePage /></ProtectedRoute>} />
-     
+      <Route path="/public/collections/:id" element={<PublicCollectionPage />} />
       <Route path="/settings/password" element={<ProtectedRoute><ChangePasswordPage/></ProtectedRoute>}/>
       <Route path="/admin" element={<AdminRoute><AdminPage /></AdminRoute>}/>
       <Route path="/forgot-password" element={<ForgotPassword />}/>
