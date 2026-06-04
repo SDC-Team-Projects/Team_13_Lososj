@@ -52,6 +52,7 @@ export default function MainPage() {
         id: v.collection_id,
         name: v.collection_name,
         image: v.collection_image,
+        category: v.category,  
         viewed_at: v.viewed_at,
       }));
 

@@ -68,6 +68,7 @@
   background: #f3f4f6;
 
   margin-top: 30px;
+  
 
   font-size: 14px;
   font-weight: 600;
@@ -306,6 +307,7 @@
 .collectionCard.mini .title {
   font-size: 14px;
 }
+
 
 /* ================= HOVER FIX FOR SPECIAL BLOCKS ================= */
 

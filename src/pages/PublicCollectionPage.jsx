@@ -22,23 +22,30 @@ export default function PublicCollectionPage() {
   }, [id]);
 
   const loadData = async () => {
-    try {
-      const [collectionData, itemsData] =
-        await Promise.all([
-          getCollectionById(id),
-          getItemsByCollection(id),
-        ]);
+  try {
+    const res = await fetch(
+      `https://team-13-lososj.onrender.com/api/public/collections/${id}`
+    );
 
-      setCollection(collectionData);
-      setItems(itemsData);
+    if (!res.ok) throw new Error("Not found");
 
-    } catch (err) {
-      console.error(err);
+    const collectionData = await res.json();
 
-    } finally {
-      setLoading(false);
-    }
-  };
+    const itemsRes = await fetch(
+      `https://team-13-lososj.onrender.com/api/collections/${id}/items`
+    );
+
+    const itemsData = await itemsRes.json();
+
+    setCollection(collectionData);
+    setItems(itemsData);
+
+  } catch (err) {
+    console.error(err);
+  } finally {
+    setLoading(false);
+  }
+};
 
   if (loading) {
     return <h2>Loading collection...</h2>;

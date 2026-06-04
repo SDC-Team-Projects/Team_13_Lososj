@@ -23,7 +23,7 @@ const LIMITS = {
   },
   mini: {
     title: 30,
-    desc: 60,
+    desc: 120,
   },
 };
 
