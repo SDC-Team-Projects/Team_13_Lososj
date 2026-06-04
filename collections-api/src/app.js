@@ -898,6 +898,60 @@ app.get("/api/items/:id", auth, async (req, res) => {
   }
 });
 
+/* GET PUBLIC ITEM BY ID */
+app.get("/api/public/items/:id", async (req, res) => {
+  try {
+    const result = await pool.query(
+      `
+      SELECT
+        items.*,
+        collections.user_id,
+        collections.is_public,
+        users.username AS owner_name
+
+      FROM items
+
+      JOIN collections
+        ON collections.id = items.collection_id
+
+      JOIN users
+        ON users.id = collections.user_id
+
+      WHERE items.id = $1
+        AND collections.is_public = true
+      `,
+      [req.params.id]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: "Item not found" });
+    }
+
+    const item = result.rows[0];
+
+    // нормализация custom_fields + image fallback
+    let cf = item.custom_fields;
+
+    if (!cf || typeof cf !== "object") {
+      cf = {};
+    }
+
+    if (item.image && !cf.image) {
+      cf.image = item.image;
+    }
+
+    item.custom_fields = cf;
+
+    res.json(item);
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+
+
 /* UPDATE ITEM */
 app.put("/api/items/:id", auth, async (req, res) => {
   try {
