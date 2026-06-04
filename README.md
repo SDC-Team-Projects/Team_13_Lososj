@@ -5,8 +5,8 @@
 ## Goal of this project is to create system for tracking user's collection (collection of coins/poststamps/etc) by topic, displaying status, history and cost
 ## Target audience is collectors.
 
-# [More info on the project here](docs/requirements.md)
-# [Examples of usage (user stories) here](docs/user-stories.md)
+[More info on the project here](docs/requirements.md)
+[Examples of usage (user stories) here](docs/user-stories.md)
 
 Features:
 - Adding items
@@ -41,7 +41,7 @@ Roles:
 
 ## TECHNOLOGIES USED
 
-# [Application architecture here](docs/architecture.md)
+[Application architecture here](docs/architecture.md)
 
 Technologies used:
 
@@ -57,12 +57,12 @@ Technologies used:
 - JWT authentication
 - bcrypt
 
-# [API specification (endpoints) here](docs/api.md)
+[API specification (endpoints) here](docs/api.md)
 
 ## Database:
-- PostgreSQL (Neon.tech)\
+- PostgreSQL (Neon.tech)
 
-# [Database schema and description here](docs/database.md)
+[Database schema and description here](docs/database.md)
 
 ## Deployment:
 - Frontend: Vercel
