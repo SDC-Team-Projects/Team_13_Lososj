@@ -1811,34 +1811,35 @@ app.get("/api/activity", auth, async (req, res) => {
   }
 });
 
-/* GET VIEWS HISTORY */
+/* GET VIEWS HISTORY (LATEST UNIQUE COLLECTIONS FIRST) */
 app.get("/api/views-history", auth, async (req, res) => {
   try {
-
     const result = await pool.query(
       `
-      SELECT
-  views_history.*,
+      SELECT DISTINCT ON (views_history.collection_id)
 
-  items.name AS item_name,
-  items.image AS item_image,
+        views_history.*,
 
-  collections.name AS collection_name,
-  collections.image AS collection_image,
+        items.name AS item_name,
+        items.image AS item_image,
 
-  collections.category AS category
+        collections.name AS collection_name,
+        collections.image AS collection_image,
+        collections.category AS category,
 
-FROM views_history
+        views_history.viewed_at
 
-LEFT JOIN items
-ON items.id = views_history.item_id
+      FROM views_history
 
-LEFT JOIN collections
-ON collections.id = views_history.collection_id
+      LEFT JOIN items
+        ON items.id = views_history.item_id
 
-WHERE views_history.user_id = $1
+      LEFT JOIN collections
+        ON collections.id = views_history.collection_id
 
-ORDER BY viewed_at DESC
+      WHERE views_history.user_id = $1
+
+      ORDER BY views_history.collection_id, views_history.viewed_at DESC
       `,
       [req.user.id]
     );
@@ -1846,12 +1847,8 @@ ORDER BY viewed_at DESC
     res.json(result.rows);
 
   } catch (err) {
-
     console.error(err);
-
-    res.status(500).json({
-      error: "Server error"
-    });
+    res.status(500).json({ error: "Server error" });
   }
 });
 
