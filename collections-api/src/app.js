@@ -315,6 +315,100 @@ app.post("/api/collections", auth, async (req, res) => {
   }
 });
 
+/* PUBLIC COLLECTION WITH ITEMS */
+
+app.get("/api/public/collections/:id", async (req, res) => {
+  try {
+
+    const collectionResult = await pool.query(
+      `
+      SELECT
+        collections.*,
+
+        users.username AS owner_name,
+
+        COUNT(items.id) AS items_count,
+
+        COALESCE(SUM(items.estimated_value), 0) AS total_value
+
+      FROM collections
+
+      JOIN users
+      ON users.id = collections.user_id
+
+      LEFT JOIN items
+      ON items.collection_id = collections.id
+
+      WHERE collections.id = $1
+      AND collections.is_public = true
+
+      GROUP BY collections.id, users.username
+      `,
+      [req.params.id]
+    );
+
+    if (collectionResult.rows.length === 0) {
+      return res.status(404).json({
+        error: "Collection not found"
+      });
+    }
+
+    const itemsResult = await pool.query(
+      `
+      SELECT
+        items.*,
+
+        collections.user_id,
+
+        users.username AS owner_name
+
+      FROM items
+
+      JOIN collections
+      ON collections.id = items.collection_id
+
+      JOIN users
+      ON users.id = collections.user_id
+
+      WHERE items.collection_id = $1
+
+      ORDER BY items.created_at DESC
+      `,
+      [req.params.id]
+    );
+
+    const items = itemsResult.rows.map(item => {
+
+      let cf = item.custom_fields;
+
+      if (!cf || typeof cf !== "object") {
+        cf = {};
+      }
+
+      if (item.image && !cf.image) {
+        cf.image = item.image;
+      }
+
+      return {
+        ...item,
+        custom_fields: cf
+      };
+    });
+
+    res.json({
+      collection: collectionResult.rows[0],
+      items
+    });
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({
+      error: "Server error"
+    });
+  }
+});
+
+
 /* GET ALL PUBLIC COLLECTIONS */
 
 app.get("/api/collections/public", async (req, res) => {
