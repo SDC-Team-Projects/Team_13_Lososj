@@ -78,10 +78,10 @@ export default function ItemsModeration() {
 
               <td>
                 <button
-                className={`${styles.actionBtn} ${styles.deleteBtn}`}
-                onClick={() => handleDelete(c.id)}
-                >
-                Delete
+                  className={`${styles.actionBtn} ${styles.deleteBtn}`}
+                  onClick={() => handleDelete(item.id)}
+                        >
+                  Delete
                 </button>
               </td>
             </tr>

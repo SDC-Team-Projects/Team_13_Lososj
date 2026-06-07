@@ -9,7 +9,6 @@ import React, { useState, useMemo } from "react";
 import { downloadCollectionPdf } from "../api/collections";
 import { useAuth } from "../context/AuthContext";
 import { isOwner } from "../utils/permissions";
-
 import { Heart, Download, Pencil, Trash2, User, Share2 } from "lucide-react";
 
 const LIMITS = {
@@ -188,7 +187,14 @@ export default function CollectionCard({
 
               <div>
                 <span>Owner</span>
-<div className="ownerAvatarWrapper">
+<div
+  className="ownerAvatarWrapper"
+  onClick={(e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    navigate(`/users/${collection.user_id}`);
+  }}
+>
   {collection.owner_avatar ? (
     <img
       src={collection.owner_avatar}

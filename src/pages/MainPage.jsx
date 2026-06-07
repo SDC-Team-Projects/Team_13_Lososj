@@ -10,6 +10,7 @@ import { getUserAnalytics } from "../api/collections";
 import React, { useEffect, useState } from "react";
 import { apiFetch } from "../api/apiClient";
 import { ChartNoAxesCombined } from "lucide-react";
+import { useLocation } from "react-router-dom";
 
 export default function MainPage() {
 
@@ -19,10 +20,22 @@ export default function MainPage() {
     collections_count: 0,
     total_value: 0,
   });
+  const location = useLocation();
 
-  useEffect(() => {
+useEffect(() => {
   loadAnalytics();
   loadRecentCollections();
+}, [location.pathname]);
+
+useEffect(() => {
+  const onFocus = () => {
+    loadAnalytics();
+    loadRecentCollections();
+  };
+
+  window.addEventListener("focus", onFocus);
+
+  return () => window.removeEventListener("focus", onFocus);
 }, []);
 
    async function loadAnalytics() {
