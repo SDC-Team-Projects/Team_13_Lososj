@@ -1724,58 +1724,82 @@ app.get("/api/analytics/collection/:id", auth, async (req, res) => {
 /* USER ANALYTICS */
 app.get("/api/analytics/user", auth, async (req, res) => {
   try {
-    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
-    res.setHeader('Pragma', 'no-cache');
-    res.setHeader('Expires', '0');
+
+    res.setHeader(
+      "Cache-Control",
+      "no-store, no-cache, must-revalidate, proxy-revalidate"
+    );
+    res.setHeader("Pragma", "no-cache");
+    res.setHeader("Expires", "0");
 
     const userId = req.user.id;
 
+    // COLLECTIONS COUNT
     const collections = await pool.query(
-      "SELECT COUNT(*) FROM collections WHERE user_id = $1",
+      `
+      SELECT COUNT(*) 
+      FROM collections
+      WHERE user_id = $1
+      `,
       [userId]
     );
 
+    // ITEMS COUNT
     const items = await pool.query(
       `
       SELECT COUNT(i.id)
       FROM items i
-      JOIN collections c ON c.id = i.collection_id
+      JOIN collections c
+        ON c.id = i.collection_id
       WHERE c.user_id = $1
       `,
       [userId]
     );
 
+    // TOTAL VALUE
     const value = await pool.query(
       `
       SELECT COALESCE(SUM(i.estimated_value), 0) AS total_value
       FROM items i
-      JOIN collections c ON c.id = i.collection_id
+      JOIN collections c
+        ON c.id = i.collection_id
       WHERE c.user_id = $1
       `,
       [userId]
     );
 
+    // CHART DATA
     const chartQuery = await pool.query(
       `
-      SELECT 
-        TO_CHAR(i.created_at, 'YYYY-MM-DD') AS date,
-        COALESCE(SUM(i.estimated_value), 0) AS daily_value
+      SELECT
+        i.id,
+        i.created_at,
+        COALESCE(i.estimated_value, 0) AS value
+
       FROM items i
-      JOIN collections c ON c.id = i.collection_id
+
+      JOIN collections c
+        ON c.id = i.collection_id
+
       WHERE c.user_id = $1
-      GROUP BY TO_CHAR(i.created_at, 'YYYY-MM-DD')
-      ORDER BY date ASC
+
+      ORDER BY i.created_at ASC
       `,
       [userId]
     );
 
     let runningTotal = 0;
+
     const chartData = chartQuery.rows.map(row => {
-      runningTotal += parseFloat(row.daily_value);
+
+      runningTotal += Number(row.value);
+
       return {
-        date: row.date,
+        item_id: row.id,
+        date: row.created_at,
         value: runningTotal
       };
+
     });
 
     res.json({
@@ -1786,8 +1810,13 @@ app.get("/api/analytics/user", auth, async (req, res) => {
     });
 
   } catch (err) {
+
     console.error(err);
-    res.status(500).json({ error: "Server error" });
+
+    res.status(500).json({
+      error: "Server error"
+    });
+
   }
 });
 
