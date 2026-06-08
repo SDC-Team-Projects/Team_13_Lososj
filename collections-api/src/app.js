@@ -540,13 +540,16 @@ app.get("/api/collections/:id", auth, async (req, res) => {
         collections.*,
         collections.user_id,
         users.username AS owner_name,
+        users.avatar_url AS owner_avatar,
         COUNT(items.id) AS items_count,
         COALESCE(SUM(items.estimated_value), 0) AS total_value
       FROM collections
-      JOIN users ON users.id = collections.user_id
-      LEFT JOIN items ON items.collection_id = collections.id
+      JOIN users
+        ON users.id = collections.user_id
+      LEFT JOIN items
+        ON items.collection_id = collections.id
       WHERE collections.id = $1
-      GROUP BY collections.id, users.username
+      GROUP BY collections.id, users.id
       `,
       [req.params.id]
     );
@@ -559,7 +562,6 @@ app.get("/api/collections/:id", auth, async (req, res) => {
 
     const collection = result.rows[0];
 
-    // VIEW HISTORY
     await addViewHistory(
       req.user.id,
       null,
@@ -582,14 +584,19 @@ app.get("/api/public/collections/:id", async (req, res) => {
       `
       SELECT
         collections.*,
+        collections.user_id,
         users.username AS owner_name,
+        users.avatar_url AS owner_avatar,
         COUNT(items.id) AS items_count,
         COALESCE(SUM(items.estimated_value), 0) AS total_value
       FROM collections
-      JOIN users ON users.id = collections.user_id
-      LEFT JOIN items ON items.collection_id = collections.id
-      WHERE collections.id = $1 AND collections.is_public = true
-      GROUP BY collections.id, users.username
+      JOIN users
+        ON users.id = collections.user_id
+      LEFT JOIN items
+        ON items.collection_id = collections.id
+      WHERE collections.id = $1
+        AND collections.is_public = true
+      GROUP BY collections.id, users.id
       `,
       [req.params.id]
     );
