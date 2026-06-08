@@ -45,6 +45,34 @@ async function fetchImageAsPngBuffer(url) {
 }
 
 
+/* ---------------- ANALYTICS HELPER ---------------- */
+
+async function addAnalyticsHistory(
+  userId,
+  changeAmount,
+  totalValue,
+  action
+) {
+  await pool.query(
+    `
+    INSERT INTO analytics_history
+    (
+      user_id,
+      change_amount,
+      total_value,
+      action
+    )
+    VALUES ($1,$2,$3,$4)
+    `,
+    [
+      userId,
+      changeAmount,
+      totalValue,
+      action
+    ]
+  );
+}
+
 /* ---------------- ACTIVITY HELPER ---------------- */
 
 async function addActivity(userId, action, item = null) {
