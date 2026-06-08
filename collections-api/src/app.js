@@ -849,7 +849,6 @@ if (item.image && item.image.startsWith("http")) {
 /* CREATE ITEM */
 app.post("/api/items", auth, async (req, res) => {
   try {
-
     const {
       collection_id,
       name,
@@ -867,20 +866,29 @@ app.post("/api/items", auth, async (req, res) => {
       VALUES ($1,$2,$3,$4,$5,$6,$7)
       RETURNING *
       `,
-      [
-        collection_id,
-        name,
-        description,
-        notes,
-        image || null,
-        condition,
-        estimated_value
-      ]
+      [collection_id, name, description, notes, image || null, condition, estimated_value]
     );
+
+    const item = result.rows[0];
+
+     
+    const total = await pool.query(
+      `SELECT COALESCE(SUM(estimated_value),0) as total FROM items WHERE collection_id=$1`,
+      [collection_id]
+    );
+
+    await addAnalytics({
+      userId: req.user.id,
+      collectionId: collection_id,
+      itemId: item.id,
+      changeAmount: estimated_value,
+      totalValue: total.rows[0].total,
+      action: "create_item"
+    });
 
     await addActivity(req.user.id, "created item", name);
 
-    res.json(result.rows[0]);
+    res.json(item);
 
   } catch (err) {
     console.error(err);
@@ -1051,7 +1059,7 @@ app.get("/api/public/items/:id", async (req, res) => {
 
     const item = result.rows[0];
 
-    // нормализация custom_fields + image fallback
+     
     let cf = item.custom_fields;
 
     if (!cf || typeof cf !== "object") {
@@ -1084,55 +1092,56 @@ app.put("/api/items/:id", auth, async (req, res) => {
       notes,
       image,
       condition,
-      estimated_value,
-      custom_fields
+      estimated_value
     } = req.body;
 
-    const cleanedCustomFields = custom_fields || {};
+     
+    const oldItem = await pool.query(
+      `SELECT * FROM items WHERE id=$1`,
+      [req.params.id]
+    );
 
-    if (cleanedCustomFields.image) {
-      delete cleanedCustomFields.image;
+    if (oldItem.rows.length === 0) {
+      return res.status(404).json({ error: "Item not found" });
     }
 
+    const oldValue = Number(oldItem.rows[0].estimated_value || 0);
+
+     
     const result = await pool.query(
       `
       UPDATE items
-      SET
-        name = $1,
-        description = $2,
-        notes = $3,
-        image = $4,
-        condition = $5,
-        estimated_value = $6,
-        custom_fields = $7
-
-      WHERE id = $8
-      AND collection_id IN (
-        SELECT id FROM collections WHERE user_id = $9
-      )
-
+      SET name=$1,
+          description=$2,
+          notes=$3,
+          image=$4,
+          condition=$5,
+          estimated_value=$6
+      WHERE id=$7
       RETURNING *
       `,
-      [
-        name,
-        description,
-        notes,
-        image || null,
-        condition,
-        estimated_value,
-        cleanedCustomFields,
-        req.params.id,
-        req.user.id
-      ]
+      [name, description, notes, image || null, condition, estimated_value, req.params.id]
     );
 
-    if (result.rows.length === 0) {
-      return res.status(403).json({
-        error: "No access to edit this item"
-      });
-    }
+    const updated = result.rows[0];
 
-    res.json(result.rows[0]);
+    const diff = Number(estimated_value) - oldValue;
+
+    const total = await pool.query(
+      `SELECT COALESCE(SUM(estimated_value),0) as total FROM items WHERE collection_id=$1`,
+      [updated.collection_id]
+    );
+
+    await addAnalytics({
+      userId: req.user.id,
+      collectionId: updated.collection_id,
+      itemId: updated.id,
+      changeAmount: diff,
+      totalValue: total.rows[0].total,
+      action: "update_item"
+    });
+
+    res.json(updated);
 
   } catch (err) {
     console.error(err);
@@ -1143,19 +1152,41 @@ app.put("/api/items/:id", auth, async (req, res) => {
 /* DELETE ITEM */
 app.delete("/api/items/:id", auth, async (req, res) => {
   try {
-    const result = await pool.query(
-      "DELETE FROM items WHERE id = $1 RETURNING *",
+
+    const item = await pool.query(
+      `SELECT * FROM items WHERE id=$1`,
       [req.params.id]
     );
 
-    if (result.rows.length === 0) {
+    if (item.rows.length === 0) {
       return res.status(404).json({ error: "Item not found" });
     }
 
-    // ACTIVITY
-    await addActivity(req.user.id, "deleted item", req.params.id);
+    const deletedItem = item.rows[0];
+
+    await pool.query(
+      `DELETE FROM items WHERE id=$1`,
+      [req.params.id]
+    );
+
+    const total = await pool.query(
+      `SELECT COALESCE(SUM(estimated_value),0) as total FROM items WHERE collection_id=$1`,
+      [deletedItem.collection_id]
+    );
+
+    await addAnalytics({
+      userId: req.user.id,
+      collectionId: deletedItem.collection_id,
+      itemId: deletedItem.id,
+      changeAmount: -Number(deletedItem.estimated_value || 0),
+      totalValue: total.rows[0].total,
+      action: "delete_item"
+    });
+
+    await addActivity(req.user.id, "deleted item", deletedItem.name);
 
     res.json({ message: "Deleted successfully" });
+
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Server error" });
