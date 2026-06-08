@@ -47,29 +47,14 @@ async function fetchImageAsPngBuffer(url) {
 
 /* ---------------- ANALYTICS HELPER ---------------- */
 
-async function addAnalyticsHistory(
-  userId,
-  changeAmount,
-  totalValue,
-  action
-) {
+async function addAnalytics({ userId, collectionId, itemId, changeAmount, totalValue, action }) {
   await pool.query(
     `
     INSERT INTO analytics_history
-    (
-      user_id,
-      change_amount,
-      total_value,
-      action
-    )
-    VALUES ($1,$2,$3,$4)
+    (user_id, collection_id, item_id, change_amount, total_value, action)
+    VALUES ($1,$2,$3,$4,$5,$6)
     `,
-    [
-      userId,
-      changeAmount,
-      totalValue,
-      action
-    ]
+    [userId, collectionId, itemId, changeAmount, totalValue, action]
   );
 }
 
