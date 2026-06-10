@@ -927,7 +927,6 @@ describe('Views & Password reset', () => {
       .send({ email: targetUserEmail, password: 'password123' });
     return loginRes.body.token || '';
   }
-});
 
     
 // Tests for GET (/api/views-history)
@@ -1058,8 +1057,9 @@ describe('Views & Password reset', () => {
     });
   });
 });
-
-
+    /*
+});
+*/
 
 
 
