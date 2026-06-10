@@ -138,12 +138,12 @@ describe('API Automation Tests', () => {
       });
 
       it('should fail login if fields are empty', async () => {
-      const response = await request(app)
-        .post('/api/auth/login')
-        .send({ email: '' });
-      
-      expect(response.status).toBeDefined(); 
-    });
+        const response = await request(app)
+          .post('/api/auth/login')
+          .send({ email: '' });
+        
+        expect(response.status).toBeDefined(); 
+      });
     });
 
     // Logging out
@@ -653,9 +653,9 @@ describe('API Automation Tests', () => {
     let adminToken;
     let targetUserId;
 
-    /*beforeAll(async () => {
-      // Registration of a new admin
+    beforeAll(async () => {
       const adminEmail = `admin_${Date.now()}@test.com`;
+
       const registerRes = await request(app)
         .post('/api/auth/register')
         .send({
@@ -673,65 +673,37 @@ describe('API Automation Tests', () => {
 
       adminToken = registerRes.body.token;
 
-      const usersRes = await pool.query("SELECT id FROM users WHERE role = 'user' LIMIT 1");
-      if (usersRes.rows.length > 0) {
-        targetUserId = usersRes.rows[0].id;
-      } else {
-        targetUserId = 9999;
-      }
-    });*/
+      const adminResult = await pool.query(
+        "SELECT id FROM users WHERE email = $1",
+        [adminEmail]
+      );
 
-    beforeAll(async () => {
-  const adminEmail = `admin_${Date.now()}@test.com`;
+      adminId = adminResult.rows[0].id;
 
-  const registerRes = await request(app)
-    .post('/api/auth/register')
-    .send({
-      email: adminEmail,
-      password: 'adminPassword123',
-      username: 'superadmin',
-      city: 'Vilnius',
-      country: 'Lithuania'
+      const userEmail = `target_${Date.now()}@test.com`;
+
+      const userRes = await request(app)
+        .post('/api/auth/register')
+        .send({
+          email: userEmail,
+          password: 'userPassword123',
+          username: 'targetUser',
+          city: 'Vilnius',
+          country: 'Lithuania'
+        });
+
+      targetUserId = userRes.body.user.id;
+
+      const collectionRes = await request(app)
+        .post('/api/collections')
+        .set('Authorization', `Bearer ${adminToken}`)
+        .send({
+          name: 'Admin Test Collection',
+          description: 'Test'
+        });
+
+      adminCollectionId = collectionRes.body.id;
     });
-
-  await pool.query(
-    "UPDATE users SET role = 'ADMIN' WHERE email = $1",
-    [adminEmail]
-  );
-
-  adminToken = registerRes.body.token;
-
-  const adminResult = await pool.query(
-    "SELECT id FROM users WHERE email = $1",
-    [adminEmail]
-  );
-
-adminId = adminResult.rows[0].id;
-
-  const userEmail = `target_${Date.now()}@test.com`;
-
-  const userRes = await request(app)
-    .post('/api/auth/register')
-    .send({
-      email: userEmail,
-      password: 'userPassword123',
-      username: 'targetUser',
-      city: 'Vilnius',
-      country: 'Lithuania'
-    });
-
-  targetUserId = userRes.body.user.id;
-
-  const collectionRes = await request(app)
-  .post('/api/collections')
-  .set('Authorization', `Bearer ${adminToken}`)
-  .send({
-    name: 'Admin Test Collection',
-    description: 'Test'
-  });
-
-  adminCollectionId = collectionRes.body.id;
-});
 
     // Access denial for regular user
     describe('Access Denied for Regular Users', () => {
@@ -747,7 +719,7 @@ adminId = adminResult.rows[0].id;
       it('POST /api/admin/users/:id/unban - should deny access', async () => {
         const response = await request(app)
           .post(`/api/admin/users/${targetUserId}/unban`)
-          .set('Authorization', `Bearer ${authToken}`)
+          .set('Authorization', `Bearer ${authToken}`);
         expect(response.status).toBe(403);
       });
 
@@ -848,220 +820,211 @@ adminId = adminResult.rows[0].id;
     describe('Other admin operations', () => {
       it('should not allow admin to ban himself', async () => {
         const response = await request(app)
-        .post(`/api/admin/users/${adminId}/ban`)
-        .set('Authorization', `Bearer ${adminToken}`)
-        .send({ type: 'permanent' });
+          .post(`/api/admin/users/${adminId}/ban`)
+          .set('Authorization', `Bearer ${adminToken}`)
+          .send({ type: 'permanent' });
 
         expect(response.status).toBe(400);
-        expect(response.body.error)
-        .toContain('You cannot ban yourself');
+        expect(response.body.error).toContain('You cannot ban yourself');
       });
 
       it('should return 404 for non-existent user', async () => {
         const response = await request(app)
-        .post('/api/admin/users/999999999/ban')
-        .set('Authorization', `Bearer ${adminToken}`)
-        .send({ type: 'permanent' });
+          .post('/api/admin/users/999999999/ban')
+          .set('Authorization', `Bearer ${adminToken}`)
+          .send({ type: 'permanent' });
 
         expect(response.status).toBe(404);
-        expect(response.body.error)
-        .toContain('User not found');
+        expect(response.body.error).toContain('User not found');
       });
     });
 
     describe('PDF export', () => {
       it('should export collection as pdf', async () => {
-      const dbResult = await pool.query('SELECT id FROM collections LIMIT 1');
-    
-      if (dbResult.rows.length === 0) {
-        throw new Error("No collections to export");
-      }
-    
-      const validCollectionId = dbResult.rows[0].id;
-
-      const response = await request(app)
-      .get(`/api/collections/${validCollectionId}/export`)
-      .set('Authorization', `Bearer ${adminToken}`);
+        const dbResult = await pool.query('SELECT id FROM collections LIMIT 1');
         
-      expect(response.status).toBe(200);
-      expect(response.headers['content-type']).toContain('application/pdf');
-    });
+        if (dbResult.rows.length === 0) {
+          throw new Error("No collections to export");
+        }
+        
+        const validCollectionId = dbResult.rows[0].id;
+
+        const response = await request(app)
+          .get(`/api/collections/${validCollectionId}/export`)
+          .set('Authorization', `Bearer ${adminToken}`);
+          
+        expect(response.status).toBe(200);
+        expect(response.headers['content-type']).toContain('application/pdf');
+      });
 
       it('should return 404 when exporting missing collection', async () => {
         const response = await request(app)
-        .get('/api/collections/999999/export')
-        .set('Authorization', `Bearer ${adminToken}`)
+          .get('/api/collections/999999/export')
+          .set('Authorization', `Bearer ${adminToken}`);
 
         expect(response.status).toBe(404);
-
-        expect(response.body.error)
-        .toContain('Collection not found');
+        expect(response.body.error).toContain('Collection not found');
       });
     });
 
-describe('Views & Password reset', () => {
-  let targetUserEmail;
-  let dynamicToken;
+    describe('Views & Password reset', () => {
+      let targetUserEmail;
+      let dynamicToken;
 
-  beforeAll(async () => {
-    const userResult = await pool.query('SELECT email FROM users LIMIT 1');
-    if (userResult.rows.length > 0) {
-      targetUserEmail = userResult.rows[0].email;
-    } else {
-      targetUserEmail = 'admin@test.com';
-    }
+      beforeAll(async () => {
+        const userResult = await pool.query('SELECT email FROM users LIMIT 1');
+        if (userResult.rows.length > 0) {
+          targetUserEmail = userResult.rows[0].email;
+        } else {
+          targetUserEmail = 'admin@test.com';
+        }
 
-    try {
-      if (typeof adminToken !== 'undefined') dynamicToken = adminToken;
-      else if (typeof authToken !== 'undefined') dynamicToken = authToken;
-      else if (typeof token !== 'undefined') dynamicToken = token;
-    } catch (e) {
-      dynamicToken = null;
-    }
-  });
+        try {
+          if (typeof adminToken !== 'undefined') dynamicToken = adminToken;
+          else if (typeof authToken !== 'undefined') dynamicToken = authToken;
+          else if (typeof token !== 'undefined') dynamicToken = token;
+        } catch (e) {
+          dynamicToken = null;
+        }
+      });
 
-  async function getValidToken() {
-    if (dynamicToken) return dynamicToken;
-    const loginRes = await request(app)
-      .post('/api/auth/login')
-      .send({ email: targetUserEmail, password: 'password123' });
-    return loginRes.body.token || '';
-  }
+      async function getValidToken() {
+        if (dynamicToken) return dynamicToken;
+        const loginRes = await request(app)
+          .post('/api/auth/login')
+          .send({ email: targetUserEmail, password: 'password123' });
+        return loginRes.body.token || '';
+      }
 
-    
-// Tests for GET (/api/views-history)
-  describe('GET /api/views-history', () => {
-    it('should fetch view history successfully for authenticated user', async () => {
-      const activeToken = await getValidToken();
-      const response = await request(app)
-        .get('/api/views-history')
-        .set('Authorization', `Bearer ${activeToken}`);
+      // Tests for GET (/api/views-history)
+      describe('GET /api/views-history', () => {
+        it('should fetch view history successfully for authenticated user', async () => {
+          const activeToken = await getValidToken();
+          const response = await request(app)
+            .get('/api/views-history')
+            .set('Authorization', `Bearer ${activeToken}`);
 
-      expect(response.status).toBe(200);
-      expect(Array.isArray(response.body)).toBe(true);
-    });
-
-    it('should return 401 if token is missing', async () => {
-      const response = await request(app).get('/api/views-history');
-      expect(response.status).toBe(401);
-    });
-  });
-
-  // Tests for password reset (REQUEST & CONFIRM)
-  describe('Password Reset Flow', () => {
-    
-    it('should successfully request password reset and return a token', async () => {
-      const response = await request(app)
-        .post('/api/auth/password-reset/request')
-        .send({ email: targetUserEmail });
-
-      expect(response.status).toBe(200);
-      expect(response.body).toHaveProperty('message', 'Password reset link sent');
-      expect(response.body).toHaveProperty('token');
-    });
-
-    it('should return 404 when requesting reset for non-existent email', async () => {
-      const response = await request(app)
-        .post('/api/auth/password-reset/request')
-        .send({ email: 'ghost_user_2026_not_found@test.com' });
-
-      expect(response.status).toBe(404);
-    });
-
-    it('should fail to confirm reset if passwords do not match', async () => {
-      const response = await request(app)
-        .post('/api/auth/password-reset/confirm')
-        .send({
-          token: 'any-token-structure',
-          new_password: 'NewPassword123!',
-          confirm_new_password: 'DifferentPassword123!'
+          expect(response.status).toBe(200);
+          expect(Array.isArray(response.body)).toBe(true);
         });
 
-      expect(response.status).toBe(400);
-      expect(response.body).toHaveProperty('error', 'Passwords do not match');
-    });
+        it('should return 401 if token is missing', async () => {
+          const response = await request(app).get('/api/views-history');
+          expect(response.status).toBe(401);
+        });
+      });
 
-    it('should fail to confirm reset with an invalid or fake token', async () => {
-      const response = await request(app)
-        .post('/api/auth/password-reset/confirm')
-        .send({
-          token: 'completely-fake-token-that-does-not-exist-in-db-12345',
-          new_password: 'ValidPassword123!',
-          confirm_new_password: 'ValidPassword123!'
+      // Tests for password reset (REQUEST & CONFIRM)
+      describe('Password Reset Flow', () => {
+        
+        it('should successfully request password reset and return a token', async () => {
+          const response = await request(app)
+            .post('/api/auth/password-reset/request')
+            .send({ email: targetUserEmail });
+
+          expect(response.status).toBe(200);
+          expect(response.body).toHaveProperty('message', 'Password reset link sent');
+          expect(response.body).toHaveProperty('token');
         });
 
-      expect(response.status).toBe(400);
-      expect(response.body).toHaveProperty('error', 'Invalid token');
-    });
+        it('should return 404 when requesting reset for non-existent email', async () => {
+          const response = await request(app)
+            .post('/api/auth/password-reset/request')
+            .send({ email: 'ghost_user_2026_not_found@test.com' });
 
-    it('should fail to confirm reset if the token has expired', async () => {
-      const reqResponse = await request(app)
-        .post('/api/auth/password-reset/request')
-        .send({ email: targetUserEmail });
-      
-      const realToken = reqResponse.body.token;
-
-      const pastDate = new Date(Date.now() - 1000 * 60 * 60 * 5);
-      await pool.query(
-        'UPDATE users SET reset_token_expires = $1 WHERE reset_token = $2',
-        [pastDate, realToken]
-      );
-
-      const response = await request(app)
-        .post('/api/auth/password-reset/confirm')
-        .send({
-          token: realToken,
-          new_password: 'NewPassword123!',
-          confirm_new_password: 'NewPassword123!'
+          expect(response.status).toBe(404);
         });
 
-      expect(response.status).toBe(400);
-      expect(response.body).toHaveProperty('error', 'Token expired');
-    });
+        it('should fail to confirm reset if passwords do not match', async () => {
+          const response = await request(app)
+            .post('/api/auth/password-reset/confirm')
+            .send({
+              token: 'any-token-structure',
+              new_password: 'NewPassword123!',
+              confirm_new_password: 'DifferentPassword123!'
+            });
 
-    it('should successfully confirm password reset with a valid token', async () => {
-      const reqResponse = await request(app)
-        .post('/api/auth/password-reset/request')
-        .send({ email: targetUserEmail });
-      
-      const validToken = reqResponse.body.token;
-
-      const response = await request(app)
-        .post('/api/auth/password-reset/confirm')
-        .send({
-          token: validToken,
-          new_password: 'BrandNewPassword2026!',
-          confirm_new_password: 'BrandNewPassword2026!'
+          expect(response.status).toBe(400);
+          expect(response.body).toHaveProperty('error', 'Passwords do not match');
         });
 
-      expect(response.status).toBe(200);
-      expect(response.body).toHaveProperty('message', 'Password reset successful');
+        it('should fail to confirm reset with an invalid or fake token', async () => {
+          const response = await request(app)
+            .post('/api/auth/password-reset/confirm')
+            .send({
+              token: 'completely-fake-token-that-does-not-exist-in-db-12345',
+              new_password: 'ValidPassword123!',
+              confirm_new_password: 'ValidPassword123!'
+            });
+
+          expect(response.status).toBe(400);
+          expect(response.body).toHaveProperty('error', 'Invalid token');
+        });
+
+        it('should fail to confirm reset if the token has expired', async () => {
+          const reqResponse = await request(app)
+            .post('/api/auth/password-reset/request')
+            .send({ email: targetUserEmail });
+          
+          const realToken = reqResponse.body.token;
+
+          const pastDate = new Date(Date.now() - 1000 * 60 * 60 * 5);
+          await pool.query(
+            'UPDATE users SET reset_token_expires = $1 WHERE reset_token = $2',
+            [pastDate, realToken]
+          );
+
+          const response = await request(app)
+            .post('/api/auth/password-reset/confirm')
+            .send({
+              token: realToken,
+              new_password: 'NewPassword123!',
+              confirm_new_password: 'NewPassword123!'
+            });
+
+          expect(response.status).toBe(400);
+          expect(response.body).toHaveProperty('error', 'Token expired');
+        });
+
+        it('should successfully confirm password reset with a valid token', async () => {
+          const reqResponse = await request(app)
+            .post('/api/auth/password-reset/request')
+            .send({ email: targetUserEmail });
+          
+          const validToken = reqResponse.body.token;
+
+          const response = await request(app)
+            .post('/api/auth/password-reset/confirm')
+            .send({
+              token: validToken,
+              new_password: 'BrandNewPassword2026!',
+              confirm_new_password: 'BrandNewPassword2026!'
+            });
+
+          expect(response.status).toBe(200);
+          expect(response.body).toHaveProperty('message', 'Password reset successful');
+        });
+      });
+
+      // Tests for CATCH (SERVER ERROR 500)
+      describe('Error handling (500 Status Covers)', () => {
+        it('should return 500 on history if DB crashes', async () => {
+          const activeToken = await getValidToken();
+          const originalQuery = pool.query;
+          pool.query = jest.fn().mockRejectedValue(new Error('Database explosion'));
+
+          const response = await request(app)
+            .get('/api/views-history')
+            .set('Authorization', `Bearer ${activeToken}`);
+
+          expect(response.status).toBe(500);
+          expect(response.body).toHaveProperty('error', 'Server error');
+
+          pool.query = originalQuery;
+        });
+      });
     });
   });
-
-  // Tests for CATCH (SERVER ERROR 500)
-  describe('Error handling (500 Status Covers)', () => {
-    it('should return 500 on history if DB crashes', async () => {
-      const activeToken = await getValidToken();
-      const originalQuery = pool.query;
-      pool.query = jest.fn().mockRejectedValue(new Error('Database explosion'));
-
-      const response = await request(app)
-        .get('/api/views-history')
-        .set('Authorization', `Bearer ${activeToken}`);
-
-      expect(response.status).toBe(500);
-      expect(response.body).toHaveProperty('error', 'Server error');
-
-      pool.query = originalQuery;
-    });
-  });
-});
-    /*
-});
-*/
-
-
 
   afterAll(async () => {
     await pool.end();
