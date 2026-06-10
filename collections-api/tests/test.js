@@ -871,16 +871,21 @@ adminId = adminResult.rows[0].id;
 
     describe('PDF export', () => {
       it('should export collection as pdf', async () => {
-        const response = await request(app)
-        .get(`/api/collections/${collectionId}/export`)
-        .set('Authorization', `Bearer ${token}`);
+      const dbResult = await pool.query('SELECT id FROM collections LIMIT 1');
+    
+      if (dbResult.rows.length === 0) {
+        throw new Error("No collections to export");
+      }
+    
+      const validCollectionId = dbResult.rows[0].id;
 
-        expect(response.status).toBe(200);
-
-        expect(
-          response.headers['content-type']
-        ).toContain('application/pdf');
-      });
+      const response = await request(app)
+      .get(`/api/collections/${validCollectionId}/export`)
+      .set('Authorization', `Bearer ${token}`);
+        
+      expect(response.status).toBe(200);
+      expect(response.headers['content-type']).toContain('application/pdf');
+    });
 
       it('should return 404 when exporting missing collection', async () => {
         const response = await request(app)
