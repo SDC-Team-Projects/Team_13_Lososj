@@ -1710,7 +1710,7 @@ app.get("/api/analytics/collection/:id", auth, async (req, res) => {
   try {
     const collectionId = req.params.id;
 
-    // total items + value
+    
     const stats = await pool.query(
       `
       SELECT 
@@ -1722,23 +1722,29 @@ app.get("/api/analytics/collection/:id", auth, async (req, res) => {
       [collectionId]
     );
 
-    // categories distribution
-    const categories = await pool.query(
+     
+    const collection = await pool.query(
       `
-      SELECT c.name AS category, COUNT(*) AS count
-      FROM item_categories ic
-      JOIN categories c ON c.id = ic.category_id
-      JOIN items i ON i.id = ic.item_id
-      WHERE i.collection_id = $1
-      GROUP BY c.name
+      SELECT
+        c.id,
+        c.name,
+        c.user_id,
+        u.username AS owner_name
+      FROM collections c
+      JOIN users u ON u.id = c.user_id
+      WHERE c.id = $1
       `,
       [collectionId]
     );
 
+    if (collection.rows.length === 0) {
+      return res.status(404).json({ error: "Collection not found" });
+    }
+
     res.json({
-      items_count: stats.rows[0].items_count,
-      total_value: stats.rows[0].total_value,
-      categories_distribution: categories.rows
+      collection: collection.rows[0],
+      items_count: Number(stats.rows[0].items_count),
+      total_value: Number(stats.rows[0].total_value)
     });
 
   } catch (err) {
