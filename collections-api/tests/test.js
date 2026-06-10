@@ -1057,8 +1057,10 @@ describe('Views & Password reset', () => {
   });
 });
 
+/*
 });
   });
+*/
 
   afterAll(async () => {
     await pool.end();
