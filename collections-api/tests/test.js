@@ -1059,7 +1059,7 @@ describe('Views & Password reset', () => {
   });
 });
 
-});
+
 
 
 
