@@ -927,7 +927,9 @@ describe('Views & Password reset', () => {
       .send({ email: targetUserEmail, password: 'password123' });
     return loginRes.body.token || '';
   }
+});
 
+    
 // Tests for GET (/api/views-history)
   describe('GET /api/views-history', () => {
     it('should fetch view history successfully for authenticated user', async () => {
@@ -1057,10 +1059,9 @@ describe('Views & Password reset', () => {
   });
 });
 
-/*
 });
-  });
-*/
+
+
 
   afterAll(async () => {
     await pool.end();
