@@ -2,6 +2,8 @@ const request = require('supertest');
 const app = require('../src/app');
 const pool = require('../src/db/index');
 
+jest.setTimeout(15000);
+
 describe('API Automation Tests', () => {
   let authToken;
 
