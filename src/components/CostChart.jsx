@@ -111,9 +111,7 @@ import {
 } from "recharts";
 
 import { useEffect, useState } from "react";
-
 import { getCostChart } from "../api/collections";
-
 import "../css/CostChart.css";
 
 export default function CostChart() {
@@ -121,15 +119,10 @@ export default function CostChart() {
   const [data, setData] = useState([]);
 
   useEffect(() => {
-    const check = () =>
-      setIsMobile(window.innerWidth <= 480);
-
+    const check = () => setIsMobile(window.innerWidth <= 480);
     check();
-
     window.addEventListener("resize", check);
-
-    return () =>
-      window.removeEventListener("resize", check);
+    return () => window.removeEventListener("resize", check);
   }, []);
 
   useEffect(() => {
@@ -137,14 +130,17 @@ export default function CostChart() {
       try {
         const chartData = await getCostChart();
 
-        const formatted = chartData.map((item) => ({
-          date: new Date(item.date).toLocaleDateString(
-            "en-GB",
-            {
-              day: "numeric",
-              month: "short",
-            }
-          ),
+        const formatted = chartData.map((item, index) => ({
+           
+          index,
+
+          date: new Date(item.date || item.created_at).toLocaleString("en-GB", {
+            day: "numeric",
+            month: "short",
+            hour: "2-digit",
+            minute: "2-digit",
+          }),
+
           value: Number(item.value),
         }));
 
@@ -159,51 +155,25 @@ export default function CostChart() {
 
   return (
     <div className="chartCard">
-      <h3 className="title">
-        Total Collection Value Over Time
-      </h3>
+      <h3 className="title">Total Collection Value Over Time</h3>
 
-      <ResponsiveContainer
-        width="100%"
-        height={isMobile ? 200 : 260}
-      >
-        <LineChart
-          data={data}
-          margin={{
-            top: 10,
-            right: 10,
-            left: 0,
-            bottom: 0,
-          }}
-        >
+      <ResponsiveContainer width="100%" height={isMobile ? 200 : 260}>
+        <LineChart data={data}>
           <CartesianGrid strokeDasharray="3 3" />
 
+          { }
           <XAxis
-            dataKey="date"
-            tick={{
-              fontSize: isMobile ? 10 : 12,
-            }}
-            angle={isMobile ? -30 : 0}
-            textAnchor={
-              isMobile ? "end" : "middle"
-            }
+            dataKey="index"
+            tick={false}
           />
 
-          <YAxis
-            tick={{
-              fontSize: isMobile ? 10 : 12,
-            }}
-            width={isMobile ? 40 : 60}
-          />
+          <YAxis />
 
           <Tooltip
-            labelFormatter={(label) =>
-              `Date: ${label}`
+            labelFormatter={(_, payload) =>
+              payload?.[0]?.payload?.date
             }
-            formatter={(value) => [
-              `$${value}`,
-              "Total value",
-            ]}
+            formatter={(value) => [`$${value}`, "Total value"]}
           />
 
           <Line
@@ -211,7 +181,7 @@ export default function CostChart() {
             dataKey="value"
             stroke="#2563eb"
             strokeWidth={3}
-            dot={!isMobile}
+            dot={true}          
             activeDot={{ r: 6 }}
           />
         </LineChart>
