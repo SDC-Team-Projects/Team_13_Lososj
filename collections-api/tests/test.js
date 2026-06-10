@@ -648,6 +648,8 @@ describe('API Automation Tests', () => {
 
   // ADMIN TESTS
   describe('Admin Operations', () => {
+    let adminId;
+    let adminCollectionId;
     let adminToken;
     let targetUserId;
 
@@ -699,6 +701,13 @@ describe('API Automation Tests', () => {
 
   adminToken = registerRes.body.token;
 
+  const adminResult = await pool.query(
+    "SELECT id FROM users WHERE email = $1",
+    [adminEmail]
+  );
+
+adminId = adminResult.rows[0].id;
+
   const userEmail = `target_${Date.now()}@test.com`;
 
   const userRes = await request(app)
@@ -712,6 +721,16 @@ describe('API Automation Tests', () => {
     });
 
   targetUserId = userRes.body.user.id;
+
+  const collectionRes = await request(app)
+  .post('/api/collections')
+  .set('Authorization', `Bearer ${adminToken}`)
+  .send({
+    name: 'Admin Test Collection',
+    description: 'Test'
+  });
+
+  adminCollectionId = collectionRes.body.id;
 });
 
     // Access denial for regular user
@@ -828,13 +847,8 @@ describe('API Automation Tests', () => {
 
     describe('Other admin operations', () => {
       it('should not allow admin to ban himself', async () => {
-        const me = await pool.query(
-          'SELECT id FROM users WHERE role = $1 LIMIT 1',
-          ['ADMIN']
-        );
-
         const response = await request(app)
-        .post(`/api/admin/users/${me.rows[0].id}/ban`)
+        .post(`/api/admin/users/${adminId}/ban`)
         .set('Authorization', `Bearer ${adminToken}`)
         .send({ type: 'permanent' });
 
@@ -871,7 +885,7 @@ describe('API Automation Tests', () => {
       it('should return 404 when exporting missing collection', async () => {
         const response = await request(app)
         .get('/api/collections/999999/export')
-        .set('Authorization', `Bearer ${token}`);
+        .set('Authorization', `Bearer ${adminToken}`)
 
         expect(response.status).toBe(404);
 
