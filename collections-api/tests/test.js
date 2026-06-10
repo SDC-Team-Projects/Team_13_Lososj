@@ -121,7 +121,7 @@ describe('API Automation Tests', () => {
             password: 'wrongPassword'
           });
 
-        expect(response.status).toBe(400);
+        expect(response.status).toBe(401);
         expect(response.body.error).toContain('Wrong password');
       });
 
@@ -133,7 +133,7 @@ describe('API Automation Tests', () => {
             password: 'anyPassword'
           });
 
-        expect(response.status).toBe(400);
+        expect(response.status).toBe(404);
         expect(response.body.error).toContain('not found');
       });
 
@@ -651,7 +651,7 @@ describe('API Automation Tests', () => {
     let adminToken;
     let targetUserId;
 
-    beforeAll(async () => {
+    /*beforeAll(async () => {
       // Registration of a new admin
       const adminEmail = `admin_${Date.now()}@test.com`;
       const registerRes = await request(app)
@@ -677,7 +677,42 @@ describe('API Automation Tests', () => {
       } else {
         targetUserId = 9999;
       }
+    });*/
+
+    beforeAll(async () => {
+  const adminEmail = `admin_${Date.now()}@test.com`;
+
+  const registerRes = await request(app)
+    .post('/api/auth/register')
+    .send({
+      email: adminEmail,
+      password: 'adminPassword123',
+      username: 'superadmin',
+      city: 'Vilnius',
+      country: 'Lithuania'
     });
+
+  await pool.query(
+    "UPDATE users SET role = 'ADMIN' WHERE email = $1",
+    [adminEmail]
+  );
+
+  adminToken = registerRes.body.token;
+
+  const userEmail = `target_${Date.now()}@test.com`;
+
+  const userRes = await request(app)
+    .post('/api/auth/register')
+    .send({
+      email: userEmail,
+      password: 'userPassword123',
+      username: 'targetUser',
+      city: 'Vilnius',
+      country: 'Lithuania'
+    });
+
+  targetUserId = userRes.body.user.id;
+});
 
     // Access denial for regular user
     describe('Access Denied for Regular Users', () => {
@@ -788,6 +823,60 @@ describe('API Automation Tests', () => {
           .delete('/api/admin/items/1')
           .set('Authorization', `Bearer ${adminToken}`);
         expect(response.status).toBeDefined();
+      });
+    });
+
+    describe('Other admin operations', () => {
+      it('should not allow admin to ban himself', async () => {
+        const me = await pool.query(
+          'SELECT id FROM users WHERE role = $1 LIMIT 1',
+          ['ADMIN']
+        );
+
+        const response = await request(app)
+        .post(`/api/admin/users/${me.rows[0].id}/ban`)
+        .set('Authorization', `Bearer ${adminToken}`)
+        .send({ type: 'permanent' });
+
+        expect(response.status).toBe(400);
+        expect(response.body.error)
+        .toContain('You cannot ban yourself');
+      });
+
+      it('should return 404 for non-existent user', async () => {
+        const response = await request(app)
+        .post('/api/admin/users/999999999/ban')
+        .set('Authorization', `Bearer ${adminToken}`)
+        .send({ type: 'permanent' });
+
+        expect(response.status).toBe(404);
+        expect(response.body.error)
+        .toContain('User not found');
+      });
+    });
+
+    describe('PDF export', () => {
+      it('should export collection as pdf', async () => {
+        const response = await request(app)
+        .get(`/api/collections/${collectionId}/export`)
+        .set('Authorization', `Bearer ${token}`);
+
+        expect(response.status).toBe(200);
+
+        expect(
+          response.headers['content-type']
+        ).toContain('application/pdf');
+      });
+
+      it('should return 404 when exporting missing collection', async () => {
+        const response = await request(app)
+        .get('/api/collections/999999/export')
+        .set('Authorization', `Bearer ${token}`);
+
+        expect(response.status).toBe(404);
+
+        expect(response.body.error)
+        .toContain('Collection not found');
       });
     });
   });
