@@ -1792,36 +1792,7 @@ app.get("/api/analytics/collection/:id", auth, async (req, res) => {
 /* USER ANALYTICS */
 app.get("/api/analytics/user", auth, async (req, res) => {
   try {
-
-    const userId = req.user.id;
-
-    const collections = await pool.query(
-      `SELECT COUNT(*) FROM collections WHERE user_id = $1`,
-      [userId]
-    );
-
-    const items = await pool.query(
-      `
-      SELECT COUNT(i.id)
-      FROM items i
-      JOIN collections c ON c.id = i.collection_id
-      WHERE c.user_id = $1
-      `,
-      [userId]
-    );
-
-    const value = await pool.query(
-      `
-      SELECT COALESCE(SUM(i.estimated_value), 0) AS total_value
-      FROM items i
-      JOIN collections c ON c.id = i.collection_id
-      WHERE c.user_id = $1
-      `,
-      [userId]
-    );
-
-    
-    const chartQuery = await pool.query(
+    const result = await pool.query(
       `
       SELECT
         created_at,
@@ -1832,10 +1803,10 @@ app.get("/api/analytics/user", auth, async (req, res) => {
       WHERE user_id = $1
       ORDER BY created_at ASC
       `,
-      [userId]
+      [req.user.id]
     );
 
-    const chartData = chartQuery.rows.map(row => ({
+    const chart_data = result.rows.map(row => ({
       date: row.created_at,
       value: Number(row.total_value),
       change: Number(row.change_amount),
@@ -1843,10 +1814,7 @@ app.get("/api/analytics/user", auth, async (req, res) => {
     }));
 
     res.json({
-      collections_count: collections.rows[0].count,
-      items_count: items.rows[0].count,
-      total_value: value.rows[0].total_value,
-      chart_data: chartData
+      chart_data
     });
 
   } catch (err) {
