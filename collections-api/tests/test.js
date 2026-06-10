@@ -1337,6 +1337,135 @@ describe('API Automation Tests', () => {
       });
     });
   });
+
+  // Public API & PDF Images Processing
+  describe('Public API Endpoints & PDF Export Elements', () => {
+
+    async function ensurePublicCollectionAndItem() {
+      let colResult = await pool.query('SELECT id FROM collections WHERE is_public = true LIMIT 1');
+      let colId;
+
+      if (colResult.rows.length === 0) {
+        const userRes = await pool.query('SELECT id FROM users LIMIT 1');
+        const userId = userRes.rows.length > 0 ? userRes.rows[0].id : 1;
+        const insertCol = await pool.query(
+          "INSERT INTO collections (user_id, name, description, is_public, category) VALUES ($1, 'Public Gallery', 'Public Description', true, 'Coins') RETURNING id",
+          [userId]
+        );
+        colId = insertCol.rows[0].id;
+      } else {
+        colId = colResult.rows[0].id;
+      }
+
+      let itemResult = await pool.query('SELECT id FROM items WHERE collection_id = $1 LIMIT 1', [colId]);
+      let itemId;
+
+      if (itemResult.rows.length === 0) {
+        const insertItem = await pool.query(
+          "INSERT INTO items (collection_id, name, description, estimated_value, image, custom_fields) VALUES ($1, 'Public Masterpiece', 'Antique', 150, 'http://example.com/image.png', '{}'::jsonb) RETURNING id",
+          [colId]
+        );
+        itemId = insertItem.rows[0].id;
+      } else {
+        itemId = itemResult.rows[0].id;
+        await pool.query(
+          "UPDATE items SET image = 'http://example.com/item.png', custom_fields = NULL WHERE id = $1",
+          [itemId]
+        );
+      }
+
+      await pool.query("UPDATE collections SET image = 'http://example.com/collection.png' WHERE id = $1", [colId]);
+
+      return { colId, itemId };
+    }
+
+    // GET /api/public/items/:id
+    describe('GET /api/public/items/:id', () => {
+      it('should successfully return public item details and normalize empty custom_fields', async () => {
+        const data = await ensurePublicCollectionAndItem();
+        const response = await request(app).get(`/api/public/items/${data.itemId}`);
+
+        expect(response.status).toBe(200);
+        expect(response.body).toHaveProperty('id', data.itemId);
+        expect(typeof response.body.custom_fields).toBe('object');
+        expect(response.body.custom_fields.image).toBe(response.body.image);
+      });
+
+      it('should return 404 for non-existent or private item', async () => {
+        const response = await request(app).get('/api/public/items/9999999');
+        expect(response.status).toBe(404);
+        expect(response.body).toHaveProperty('error', 'Item not found');
+      });
+    });
+
+    // GET /api/public/collections/:id
+    describe('GET /api/public/collections/:id', () => {
+      it('should successfully get public collection data without authorization', async () => {
+        const data = await ensurePublicCollectionAndItem();
+        const response = await request(app).get(`/api/public/collections/${data.colId}`);
+
+        expect(response.status).toBe(200);
+        if (response.body.collection) {
+          expect(response.body.collection).toHaveProperty('id', data.colId);
+          expect(Array.isArray(response.body.items)).toBe(true);
+        } else {
+          expect(response.body).toHaveProperty('id', data.colId);
+        }
+      });
+
+      it('should return 404 for non-existent public collection', async () => {
+        const response = await request(app).get('/api/public/collections/9999999');
+        expect(response.status).toBe(404);
+      });
+    });
+
+    // PDF generation
+    describe('PDF Image Buffering & Streams Edge Cases', () => {
+      it('should gracefully handle image load errors in PDF generation and fallback to text', async () => {
+        const data = await ensurePublicCollectionAndItem();
+        
+        let tokenForPdf = '';
+        try {
+          if (typeof authToken !== 'undefined') tokenForPdf = authToken;
+          else if (typeof adminToken !== 'undefined') tokenForPdf = adminToken;
+        } catch(e){}
+
+        const response = await request(app)
+          .get(`/api/collections/${data.colId}/export`)
+          .set('Authorization', `Bearer ${tokenForPdf}`);
+
+        expect(response.status).toBe(200);
+        expect(response.headers['content-type']).toContain('application/pdf');
+      });
+    });
+
+    // Critical errors
+    describe('Database Crash Public API Handling (500)', () => {
+      it('should return 500 on public item access if СУБД fails', async () => {
+        const originalQuery = pool.query;
+        pool.query = jest.fn().mockRejectedValue(new Error('Fatal pool connection error'));
+
+        const response = await request(app).get('/api/public/items/1');
+
+        expect(response.status).toBe(500);
+        expect(response.body).toHaveProperty('error', 'Server error');
+
+        pool.query = originalQuery;
+      });
+
+      it('should return 500 on public collections access if СУБД fails', async () => {
+        const originalQuery = pool.query;
+        pool.query = jest.fn().mockRejectedValue(new Error('Fatal pool connection error'));
+
+        const response = await request(app).get('/api/public/collections/1');
+
+        expect(response.status).toBe(500);
+        expect(response.body).toHaveProperty('error', 'Server error');
+
+        pool.query = originalQuery;
+      });
+    });
+  });
   
   afterAll(async () => {
     await pool.end();
