@@ -898,6 +898,145 @@ adminId = adminResult.rows[0].id;
         .toContain('Collection not found');
       });
     });
+
+  describe('Дополнительное покрытие для достижения 70% (Views & Password Reset)', () => {
+
+
+  // Tests for GET /api/views-history
+  describe('GET /api/views-history', () => {
+    it('should fetch view history successfully for authenticated user', async () => {
+      const response = await request(app)
+        .get('/api/views-history')
+        .set('Authorization', `Bearer ${token}`);
+
+      expect(response.status).toBe(200);
+      expect(Array.isArray(response.body)).toBe(true);
+      if (response.body.length > 0) {
+        expect(response.body[0]).toHaveProperty('viewed_at');
+        expect(response.body[0]).toHaveProperty('collection_id');
+      }
+    });
+
+    it('should return 401 if token is missing', async () => {
+      const response = await request(app).get('/api/views-history');
+      expect(response.status).toBe(401);
+    });
+  });
+
+  // Password reset tests (Request & confirm)
+  describe('Password Reset Flow', () => {
+    let resetTokenForTest;
+    const testEmail = 'user11@test.com';
+
+    it('should successfully request password reset and return a token', async () => {
+      const response = await request(app)
+        .post('/api/auth/password-reset/request')
+        .send({ email: testEmail });
+
+      expect(response.status).toBe(200);
+      expect(response.body).toHaveProperty('message', 'Password reset link sent');
+      expect(response.body).toHaveProperty('token');
+      
+      resetTokenForTest = response.body.token;
+    });
+
+    it('should return 404 when requesting reset for non-existent email', async () => {
+      const response = await request(app)
+        .post('/api/auth/password-reset/request')
+        .send({ email: 'ghost_user_9999@notfound.com' });
+
+      expect(response.status).toBe(404);
+      expect(response.body).toHaveProperty('error', 'User not found');
+    });
+
+    it('should fail to confirm reset if passwords do not match', async () => {
+      const response = await request(app)
+        .post('/api/auth/password-reset/confirm')
+        .send({
+          token: 'some-token',
+          new_password: 'NewPassword123!',
+          confirm_new_password: 'DifferentPassword123!'
+        });
+
+      expect(response.status).toBe(400);
+      expect(response.body).toHaveProperty('error', 'Passwords do not match');
+    });
+
+    it('should fail to confirm reset with an invalid or fake token', async () => {
+      const response = await request(app)
+        .post('/api/auth/password-reset/confirm')
+        .send({
+          token: 'fake-crypto-token-12345',
+          new_password: 'ValidPassword123!',
+          confirm_new_password: 'ValidPassword123!'
+        });
+
+      expect(response.status).toBe(400);
+      expect(response.body).toHaveProperty('error', 'Invalid token');
+    });
+
+    it('should fail to confirm reset if the token has expired', async () => {
+      const expiredToken = 'expired-token-xyz';
+      const pastDate = new Date(Date.now() - 1000 * 60 * 60);
+
+      await pool.query(
+        'UPDATE users SET reset_token = $1, reset_token_expires = $2 WHERE email = $3',
+        [expiredToken, pastDate, testEmail]
+      );
+
+      const response = await request(app)
+        .post('/api/auth/password-reset/confirm')
+        .send({
+          token: expiredToken,
+          new_password: 'NewPassword123!',
+          confirm_new_password: 'NewPassword123!'
+        });
+
+      expect(response.status).toBe(400);
+      expect(response.body).toHaveProperty('error', 'Token expired');
+    });
+
+    it('should successfully confirm password reset with a valid token', async () => {
+      const reqResponse = await request(app)
+        .post('/api/auth/password-reset/request')
+        .send({ email: testEmail });
+      
+      const validToken = reqResponse.body.token;
+
+      const response = await request(app)
+        .post('/api/auth/password-reset/confirm')
+        .send({
+          token: validToken,
+          new_password: 'BrandNewPassword2026!',
+          confirm_new_password: 'BrandNewPassword2026!'
+        });
+
+      expect(response.status).toBe(200);
+      expect(response.body).toHaveProperty('message', 'Password reset successful');
+
+      const dbCheck = await pool.query('SELECT reset_token, reset_token_expires FROM users WHERE email = $1', [testEmail]);
+      expect(dbCheck.rows[0].reset_token).toBeNull();
+      expect(dbCheck.rows[0].reset_token_expires).toBeNull();
+    });
+  });
+
+  // CATCH tests (SERVER ERROR 500)
+  describe('Error handling (500 Status Covers)', () => {
+    it('should return 500 on history if DB crashes', async () => {
+      const originalQuery = pool.query;
+      pool.query = jest.fn().mockRejectedValue(new Error('Database explosion'));
+
+      const response = await request(app)
+        .get('/api/views-history')
+        .set('Authorization', `Bearer ${token}`);
+
+      expect(response.status).toBe(500);
+      expect(response.body).toHaveProperty('error', 'Server error');
+
+      pool.query = originalQuery;
+    });
+  });
+});
   });
 
   afterAll(async () => {
