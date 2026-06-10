@@ -23,7 +23,7 @@ import AdminPage from "./pages/AdminPage";
 import ForgotPassword from "./components/ForgotPassword";
 import ResetPassword from "./components/ResetPassword";
 import PublicCollectionPage from "./pages/PublicCollectionPage";
-
+import LandingPage from "./components/LandingPage";
 function App() {
 
   return (
@@ -33,7 +33,7 @@ function App() {
     <BrowserRouter>
     <Routes>
       <Route path="/login" element={<LoginPage/>}></Route>
-     <Route path="/" element={<RegisterPage />} />
+     <Route path="/register" element={<RegisterPage />} />
       <Route path="/home" element={<ProtectedRoute><MainPage /></ProtectedRoute>} />
       <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
       <Route path="/collectionForm" element={<ProtectedRoute><CollectionFormPage /></ProtectedRoute>} />
@@ -53,6 +53,8 @@ function App() {
       <Route path="/forgot-password" element={<ForgotPassword />}/>
       <Route path="/reset-password/:token" element={<ResetPassword />}/>
       <Route path="/users/:id" element={<UserProfilePage />} />
+      <Route path="/public/collections/:id" element={<PublicCollectionPage />} />
+      <Route path="/" element={<LandingPage />} />
     </Routes>
     </BrowserRouter>
     </AuthProvider>

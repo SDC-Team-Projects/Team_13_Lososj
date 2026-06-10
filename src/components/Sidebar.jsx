@@ -17,6 +17,7 @@ import {
   KeyRound,
 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
+import Modal from "../components/Modal";
 
 export default function Sidebar() {
   const navigate = useNavigate();
@@ -101,47 +102,29 @@ const handleLogout = async () => {
 
         </nav>
       </aside>
-      {logoutOpen && (
-  <div
-    className="logoutModalOverlay"
-    onClick={() => setLogoutOpen(false)}
-  >
+      <Modal
+  isOpen={logoutOpen}
+  onClose={() => setLogoutOpen(false)}
+  title="Log out?"
+>
+  <p>Are you sure you want to leave your account?</p>
 
-    <div
-      className="logoutModal"
-      onClick={(e) => e.stopPropagation()}
+  <div className="logoutActions">
+    <button
+      className="cancelBtn"
+      onClick={() => setLogoutOpen(false)}
     >
+      Cancel
+    </button>
 
-      <h3>
-        Log out?
-      </h3>
-
-      <p>
-        Are you sure you want to leave your account?
-      </p>
-
-      <div className="logoutActions">
-
-        <button
-          className="cancelBtn"
-          onClick={() => setLogoutOpen(false)}
-        >
-          Cancel
-        </button>
-
-        <button
-          className="logoutBtn"
-          onClick={handleLogout}
-        >
-          Log Out
-        </button>
-
-      </div>
-
-    </div>
-
+    <button
+      className="logoutBtn"
+      onClick={handleLogout}
+    >
+      Log Out
+    </button>
   </div>
-)}
+</Modal>
     </>
   );
 }

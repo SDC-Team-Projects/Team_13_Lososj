@@ -29,17 +29,10 @@ export default function PublicCollectionPage() {
 
     if (!res.ok) throw new Error("Not found");
 
-    const collectionData = await res.json();
+    const data = await res.json();
 
-    const itemsRes = await fetch(
-      `https://team-13-lososj.onrender.com/api/collections/${id}/items`
-    );
-
-    const itemsData = await itemsRes.json();
-
-    setCollection(collectionData);
-    setItems(itemsData);
-
+    setCollection(data.collection);
+    setItems(data.items || []);
   } catch (err) {
     console.error(err);
   } finally {

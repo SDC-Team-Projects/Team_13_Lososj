@@ -1,0 +1,222 @@
+.page {
+min-height: 100vh;
+padding: 40px 60px;
+background: linear-gradient(
+180deg,
+#A8D3FF 0%,
+#FFF4DF 100%
+);
+
+display: flex;
+flex-direction: column;
+gap: 60px;
+}
+
+/* HEADER */
+
+.header {
+display: flex;
+justify-content: space-between;
+align-items: center;
+
+padding: 18px 24px;
+
+border-radius: 24px;
+
+background: rgba(255,255,255,0.35);
+backdrop-filter: blur(12px);
+
+box-shadow: 0 8px 24px rgba(0,0,0,0.06);
+}
+
+.logo {
+font-size: 22px;
+font-weight: 700;
+}
+
+.actions {
+display: flex;
+gap: 12px;
+}
+
+/* BUTTONS */
+
+.primaryBtn {
+border: none;
+cursor: pointer;
+
+padding: 12px 18px;
+
+border-radius: 14px;
+
+background: linear-gradient(
+135deg,
+#46c3e5,
+#3a4ced
+);
+
+color: white;
+font-weight: 600;
+
+box-shadow:
+0 6px 18px rgba(79,70,229,0.3);
+}
+
+.secondaryBtn {
+border: 1px solid rgba(0,0,0,0.1);
+
+cursor: pointer;
+
+padding: 12px 18px;
+
+border-radius: 14px;
+
+background: rgba(255,255,255,0.7);
+}
+
+.hero {
+display: flex;
+justify-content: center;
+align-items: center;
+
+text-align: center;
+
+padding: 60px 20px;
+}
+
+.heroContent {
+max-width: 800px;
+}
+
+.hero h1 {
+font-size: 56px;
+line-height: 1.1;
+margin-bottom: 20px;
+}
+
+.hero p {
+font-size: 20px;
+opacity: 0.8;
+line-height: 1.6;
+}
+
+.heroButtons {
+margin-top: 30px;
+
+display: flex;
+justify-content: center;
+gap: 16px;
+}
+
+.bigPrimaryBtn {
+border: none;
+cursor: pointer;
+
+padding: 16px 24px;
+
+border-radius: 18px;
+
+font-size: 16px;
+font-weight: 700;
+
+color: white;
+
+background: linear-gradient(
+135deg,
+#3a4ced,
+#46c3e5
+);
+
+box-shadow:
+0 10px 25px rgba(59,130,246,0.25);
+}
+
+.bigSecondaryBtn {
+border: 1px solid rgba(0,0,0,0.1);
+
+cursor: pointer;
+
+padding: 16px 24px;
+
+border-radius: 18px;
+
+background: rgba(255,255,255,0.8);
+}
+
+.features {
+display: grid;
+grid-template-columns: repeat(3, 1fr);
+
+gap: 20px;
+}
+
+.featureCard {
+padding: 24px;
+
+border-radius: 24px;
+
+background: rgba(255,255,255,0.4);
+
+backdrop-filter: blur(10px);
+
+box-shadow:
+0 8px 24px rgba(0,0,0,0.05);
+}
+
+.featureCard h3 {
+margin-top: 0;
+}
+
+.previewSection {
+display: flex;
+flex-direction: column;
+gap: 25px;
+}
+
+.sectionHeader {
+display: flex;
+justify-content: space-between;
+align-items: center;
+}
+
+.viewAllBtn {
+border: none;
+cursor: pointer;
+
+padding: 12px 18px;
+
+border-radius: 14px;
+
+background: rgba(255,255,255,0.7);
+
+font-weight: 600;
+}
+
+@media (max-width: 900px) {
+
+.page {
+padding: 20px;
+}
+
+.header {
+flex-direction: column;
+gap: 16px;
+}
+
+.hero h1 {
+font-size: 38px;
+}
+
+.heroButtons {
+flex-direction: column;
+}
+
+.features {
+grid-template-columns: 1fr;
+}
+
+.sectionHeader {
+flex-direction: column;
+gap: 10px;
+}
+}

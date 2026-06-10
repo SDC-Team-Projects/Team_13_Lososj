@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { getUsers, banUser, unbanUser } from "../../api/admin";
 import { useAuth } from "../../context/AuthContext";
 import styles from "../../css/AdminPage.module.css";
-
+import Modal from "../../components/Modal";
 
 export default function UsersManagement() {
   const { token } = useAuth();
@@ -10,7 +10,11 @@ export default function UsersManagement() {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  const [banModalOpen, setBanModalOpen] = useState(false);
+  const [selectedUser, setSelectedUser] = useState(null);
+
   /* ---------------- LOAD USERS ---------------- */
+
   const fetchUsers = async () => {
     try {
       setLoading(true);
@@ -27,26 +31,42 @@ export default function UsersManagement() {
     if (token) fetchUsers();
   }, [token]);
 
-  /* ---------------- ACTIONS ---------------- */
-  const handleBan = async (id) => {
-  try {
-    await banUser(id, token);
-    await fetchUsers();
-  } catch (err) {
-    console.error(err.message);
-    alert(err.message);
-  }
-};
+  /* ---------------- MODAL ---------------- */
 
-const handleUnban = async (id) => {
-  try {
-    await unbanUser(id, token);
-    await fetchUsers();
-  } catch (err) {
-    console.error(err.message);
-    alert(err.message);
-  }
-};
+  const openBanModal = (user) => {
+    setSelectedUser(user);
+    setBanModalOpen(true);
+  };
+
+  const closeBanModal = () => {
+    setBanModalOpen(false);
+    setSelectedUser(null);
+  };
+
+  const confirmBan = async () => {
+    if (!selectedUser) return;
+
+    try {
+      await banUser(selectedUser.id, token);
+      await fetchUsers();
+      closeBanModal();
+    } catch (err) {
+      console.error(err.message);
+      alert(err.message);
+    }
+  };
+
+  /* ---------------- ACTIONS ---------------- */
+
+  const handleUnban = async (id) => {
+    try {
+      await unbanUser(id, token);
+      await fetchUsers();
+    } catch (err) {
+      console.error(err.message);
+      alert(err.message);
+    }
+  };
 
   if (loading) return <p>Loading users...</p>;
 
@@ -76,24 +96,51 @@ const handleUnban = async (id) => {
               <td>
                 {user.status === "active" ? (
                   <button
-  className={`${styles.actionBtn} ${styles.banBtn}`}
-  onClick={() => handleBan(user.id)}
->
-  Ban
-</button>
+                    className={`${styles.actionBtn} ${styles.banBtn}`}
+                    onClick={() => openBanModal(user)}
+                  >
+                    Ban
+                  </button>
                 ) : (
                   <button
-  className={`${styles.actionBtn} ${styles.unbanBtn}`}
-  onClick={() => handleUnban(user.id)}
->
-  Unban
-</button>
+                    className={`${styles.actionBtn} ${styles.unbanBtn}`}
+                    onClick={() => handleUnban(user.id)}
+                  >
+                    Unban
+                  </button>
                 )}
               </td>
             </tr>
           ))}
         </tbody>
       </table>
+
+      <Modal
+        isOpen={banModalOpen}
+        onClose={closeBanModal}
+        title="Ban user?"
+      >
+        <p>
+          Are you sure you want to ban{" "}
+          <strong>{selectedUser?.username}</strong>?
+        </p>
+
+        <div className="logoutActions">
+          <button
+            className="cancelBtn"
+            onClick={closeBanModal}
+          >
+            Cancel
+          </button>
+
+          <button
+            className="logoutBtn"
+            onClick={confirmBan}
+          >
+            Ban User
+          </button>
+        </div>
+      </Modal>
     </div>
   );
 }

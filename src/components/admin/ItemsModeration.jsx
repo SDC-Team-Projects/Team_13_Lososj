@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "../../context/AuthContext";
 import { getAdminItems } from "../../api/admin";
+import Modal from "../../components/Modal";
 import styles from "../../css/AdminPage.module.css";
-
 
 const API_URL = "https://team-13-lososj.onrender.com/api";
 
@@ -12,7 +12,11 @@ export default function ItemsModeration() {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [selectedItem, setSelectedItem] = useState(null);
+
   /* ---------------- FETCH ---------------- */
+
   const fetchItems = async () => {
     try {
       setLoading(true);
@@ -29,23 +33,34 @@ export default function ItemsModeration() {
     if (token) fetchItems();
   }, [token]);
 
-  /* ---------------- DELETE ---------------- */
-  const handleDelete = async (id) => {
-    const confirm = window.confirm(
-      "Delete this item?"
-    );
+  /* ---------------- MODAL ---------------- */
 
-    if (!confirm) return;
+  const openDeleteModal = (item) => {
+    setSelectedItem(item);
+    setDeleteModalOpen(true);
+  };
+
+  const closeDeleteModal = () => {
+    setDeleteModalOpen(false);
+    setSelectedItem(null);
+  };
+
+  const confirmDelete = async () => {
+    if (!selectedItem) return;
 
     try {
-      await fetch(`${API_URL}/admin/items/${id}`, {
-        method: "DELETE",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      await fetch(
+        `${API_URL}/admin/items/${selectedItem.id}`,
+        {
+          method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
 
-      fetchItems();
+      await fetchItems();
+      closeDeleteModal();
     } catch (err) {
       console.error(err);
     }
@@ -79,8 +94,8 @@ export default function ItemsModeration() {
               <td>
                 <button
                   className={`${styles.actionBtn} ${styles.deleteBtn}`}
-                  onClick={() => handleDelete(item.id)}
-                        >
+                  onClick={() => openDeleteModal(item)}
+                >
                   Delete
                 </button>
               </td>
@@ -88,6 +103,33 @@ export default function ItemsModeration() {
           ))}
         </tbody>
       </table>
+
+      <Modal
+        isOpen={deleteModalOpen}
+        onClose={closeDeleteModal}
+        title="Delete item?"
+      >
+        <p>
+          Are you sure you want to delete{" "}
+          <strong>{selectedItem?.name}</strong>?
+        </p>
+
+        <div className="logoutActions">
+          <button
+            className="cancelBtn"
+            onClick={closeDeleteModal}
+          >
+            Cancel
+          </button>
+
+          <button
+            className="logoutBtn"
+            onClick={confirmDelete}
+          >
+            Delete Item
+          </button>
+        </div>
+      </Modal>
     </div>
   );
 }
