@@ -1181,6 +1181,173 @@ describe('API Automation Tests', () => {
       });
     });
   });
+
+  // Password Change, User Details, Item Favorites
+  describe('Profile Password & Item Favorites Coverage', () => {
+
+    async function getFreshUserContext() {
+      const userResult = await pool.query('SELECT id, email FROM users LIMIT 1');
+      if (userResult.rows.length === 0) {
+        throw new Error("No users found in database for context");
+      }
+      const user = userResult.rows[0];
+    
+      const bcrypt = require('bcrypt');
+      const testHash = await bcrypt.hash('validPassword123', 10);
+      await pool.query('UPDATE users SET password = $1 WHERE id = $2', [testHash, user.id]);
+
+      const loginRes = await request(app)
+        .post('/api/auth/login')
+        .send({ email: user.email, password: 'validPassword123' });
+
+      return {
+        token: loginRes.body.token,
+        id: user.id
+      };
+    }
+
+    async function getValidItemId() {
+      const itemResult = await pool.query('SELECT id FROM items LIMIT 1');
+      if (itemResult.rows.length > 0) {
+        return itemResult.rows[0].id;
+      }
+      
+      const colResult = await pool.query('SELECT id FROM collections LIMIT 1');
+      const colId = colResult.rows.length > 0 ? colResult.rows[0].id : 1;
+      
+      const newItem = await pool.query(
+        "INSERT INTO items (collection_id, name, description, condition, estimated_value) VALUES ($1, 'Test Item', 'Desc', 'Mint', 10) RETURNING id",
+        [colId]
+      );
+      return newItem.rows[0].id;
+    }
+
+    // PUT /api/profile/password
+    describe('PUT /api/profile/password', () => {
+      it('should successfully change password with correct old password', async () => {
+        const ctx = await getFreshUserContext();
+        const response = await request(app)
+          .put('/api/profile/password')
+          .set('Authorization', `Bearer ${ctx.token}`)
+          .send({
+            old_password: 'validPassword123',
+            new_password: 'completelyNewPassword2026!'
+          });
+
+        expect(response.status).toBe(200);
+        expect(response.body).toHaveProperty('message', 'Password updated');
+      });
+
+      it('should fail to change password with wrong old password', async () => {
+        const ctx = await getFreshUserContext();
+        const response = await request(app)
+          .put('/api/profile/password')
+          .set('Authorization', `Bearer ${ctx.token}`)
+          .send({
+            old_password: 'wrong-old-password-123',
+            new_password: 'someNewPassword123!'
+          });
+
+        expect(response.status).toBe(400);
+        expect(response.body).toHaveProperty('error', 'Wrong old password');
+      });
+    });
+
+    // GET /api/users/:id
+    describe('GET /api/users/:id', () => {
+      it('should fetch user profile details by valid ID', async () => {
+        const ctx = await getFreshUserContext();
+        const response = await request(app).get(`/api/users/${ctx.id}`);
+
+        expect(response.status).toBe(200);
+        expect(response.body).toHaveProperty('id', ctx.id);
+        expect(response.body).toHaveProperty('username');
+        expect(response.body).not.toHaveProperty('password');
+      });
+
+      it('should return 404 for non-existent user ID', async () => {
+        const response = await request(app).get('/api/users/9999999');
+        expect(response.status).toBe(404);
+        expect(response.body).toHaveProperty('error', 'User not found');
+      });
+    });
+
+    // Favorite items (GET, POST, DELETE)
+    describe('Favorites Items Flow (/api/favorites)', () => {
+      it('should successfully add an item to favorites, fetch it, and remove it', async () => {
+        const ctx = await getFreshUserContext();
+        const itemId = await getValidItemId();
+
+        await pool.query('DELETE FROM favorites WHERE user_id = $1 AND item_id = $2', [ctx.id, itemId]);
+
+        // POST /api/favorites/:item_id
+        const addResponse = await request(app)
+          .post(`/api/favorites/${itemId}`)
+          .set('Authorization', `Bearer ${ctx.token}`);
+        
+        expect(addResponse.status).toBe(200);
+        expect(addResponse.body).toHaveProperty('item_id', itemId);
+
+        // GET /api/favorites
+        const getResponse = await request(app)
+          .get('/api/favorites')
+          .set('Authorization', `Bearer ${ctx.token}`);
+
+        expect(getResponse.status).toBe(200);
+        expect(Array.isArray(getResponse.body)).toBe(true);
+        expect(getResponse.body.some(item => item.id === itemId)).toBe(true);
+
+        // DELETE /api/favorites/:item_id
+        const deleteResponse = await request(app)
+          .delete(`/api/favorites/${itemId}`)
+          .set('Authorization', `Bearer ${ctx.token}`);
+
+        expect(deleteResponse.status).toBe(200);
+        expect(deleteResponse.body).toHaveProperty('message', 'Removed from favorites');
+      });
+
+      it('should return 404 when trying to remove an item that is not in favorites', async () => {
+        const ctx = await getFreshUserContext();
+        const response = await request(app)
+          .delete('/api/favorites/9999999')
+          .set('Authorization', `Bearer ${ctx.token}`);
+
+        expect(response.status).toBe(404);
+        expect(response.body).toHaveProperty('error', 'Not in favorites');
+      });
+    });
+
+    // CATCH blocks (STATUS 500)
+    describe('Database Crash Error Handling (500)', () => {
+      it('should return 500 on password update if DB throws error', async () => {
+        const ctx = await getFreshUserContext();
+        const originalQuery = pool.query;
+        pool.query = jest.fn().mockRejectedValue(new Error('Critical DB failure'));
+
+        const response = await request(app)
+          .put('/api/profile/password')
+          .set('Authorization', `Bearer ${ctx.token}`)
+          .send({ old_password: '1', new_password: '2' });
+
+        expect(response.status).toBe(500);
+        expect(response.body).toHaveProperty('error', 'Server error');
+
+        pool.query = originalQuery;
+      });
+
+      it('should return 500 on get user profile by id if DB throws error', async () => {
+        const originalQuery = pool.query;
+        pool.query = jest.fn().mockRejectedValue(new Error('Critical DB failure'));
+
+        const response = await request(app).get('/api/users/1');
+
+        expect(response.status).toBe(500);
+        expect(response.body).toHaveProperty('error', 'Server error');
+
+        pool.query = originalQuery;
+      });
+    });
+  });
   
   afterAll(async () => {
     await pool.end();
