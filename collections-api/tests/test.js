@@ -881,7 +881,7 @@ adminId = adminResult.rows[0].id;
 
       const response = await request(app)
       .get(`/api/collections/${validCollectionId}/export`)
-      .set('Authorization', `Bearer ${token}`);
+      .set('Authorization', `Bearer ${adminToken}`);
         
       expect(response.status).toBe(200);
       expect(response.headers['content-type']).toContain('application/pdf');
