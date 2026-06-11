@@ -1,6 +1,7 @@
 
 
 import { createContext, useState, useEffect, useContext } from "react";
+import { apiFetch } from "../api/apiClient";
 
 export const AuthContext = createContext();
 
@@ -9,52 +10,52 @@ export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // INIT AUTH
-  useEffect(() => {
-    const savedToken = sessionStorage.getItem("token");
+// INIT AUTH
+useEffect(() => {
+  const savedToken = localStorage.getItem("token");
 
-    if (!savedToken) {
-      setLoading(false);
-      return;
-    }
+  if (!savedToken) {
+    setLoading(false);
+    return;
+  }
 
-    setToken(savedToken);
+  setToken(savedToken);
 
-    fetch("https://team-13-lososj.onrender.com/api/profile", {
-      headers: {
-        Authorization: `Bearer ${savedToken}`,
-      },
+  // fetch("https://team-13-lososj.onrender.com/api/profile", {
+  //   headers: {
+  //     Authorization: `Bearer ${savedToken}`,
+  //   },
+  // })
+
+  apiFetch("https://team-13-lososj.onrender.com/api/profile")
+    .then((res) => {
+      if (!res.ok) throw new Error("Auth failed");
+      return res.json();
     })
-      .then((res) => {
-        if (!res.ok) throw new Error("Auth failed");
-        return res.json();
-      })
-      .then((data) => {
-        setUser(data);
-      })
-      .catch(() => {
-        sessionStorage.removeItem("token");
-        setToken(null);
-        setUser(null);
-      })
-      .finally(() => {
-        setLoading(false);
-      });
-  }, []);
+    .then((data) => {
+      setUser(data);
+    })
+    .catch(() => {
+      localStorage.removeItem("token");
+      setToken(null);
+      setUser(null);
+    })
+    .finally(() => {
+      setLoading(false);
+    });
+}, []);
 
-  // LOGIN
-  const login = (newToken, userData) => {
-    sessionStorage.setItem("token", newToken);
-    setToken(newToken);
-    setUser(userData);
-  };
+const login = (newToken, userData) => {
+  localStorage.setItem("token", newToken);
+  setToken(newToken);
+  setUser(userData);
+};
 
-  // LOGOUT
-  const logout = () => {
-    sessionStorage.removeItem("token");
-    setToken(null);
-    setUser(null);
-  };
+const logout = () => {
+  localStorage.removeItem("token");
+  setToken(null);
+  setUser(null);
+};
 
   // ✅ ВАЖНО: auth = token, не user
   const isAuthenticated = !!token;

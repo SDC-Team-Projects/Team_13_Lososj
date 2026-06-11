@@ -61,8 +61,7 @@ export async function logoutUser() {
     throw new Error("Logout failed");
   }
 
-  // чистим sessionStorage (единственный источник правды)
-  sessionStorage.removeItem("token");
+  localStorage.removeItem("token");
 
   return res.json();
 }

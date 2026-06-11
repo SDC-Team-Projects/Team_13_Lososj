@@ -4,7 +4,7 @@ import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
 import ProfilePage from "./pages/ProfilePage";
 import MainPage from "./pages/MainPage";
-import { AuthProvider } from "./context/AuthContext";
+
 import UserProfilePage from "./pages/UserProfilePage";
 import ProtectedRoute from "./routes/ProtectedRoute";
 import CollectionFormPage from "./pages/CollectionFormPage";
@@ -28,9 +28,6 @@ function App() {
 
   return (
     <>
-      <AuthProvider>
-      
-    <BrowserRouter>
     <Routes>
       <Route path="/login" element={<LoginPage/>}></Route>
      <Route path="/register" element={<RegisterPage />} />
@@ -56,8 +53,7 @@ function App() {
       <Route path="/public/collections/:id" element={<PublicCollectionPage />} />
       <Route path="/" element={<LandingPage />} />
     </Routes>
-    </BrowserRouter>
-    </AuthProvider>
+
     </>
   )
 }
