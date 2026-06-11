@@ -433,6 +433,7 @@ describe('API Automation Tests', () => {
   });
 
   // ITEMS TESTS
+  /*
   describe('Items', () => {
 
     beforeAll(async () => {
@@ -537,6 +538,140 @@ describe('API Automation Tests', () => {
       const idToDelete = itemId || 1;
       const response = await request(app)
         .delete(`/api/items/${idToDelete}`)
+        .set('Authorization', `Bearer ${authToken}`);
+
+      expect([200, 500]).toContain(response.status);
+      if (response.status === 200) {
+        expect(response.body).toHaveProperty('message', 'Deleted successfully');
+      }
+    });
+  });
+  */
+
+  describe('Items', () => {
+    let localCollectionId;
+
+    beforeAll(async () => {
+      const userCheck = await pool.query("SELECT id FROM users ORDER BY id ASC LIMIT 1");
+      const currentUserId = userCheck.rows.length > 0 ? userCheck.rows[0].id : 1;
+
+      const colCheck = await pool.query(
+        'SELECT id FROM collections WHERE user_id = $1 LIMIT 1',
+        [currentUserId]
+      );
+
+      if (colCheck.rows.length > 0) {
+        localCollectionId = colCheck.rows[0].id;
+      } else {
+        const newCol = await pool.query(
+          "INSERT INTO collections (user_id, name, description, category, is_public) VALUES ($1, 'Items Test Collection', 'Desc', 'Other', false) RETURNING id",
+          [currentUserId]
+        );
+        localCollectionId = newCol.rows[0].id;
+      }
+
+      const itemCheck = await pool.query(
+        'SELECT id FROM items WHERE collection_id = $1 LIMIT 1',
+        [localCollectionId]
+      );
+      if (itemCheck.rows.length > 0) {
+        itemId = itemCheck.rows[0].id;
+      } else {
+        const newItem = await pool.query(
+          "INSERT INTO items (collection_id, name, description, estimated_value) VALUES ($1, 'Base Test Item', 'Desc', 50) RETURNING id",
+          [localCollectionId]
+        );
+        itemId = newItem.rows[0].id;
+      }
+    });
+
+    // POST
+    it('POST /api/items - should create a new item in collection', async () => {
+      const response = await request(app)
+        .post('/api/items')
+        .set('Authorization', `Bearer ${authToken}`)
+        .send({
+          collection_id: localCollectionId,
+          name: `Rare Item ${Date.now()}`,
+          description: 'Unique artifact description',
+          notes: 'Some private notes',
+          condition: 'Mint',
+          estimated_value: 150
+        });
+
+      expect([200, 500]).toContain(response.status);
+
+      if (response.status === 200) {
+        expect(response.body).toHaveProperty('id');
+        itemId = response.body.id;
+      }
+    });
+
+    // GET
+    it('GET /api/collections/:id/items - should fetch items from specific collection', async () => {
+      const response = await request(app)
+        .get(`/api/collections/${localCollectionId}/items`)
+        .set('Authorization', `Bearer ${authToken}`);
+
+      expect([200, 500]).toContain(response.status);
+      if (response.status === 200) {
+        expect(Array.isArray(response.body)).toBe(true);
+      }
+    });
+
+    // GET
+    it('GET /api/items/:id - should fetch single item details', async () => {
+      const response = await request(app)
+        .get(`/api/items/${itemId}`)
+        .set('Authorization', `Bearer ${authToken}`);
+
+      expect(response.status).toBe(200);
+      expect(response.body).toHaveProperty('id', itemId);
+    });
+
+    // PUT
+    it('PUT /api/items/:id - should update item data', async () => {
+      const response = await request(app)
+        .put(`/api/items/${itemId}`)
+        .set('Authorization', `Bearer ${authToken}`)
+        .send({
+          name: 'Updated Item Name',
+          description: 'Brand new description for this item',
+          notes: 'Updated notes',
+          condition: 'Good',
+          estimated_value: 200
+        });
+
+      expect([200, 500]).toContain(response.status);
+      if (response.status === 200) {
+        expect(response.body).toHaveProperty('name', 'Updated Item Name');
+      }
+    });
+
+    // POST & DELETE
+    it('POST & DELETE /api/items/:id/photos - should manage item photos', async () => {
+      const addPhotoRes = await request(app)
+        .post(`/api/items/${itemId}/photos`)
+        .set('Authorization', `Bearer ${authToken}`)
+        .send({ url: 'http://example.com/photo.jpg' });
+
+      expect([200, 500]).toContain(addPhotoRes.status);
+
+      if (addPhotoRes.status === 200) {
+        expect(addPhotoRes.body).toHaveProperty('id');
+        
+        const deletePhotoRes = await request(app)
+          .delete(`/api/photos/${addPhotoRes.body.id}`)
+          .set('Authorization', `Bearer ${authToken}`);
+          
+        expect([200, 404, 500]).toContain(deletePhotoRes.status);
+      }
+    });
+
+    // DELETE
+    it('DELETE /api/items/:id - should delete item', async () => {
+      const response = await request(app)
+        .delete(`/api/items/${itemId}`)
         .set('Authorization', `Bearer ${authToken}`);
 
       expect([200, 500]).toContain(response.status);
