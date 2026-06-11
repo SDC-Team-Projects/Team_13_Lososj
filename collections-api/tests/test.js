@@ -461,7 +461,7 @@ describe('API Automation Tests', () => {
           notes: 'Some private notes',
           condition: 'Mint',
           estimated_value: 150,
-          custom_fields: JSON.stringify({ material: 'Gold' })
+          custom_fields: { material: 'Gold' }
         });
 
       expect(response.status).toBe(200);
@@ -502,7 +502,7 @@ describe('API Automation Tests', () => {
           notes: 'Updated notes',
           condition: 'Good',
           estimated_value: 200,
-          custom_fields: JSON.stringify({ material: 'Silver' })
+          custom_fields: { material: 'Silver' }
         });
 
       expect(response.status).toBe(200);
@@ -608,8 +608,14 @@ describe('API Automation Tests', () => {
 
     // Analytics of a collection
     it('GET /api/analytics/collection/:id - should return collection stats', async () => {
+      let targetId = testCollectionId;
+      if (!targetId) {
+        const colCheck = await pool.query('SELECT id FROM collections LIMIT 1');
+        targetId = colCheck.rows.length > 0 ? colCheck.rows[0].id : 1;
+      }
+
       const response = await request(app)
-        .get('/api/analytics/collection/1')
+        .get(`/api/analytics/collection/${targetId}`)
         .set('Authorization', `Bearer ${authToken}`);
 
       expect(response.status).toBe(200);
@@ -1260,16 +1266,17 @@ describe('API Automation Tests', () => {
         expect(response.status).toBe(200);
         if (response.body.collection) {
           expect(response.body.collection).toHaveProperty('id', data.colId);
+          expect(Array.isArray(response.body.items)).toBe(true);
         } else {
           expect(response.body).toHaveProperty('id', data.colId);
         }
-        
-        it('should return 404 for non-existent public collection', async () => {
-        const response = await request(app).get('/api/public/collections/9999999');
-        expect(response.status).toBe(404);
-      });
 
         await pool.query('DELETE FROM users WHERE id = $1', [data.userId]);
+      });
+
+      it('should return 404 for non-existent public collection', async () => {
+        const response = await request(app).get('/api/public/collections/9999999');
+        expect(response.status).toBe(404);
       });
     });
 
