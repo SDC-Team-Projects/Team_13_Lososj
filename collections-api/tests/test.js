@@ -6,6 +6,9 @@ jest.setTimeout(15000);
 
 describe('API Automation Tests', () => {
   let authToken;
+  let testCollectionId;
+  let itemId;
+  let parentCollectionId;
 
   // AUTHENTICATION TESTS
   describe('Authentication', () => {
@@ -162,7 +165,6 @@ describe('API Automation Tests', () => {
 
   // COLLECTIONS TESTS
   describe('Collections', () => {
-    let testCollectionId;
 
     it('GET /api/collections/public - should fetch public collections', async () => {
       const response = await request(app)
@@ -432,8 +434,6 @@ describe('API Automation Tests', () => {
 
   // ITEMS TESTS
   describe('Items', () => {
-    let itemId;
-    let parentCollectionId;
 
     beforeAll(async () => {
       const colResponse = await request(app)
