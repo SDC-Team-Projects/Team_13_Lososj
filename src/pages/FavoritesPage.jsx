@@ -9,6 +9,7 @@ import Button from "../ui/Button";
 import { getFavoriteCollections, removeFavoriteCollection } from "../api/collections";
 
 import "../css/MyCollectionsPage.css";
+import { usePageLoader } from "../hook/usePageLoader";
 
 export default function FavoritesPage() {
   const [gridMode, setGridMode] = useState(1);
@@ -28,6 +29,8 @@ export default function FavoritesPage() {
   queryKey: ["favoriteCollections"],
   queryFn: getFavoriteCollections,
 });
+
+  usePageLoader(isLoading);
 
 const removeFavoriteMutation = useMutation({
   mutationFn: removeFavoriteCollection,

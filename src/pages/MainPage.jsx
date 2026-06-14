@@ -11,6 +11,7 @@ import { useQuery, useMutation, useQueryClient, } from "@tanstack/react-query";
 import { apiFetch } from "../api/apiClient";
 import { ChartNoAxesCombined } from "lucide-react";
 import { useLocation } from "react-router-dom";
+import { usePageLoader } from "../hook/usePageLoader";
 
 export default function MainPage() {
   const queryClient = useQueryClient();
@@ -19,11 +20,14 @@ export default function MainPage() {
 
   const {
   data: recentCollections = [],
+  isLoading
 } = useQuery({
   queryKey: ["recentCollections"],
   queryFn: getRecentCollections,
   staleTime: 1000 * 60 * 5,
 });
+
+usePageLoader(isLoading);
 
   // const [analytics, setAnalytics] = useState({
   //   items_count: 0,

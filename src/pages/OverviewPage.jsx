@@ -7,6 +7,8 @@ import CollectionCard from "../components/CollectionCard";
 import UniversalGrid from "../components/UniversalGrid";
 import "../css/OverviewPage.css";
 import Button from "../ui/Button";
+import { usePageLoader } from "../hook/usePageLoader";
+
 
 import {
   getPublicCollections,
@@ -30,9 +32,12 @@ export default function OverviewPage() {
   queryFn: getPublicCollections,
 });
 
+usePageLoader(isLoading);
   // const [favoriteIds, setFavoriteIds] = useState([]);
 
-const { data: favorites = [] } = useQuery({
+const { 
+  data: favorites = [] 
+} = useQuery({
   queryKey: ["favoriteCollections"],
   queryFn: getFavoriteCollections,
 });

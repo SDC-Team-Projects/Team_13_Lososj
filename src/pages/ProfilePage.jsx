@@ -7,6 +7,7 @@ import { getUserAnalytics } from "../api/collections";
 import React, { useState } from "react";
 import { useAuth } from "../context/AuthContext";
 import { useQuery } from "@tanstack/react-query";
+import { usePageLoader } from "../hook/usePageLoader";
 
 export default function ProfilePage() {
   const { user, loading } = useAuth();
@@ -23,6 +24,8 @@ export default function ProfilePage() {
   queryFn: getUserAnalytics,
   staleTime: 1000 * 60 * 5,
 });
+
+usePageLoader(isLoading);
 
   // const [analytics, setAnalytics] = useState({
   //   items_count: 0,

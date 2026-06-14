@@ -9,6 +9,8 @@ import Button from "../ui/Button";
 import "../css/CollectionPage.css";
 import "../css/CollectionCard.css";
 
+
+
 import {
   getCollectionById,
   deleteCollection,
@@ -22,6 +24,7 @@ import { getItemsByCollection } from "../api/items";
 import { useAuth } from "../context/AuthContext";
 import { isOwner } from "../utils/permissions";
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
+import { usePageLoader } from "../hook/usePageLoader";
 
 export default function CollectionPage() {
   const queryClient = useQueryClient();
@@ -38,6 +41,7 @@ export default function CollectionPage() {
   queryFn: () => getCollectionById(id),
 });
 
+
   // const [items, setItems] = useState([]);
 
   const {
@@ -47,6 +51,9 @@ export default function CollectionPage() {
   queryKey: ["collectionItems", id],
   queryFn: () => getItemsByCollection(id),
 });
+
+usePageLoader(collectionLoading || itemsLoading);
+
 
   // const [loading, setLoading] = useState(true);
 

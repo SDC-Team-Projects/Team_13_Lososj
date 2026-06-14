@@ -9,6 +9,7 @@ import { Trash2 } from "lucide-react";
 import { getItemById, deleteItem } from "../api/items";
 import { useAuth } from "../context/AuthContext";
 import { isOwner } from "../utils/permissions";
+import { usePageLoader } from "../hook/usePageLoader";
 
 import "../css/ItemPage.css";
 
@@ -28,6 +29,8 @@ export default function ItemPage() {
     queryFn: () => getItemById(id),
     enabled: !!id,
   });
+
+  usePageLoader(isLoading);
 
   // 2. DELETE MUTATION
   const deleteMutation = useMutation({

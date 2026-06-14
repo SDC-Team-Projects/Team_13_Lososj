@@ -6,6 +6,7 @@ import SearchBar from "../components/SearchBar";
 import CollectionCard from "../components/CollectionCard";
 import UniversalGrid from "../components/UniversalGrid";
 import Sidebar from "../components/Sidebar";
+import { usePageLoader } from "../hook/usePageLoader";
 
 import {
   getCollections,
@@ -37,6 +38,9 @@ export default function MyCollectionsPage() {
     queryKey: ["collections"],
     queryFn: getCollections,
   });
+
+  usePageLoader(isLoading);
+
 
 //react query favorites
   const { data: favorites = [] } = useQuery({
@@ -104,16 +108,16 @@ const gridOptions = [
   { label: "Compact", value: 3 },
 ];
 
-if (isLoading) {
-    return (
-      <div className="layout">
-        <Sidebar />
-        <div className="content">
-          <h2>Loading collections...</h2>
-        </div>
-      </div>
-    );
-  }
+// if (isLoading) {
+//     return (
+//       <div className="layout">
+//         <Sidebar />
+//         <div className="content">
+//           <h2>Loading collections...</h2>
+//         </div>
+//       </div>
+//     );
+//   }
 
   return (
     <div className="layout">

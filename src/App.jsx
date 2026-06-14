@@ -26,6 +26,7 @@ import LandingPage from "./components/LandingPage";
 import { Navigate } from "react-router-dom";
 import { useAuth } from "./context/AuthContext";
 import Layout from "./components/Layout";
+import FormLayout from "./components/FormLayout";
 
 function App() {
 
@@ -55,39 +56,80 @@ function App() {
   <Route path="/forgot-password" element={<ForgotPassword />} />
   <Route path="/reset-password/:token" element={<ResetPassword />} />
 
-  {/* protected layout group */}
+  {/* Основной layout с sidebar */}
+<Route
+  element={
+    <ProtectedRoute>
+      <Layout />
+    </ProtectedRoute>
+  }
+>
+  <Route path="/home" element={<MainPage />} />
+
+  <Route path="/profile" element={<ProfilePage />} />
+  <Route path="/profile/edit" element={<EditProfilePage />} />
+
+  <Route path="/collections" element={<MyCollectionsPage />} />
+  <Route path="/collections/:id" element={<CollectionPage />} />
+
+  <Route path="/items/:id" element={<ItemPage />} />
+
+  <Route path="/overview" element={<OverviewPage />} />
+  <Route path="/favorites" element={<FavoritesPage />} />
+
+  <Route path="/settings/password" element={<ChangePasswordPage />} />
+
   <Route
+    path="/admin"
     element={
-      <ProtectedRoute>
-        <Layout />
-      </ProtectedRoute>
+      <AdminRoute>
+        <AdminPage />
+      </AdminRoute>
     }
-  >
-    <Route path="/home" element={<MainPage />} />
-    <Route path="/profile" element={<ProfilePage />} />
-    <Route path="/profile/edit" element={<EditProfilePage />} />
+  />
 
-    <Route path="/collections" element={<MyCollectionsPage />} />
-    <Route path="/collections/:id" element={<CollectionPage />} />
-    <Route path="/collections/:id/items/new" element={<ItemForm />} />
-    <Route path="/collections/edit/:id" element={<EditCollectionForm />} />
-    <Route path="/collections/edit/:id" element={<EditCollectionForm />} />
-    <Route path="/items/:id" element={<ItemPage />} />
-    <Route path="/collectionForm" element={<CollectionFormPage />} />
+  <Route path="/users/:id" element={<UserProfilePage />} />
+  <Route
+    path="/public/collections/:id"
+    element={<PublicCollectionPage />}
+  />
+</Route>
 
-    <Route path="/overview" element={<OverviewPage />} />
-    <Route path="/favorites" element={<FavoritesPage />} />
+ {/* Отдельный без sidebar */}
 
-    <Route path="/settings/password" element={<ChangePasswordPage />} />
-    <Route path="/admin" element={<AdminRoute><AdminPage /></AdminRoute>} />
+  <Route
+  element={
+    <ProtectedRoute>
+      <FormLayout />
+    </ProtectedRoute>
+  }
+>
+  <Route
+    path="/collectionForm"
+    element={<CollectionFormPage />}
+  />
 
-    <Route path="/users/:id" element={<UserProfilePage />} />
-    <Route path="/public/collections/:id" element={<PublicCollectionPage />} />
-  </Route>
+  <Route
+    path="/collections/edit/:id"
+    element={<EditCollectionForm />}
+  />
+
+  <Route
+    path="/collections/:id/items/new"
+    element={<ItemForm />}
+  />
+
+  <Route
+    path="/items/:id/edit"
+    element={<EditItemForm />}
+  />
+</Route>
+
 </Routes>
 
     </>
   )
 }
+import { ssrImportMetaKey } from "vite/module-runner";
 
 export default App
