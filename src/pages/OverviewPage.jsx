@@ -1,6 +1,6 @@
 
-import { useEffect, useState } from "react";
-
+import {  useState } from "react";
+import { useQuery, useMutation, useQueryClient, } from "@tanstack/react-query";
 import Sidebar from "../components/Sidebar";
 import SearchBar from "../components/SearchBar";
 import CollectionCard from "../components/CollectionCard";
@@ -18,11 +18,26 @@ import {
 import "../css/MyCollectionsPage.css";
 
 export default function OverviewPage() {
-  const [collections, setCollections] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [favoriteIds, setFavoriteIds] = useState([]);
+  const queryClient = useQueryClient();
+  // const [collections, setCollections] = useState([]);
+  // const [loading, setLoading] = useState(true);
 
-  /* GRID MODE */
+  const {
+  data: collections = [],
+  isLoading,
+} = useQuery({
+  queryKey: ["publicCollections"],
+  queryFn: getPublicCollections,
+});
+
+  // const [favoriteIds, setFavoriteIds] = useState([]);
+
+const { data: favorites = [] } = useQuery({
+  queryKey: ["favoriteCollections"],
+  queryFn: getFavoriteCollections,
+});
+
+const favoriteIds = favorites.map((c) => c.id);
 
   const [gridMode, setGridMode] = useState(3);
 
@@ -30,8 +45,6 @@ export default function OverviewPage() {
     { label: "Large", value: 1 },
     { label: "Compact", value: 3 },
   ];
-
-  /* FILTERS */
 
   const [filters, setFilters] = useState({
     search: "",
@@ -41,62 +54,83 @@ export default function OverviewPage() {
     sort: "",
   });
 
-  useEffect(() => {
-    loadCollections();
-    loadFavorites();
-  }, []);
+  // useEffect(() => {
+  //   loadCollections();
+  //   loadFavorites();
+  // }, []);
 
-  async function loadCollections() {
-    try {
-      const data = await getPublicCollections();
+  // async function loadCollections() {
+  //   try {
+  //     const data = await getPublicCollections();
 
-      setCollections(data);
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
-  }
+  //     setCollections(data);
+  //   } catch (err) {
+  //     console.error(err);
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // }
 
-  async function loadFavorites() {
-    try {
-      const data = await getFavoriteCollections();
+  // async function loadFavorites() {
+  //   try {
+  //     const data = await getFavoriteCollections();
 
-      setFavoriteIds(data.map((c) => c.id));
-    } catch (err) {
-      console.error(err);
-    }
-  }
+  //     setFavoriteIds(data.map((c) => c.id));
+  //   } catch (err) {
+  //     console.error(err);
+  //   }
+  // }
+
+  // async function toggleFavorite(collectionId) {
+  //   const isFav = favoriteIds.includes(collectionId);
+
+  //   try {
+  //     if (isFav) {
+  //       await removeFavoriteCollection(collectionId);
+
+  //       setFavoriteIds((prev) =>
+  //         prev.filter((id) => id !== collectionId)
+  //       );
+  //     } else {
+  //       await addFavoriteCollection(collectionId);
+
+  //       setFavoriteIds((prev) => [...prev, collectionId]);
+  //     }
+  //   } catch (err) {
+  //     console.error(err);
+  //   }
+  // }
+
+  // function handleDeleteCollection(id) {
+  //   setCollections((prev) =>
+  //     prev.filter((c) => c.id !== id)
+  //   );
+
+  //   setFavoriteIds((prev) =>
+  //     prev.filter((idFav) => idFav !== id)
+  //   );
+  // }
+
 
   async function toggleFavorite(collectionId) {
-    const isFav = favoriteIds.includes(collectionId);
+  const isFav = favoriteIds.includes(collectionId);
 
-    try {
-      if (isFav) {
-        await removeFavoriteCollection(collectionId);
-
-        setFavoriteIds((prev) =>
-          prev.filter((id) => id !== collectionId)
-        );
-      } else {
-        await addFavoriteCollection(collectionId);
-
-        setFavoriteIds((prev) => [...prev, collectionId]);
-      }
-    } catch (err) {
-      console.error(err);
+  try {
+    if (isFav) {
+      await removeFavoriteCollection(collectionId);
+    } else {
+      await addFavoriteCollection(collectionId);
     }
-  }
 
-  function handleDeleteCollection(id) {
-    setCollections((prev) =>
-      prev.filter((c) => c.id !== id)
-    );
-
-    setFavoriteIds((prev) =>
-      prev.filter((idFav) => idFav !== id)
-    );
+    queryClient.invalidateQueries({
+      queryKey: ["favoriteCollections"],
+    });
+  } catch (err) {
+    console.error(err);
   }
+}
+
+
 
   /* FILTERED */
 
@@ -135,7 +169,11 @@ export default function OverviewPage() {
       return 0;
     });
 
-  if (loading) {
+  // if (loading) {
+  //   return <h2>Loading collections...</h2>;
+  // }
+
+  if (isLoading) {
     return <h2>Loading collections...</h2>;
   }
 
@@ -196,7 +234,7 @@ export default function OverviewPage() {
                 collection={collection}
                 variant="square"
                 disableAnalytics={true}
-                onDelete={handleDeleteCollection}
+                // onDelete={handleDeleteCollection}
                 isFavorite={favoriteIds.includes(
                   collection.id
                 )}

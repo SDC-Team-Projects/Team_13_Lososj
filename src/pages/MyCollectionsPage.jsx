@@ -1,27 +1,24 @@
-
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import Button from "../ui/Button";
 import { Link } from "react-router-dom";
-
 import "../css/MyCollectionsPage.css";
-
 import SearchBar from "../components/SearchBar";
-import Sidebar from "../components/Sidebar";
 import CollectionCard from "../components/CollectionCard";
 import UniversalGrid from "../components/UniversalGrid";
+import Sidebar from "../components/Sidebar";
 
 import {
   getCollections,
   getFavoriteCollections,
   addFavoriteCollection,
   removeFavoriteCollection,
+  deleteCollection
 } from "../api/collections";
 
-export default function MyCollectionsPage() {
-  const [collections, setCollections] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [favoriteIds, setFavoriteIds] = useState([]);
+import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 
+export default function MyCollectionsPage() {
+  const queryClient = useQueryClient();
   const [gridMode, setGridMode] = useState(1);
 
   const [filters, setFilters] = useState({
@@ -32,49 +29,52 @@ export default function MyCollectionsPage() {
     sort: "",
   });
 
-  useEffect(() => {
-    loadCollections();
-    loadFavorites();
-  }, []);
+  //react query collections 
+  const {
+    data: collections = [],
+    isLoading,
+  } = useQuery({
+    queryKey: ["collections"],
+    queryFn: getCollections,
+  });
 
-  async function loadCollections() {
-    try {
-      const data = await getCollections();
-      setCollections(data);
-    } finally {
-      setLoading(false);
-    }
-  }
+//react query favorites
+  const { data: favorites = [] } = useQuery({
+    queryKey: ["favoriteCollections"],
+    queryFn: getFavoriteCollections,
+  });
 
-  async function loadFavorites() {
-    try {
-      const data = await getFavoriteCollections();
-      setFavoriteIds(data.map((c) => c.id));
-    } catch (err) {
-      console.error(err);
-    }
-  }
+  
+  // helper
+  const favoriteIds = favorites.map((c) => c.id);
 
+  // toggle favorite через API + обновление cache
   async function toggleFavorite(collectionId) {
     const isFav = favoriteIds.includes(collectionId);
 
     try {
       if (isFav) {
         await removeFavoriteCollection(collectionId);
-        setFavoriteIds((prev) => prev.filter((id) => id !== collectionId));
       } else {
         await addFavoriteCollection(collectionId);
-        setFavoriteIds((prev) => [...prev, collectionId]);
       }
+
+      queryClient.invalidateQueries({
+        queryKey: ["favoriteCollections"],
+      });
     } catch (err) {
       console.error(err);
     }
   }
 
-  function handleDeleteCollection(id) {
-    setCollections((prev) => prev.filter((c) => c.id !== id));
-    setFavoriteIds((prev) => prev.filter((favId) => favId !== id));
-  }
+  const deleteMutation = useMutation({
+  mutationFn: deleteCollection,
+  onSuccess: () => {
+    queryClient.invalidateQueries({
+      queryKey: ["collections"],
+    });
+  },
+});
 
   const filteredCollections = collections
     .filter((c) =>
@@ -104,14 +104,21 @@ const gridOptions = [
   { label: "Compact", value: 3 },
 ];
 
-  if (loading) return <h2>Loading collections...</h2>;
+if (isLoading) {
+    return (
+      <div className="layout">
+        <Sidebar />
+        <div className="content">
+          <h2>Loading collections...</h2>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="layout">
-      <Sidebar />
-
       <div className="content">
-        <div className="title">
+        <div className="mainText">
           <div className="heroTitle">
           <h1>My Collections</h1>
           <p>Here you can manage your collections</p>
@@ -151,7 +158,7 @@ const gridOptions = [
         key={collection.id}
         collection={collection}
         variant="square"
-        onDelete={handleDeleteCollection}
+        onDelete={(id) => deleteMutation.mutate(id)}
         isFavorite={favoriteIds.includes(collection.id)}
         onToggleFavorite={toggleFavorite}
       />

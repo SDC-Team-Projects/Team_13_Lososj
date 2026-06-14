@@ -24,6 +24,10 @@ h1 {
   align-items: center; 
 }
 
+.itemsCards{
+margin-left: 20px;
+}
+
 .button {
     display: flex;
   justify-content: center;

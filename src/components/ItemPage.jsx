@@ -1,14 +1,12 @@
-
-import { useEffect, useState, useMemo } from "react";
+import { useMemo } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
 import Sidebar from "../components/Sidebar";
 import Button from "../ui/Button";
-
-import { Pencil, Trash2 } from "lucide-react";
+import { Trash2 } from "lucide-react";
 
 import { getItemById, deleteItem } from "../api/items";
-
 import { useAuth } from "../context/AuthContext";
 import { isOwner } from "../utils/permissions";
 
@@ -17,52 +15,53 @@ import "../css/ItemPage.css";
 export default function ItemPage() {
   const { id } = useParams();
   const navigate = useNavigate();
-
-  const [item, setItem] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
 
   const { user } = useAuth();
 
-  useEffect(() => {
-    const loadItem = async () => {
-      try {
-        const data = await getItemById(id);
-        setItem(data);
-      } catch (err) {
-        console.error(err);
-      } finally {
-        setLoading(false);
-      }
-    };
+  // 1. ITEM QUERY
+  const {
+    data: item,
+    isLoading,
+  } = useQuery({
+    queryKey: ["item", id],
+    queryFn: () => getItemById(id),
+    enabled: !!id,
+  });
 
-    loadItem();
-  }, [id]);
+  // 2. DELETE MUTATION
+  const deleteMutation = useMutation({
+    mutationFn: deleteItem,
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["items"],
+      });
 
+      navigate("/collections");
+    },
+  });
 
+  // 3. OWNER CHECK
   const owner = useMemo(() => {
     if (!user || !item) return false;
     return isOwner(user, item.user_id);
   }, [user, item]);
 
+  // 4. IMAGE SAFE
   const image =
     item?.custom_fields?.image ||
     "https://placehold.co/1200x800";
 
-  async function handleDelete() {
+  // 5. DELETE HANDLER
+  function handleDelete() {
     const confirmDelete = window.confirm("Delete this item?");
     if (!confirmDelete) return;
 
-    try {
-      await deleteItem(item.id);
-      alert("Item deleted");
-      navigate("/collections");
-    } catch (err) {
-      console.error(err);
-      alert("Failed to delete item");
-    }
+    deleteMutation.mutate(item.id);
   }
 
-  if (loading) return <h2>Loading item...</h2>;
+  // 6. LOADING STATES
+  if (isLoading) return <h2>Loading item...</h2>;
   if (!item) return <h2>Item not found</h2>;
 
   return (
@@ -93,11 +92,13 @@ export default function ItemPage() {
             <div className="itemActions">
 
               <Button
-  variant="primary"
-  onClick={() => navigate(`/items/${item.id}/edit`)}
->
-  Edit
-</Button>
+                variant="primary"
+                onClick={() =>
+                  navigate(`/items/${item.id}/edit`)
+                }
+              >
+                Edit
+              </Button>
 
               <Button
                 variant="danger"
@@ -121,7 +122,7 @@ export default function ItemPage() {
 
             <div className="detailsGrid">
 
-              <div>
+              <div className="condition">
                 <span>Condition</span>
                 <strong>{item.condition}</strong>
               </div>
@@ -142,4 +143,3 @@ export default function ItemPage() {
     </div>
   );
 }
-

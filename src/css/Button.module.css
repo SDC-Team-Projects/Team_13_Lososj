@@ -13,13 +13,26 @@
 }
 
 .primary {
+  border: none;
+  outline: none;
   /* background-color: rgb(125, 187, 253); */
-  background-color: #2563eb;
+  background: linear-gradient(
+135deg,
+#3e30ff,
+#82c0ff
+);
+
   color: white;
 }
 
 .danger {
-  background-color: #ef4444;
+border: none;
+outline: none;
+background: linear-gradient(
+135deg,
+#e71e1e,
+#e6afaf
+);
   color: white;
 }
 

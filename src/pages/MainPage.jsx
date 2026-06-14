@@ -4,89 +4,148 @@ import ProfileCard from "../components/ProfileCard";
 import InfoCard from "../components/InfoCard";
 import CostChart from "../components/CostChart";
 import CollectionForm from "../components/CollectionForm";
-// import ItemCard from "../components/ItemCard";
 import CollectionCard from "../components/CollectionCard";
 import { getUserAnalytics } from "../api/collections";
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
+import { useQuery, useMutation, useQueryClient, } from "@tanstack/react-query";
 import { apiFetch } from "../api/apiClient";
 import { ChartNoAxesCombined } from "lucide-react";
 import { useLocation } from "react-router-dom";
 
 export default function MainPage() {
+  const queryClient = useQueryClient();
 
-  const [recentCollections, setRecentCollections] = useState([]);
-  const [analytics, setAnalytics] = useState({
+  // const [recentCollections, setRecentCollections] = useState([]);
+
+  const {
+  data: recentCollections = [],
+} = useQuery({
+  queryKey: ["recentCollections"],
+  queryFn: getRecentCollections,
+  staleTime: 1000 * 60 * 5,
+});
+
+  // const [analytics, setAnalytics] = useState({
+  //   items_count: 0,
+  //   collections_count: 0,
+  //   total_value: 0,
+  // });
+
+  const {
+  data: analytics = {
     items_count: 0,
     collections_count: 0,
     total_value: 0,
-  });
+  },
+} = useQuery({
+  queryKey: ["userAnalytics"],
+  queryFn: getUserAnalytics,
+  staleTime: 1000 * 60 * 5,
+});
+
   const location = useLocation();
 
-useEffect(() => {
-  loadAnalytics();
-  loadRecentCollections();
-}, [location.pathname]);
+// useEffect(() => {
+//   loadAnalytics();
+//   loadRecentCollections();
+// }, [location.pathname]);
 
-useEffect(() => {
-  const onFocus = () => {
-    loadAnalytics();
-    loadRecentCollections();
-  };
+// useEffect(() => {
+//   const onFocus = () => {
+//     loadAnalytics();
+//     loadRecentCollections();
+//   };
 
-  window.addEventListener("focus", onFocus);
+//   window.addEventListener("focus", onFocus);
 
-  return () => window.removeEventListener("focus", onFocus);
-}, []);
+//   return () => window.removeEventListener("focus", onFocus);
+// }, []);
 
-   async function loadAnalytics() {
-    try {
-      const data = await getUserAnalytics();
-      setAnalytics(data);
-    } catch (err) {
-      console.error(err);
-    }
+  //  async function loadAnalytics() {
+  //   try {
+  //     const data = await getUserAnalytics();
+  //     setAnalytics(data);
+  //   } catch (err) {
+  //     console.error(err);
+  //   }
+  // }
+
+
+//   async function loadRecentCollections() {
+//   try {
+//     const res = await apiFetch(
+//       "https://team-13-lososj.onrender.com/api/views-history"
+//     );
+
+//     if (!res.ok) throw new Error("Failed");
+
+//     const data = await res.json();
+
+//     // 1. берём только коллекции
+//     const collectionsOnly = data
+//       .filter((v) => v.collection_id !== null)
+//       .map((v) => ({
+//         id: v.collection_id,
+//         name: v.collection_name,
+//         image: v.collection_image,
+//         category: v.category,  
+//         viewed_at: v.viewed_at,
+//       }));
+
+//     // 2. убираем дубли (берём последнюю версию)
+//     const uniqueMap = new Map();
+
+//     collectionsOnly.forEach((c) => {
+//       uniqueMap.set(c.id, c);
+//     });
+
+//     const unique = Array.from(uniqueMap.values());
+
+// // 3. сортируем по времени (новые первые)
+// unique.sort(
+//   (a, b) => new Date(b.viewed_at) - new Date(a.viewed_at)
+// );
+
+// setRecentCollections(unique);
+//   } catch (err) {
+//     console.error(err);
+//   }
+// }
+
+async function getRecentCollections() {
+  const res = await apiFetch(
+    "https://team-13-lososj.onrender.com/api/views-history"
+  );
+
+  if (!res.ok) {
+    throw new Error("Failed");
   }
 
+  const data = await res.json();
 
-  async function loadRecentCollections() {
-  try {
-    const res = await apiFetch(
-      "https://team-13-lososj.onrender.com/api/views-history"
-    );
+  const collectionsOnly = data
+    .filter((v) => v.collection_id !== null)
+    .map((v) => ({
+      id: v.collection_id,
+      name: v.collection_name,
+      image: v.collection_image,
+      category: v.category,
+      viewed_at: v.viewed_at,
+    }));
 
-    if (!res.ok) throw new Error("Failed");
+  const uniqueMap = new Map();
 
-    const data = await res.json();
+  collectionsOnly.forEach((c) => {
+    uniqueMap.set(c.id, c);
+  });
 
-    // 1. берём только коллекции
-    const collectionsOnly = data
-      .filter((v) => v.collection_id !== null)
-      .map((v) => ({
-        id: v.collection_id,
-        name: v.collection_name,
-        image: v.collection_image,
-        category: v.category,  
-        viewed_at: v.viewed_at,
-      }));
+  const unique = Array.from(uniqueMap.values());
 
-    // 2. убираем дубли (берём последнюю версию)
-    const uniqueMap = new Map();
+  unique.sort(
+    (a, b) => new Date(b.viewed_at) - new Date(a.viewed_at)
+  );
 
-    collectionsOnly.forEach((c) => {
-      uniqueMap.set(c.id, c);
-    });
-
-    const unique = Array.from(uniqueMap.values());
-
-// 3. сортируем по времени (новые первые)
-unique.sort(
-  (a, b) => new Date(b.viewed_at) - new Date(a.viewed_at)
-);
-
-setRecentCollections(unique);
-  } catch (err) {
-    console.error(err);
-  }
+  return unique;
 }
 
   return (

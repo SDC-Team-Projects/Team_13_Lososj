@@ -3,11 +3,12 @@
    HERO / TITLE
 ======================= */
 
-.title {
+.mainText {
   text-align: center;
   display: flex;
   flex-direction: column;
   gap: 20px;
+
 }
 
 .heroTitle {
@@ -20,7 +21,7 @@
   text-align: center;
 }
 
-.title h1 {
+.mainText h1 {
   font-size: 48px;
   font-weight: 800;
   color: #0f172a;
@@ -29,7 +30,7 @@
   letter-spacing: -1px;
 }
 
-.title p {
+.mainText p {
   font-size: 18px;
   font-weight: 400;
   color: #475569;
