@@ -17,6 +17,11 @@
   align-items: flex-start;
 }
 
+.tableWrapper {
+  width: 100%;
+  overflow-x: auto;
+}
+
 /* LEFT NAV */
 .sidebar {
   display: flex;
@@ -120,4 +125,30 @@
   backdrop-filter: blur(10px);
 
   box-shadow: 0 8px 24px rgba(0,0,0,0.06);
+}
+
+
+@media (max-width: 768px) {
+  .container {
+    flex-direction: column;
+  }
+
+  .sidebar {
+    flex-direction: row;
+    overflow-x: auto;
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .sidebar button {
+    white-space: nowrap;
+  }
+
+  .content {
+    padding: 15px;
+  }
+
+  .page {
+    padding: 20px;
+  }
 }

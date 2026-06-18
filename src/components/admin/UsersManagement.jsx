@@ -73,7 +73,7 @@ export default function UsersManagement() {
   return (
     <div>
       <h2>Users Management</h2>
-
+      <div className={styles.tableWrapper}>
       <table border="1" cellPadding="10">
         <thead>
           <tr>
@@ -114,6 +114,7 @@ export default function UsersManagement() {
           ))}
         </tbody>
       </table>
+      </div>
 
       <Modal
         isOpen={banModalOpen}

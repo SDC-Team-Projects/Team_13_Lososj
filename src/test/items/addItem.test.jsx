@@ -65,70 +65,56 @@ beforeEach(() => {
    TEST
 ========================= */
 
+
+
 test("user can add item to collection", async () => {
   const user = userEvent.setup();
 
   render(
     <MemoryRouter initialEntries={["/collections/1/items/new"]}>
       <Routes>
-        <Route
-          path="/collections/:id/items/new"
-          element={<ItemForm />}
-        />
-        <Route
-          path="/collections/:id"
-          element={<h1>Collection Page</h1>}
-        />
+        <Route path="/collections/:id/items/new" element={<ItemForm />} />
+        <Route path="/collections/:id" element={<h1>Collection Page</h1>} />
       </Routes>
     </MemoryRouter>
   );
 
-  // text fields
-  await user.type(
-    screen.getByPlaceholderText(/harry potter book/i),
-    "Pokemon Card"
-  );
+  const nameInput = screen.getByPlaceholderText(/harry potter book/i);
+  const select = screen.getByRole("combobox");
+  const descInput = screen.getByPlaceholderText(/describe item/i);
+  const notesInput = screen.getByPlaceholderText(/additional notes/i);
+  const priceInput = screen.getByPlaceholderText("100");
 
-  await user.selectOptions(screen.getByRole("combobox"), "new");
+  await user.type(nameInput, "Pokemon Card");
+  await user.selectOptions(select, "new");
+  await user.type(descInput, "Rare collectible");
+  await user.type(notesInput, "Mint condition");
+  await user.type(priceInput, "500");
 
-  await user.type(
-    screen.getByPlaceholderText(/describe item/i),
-    "Rare collectible"
-  );
-
-  await user.type(
-    screen.getByPlaceholderText(/additional notes/i),
-    "Mint condition"
-  );
-
-  await user.type(screen.getByPlaceholderText("100"), "500");
-
-  // file upload (IMPORTANT FIX)
+  // file upload (SAFE FIX)
   const file = new File(["image"], "photo.png", {
     type: "image/png",
   });
 
-  const fileInput = document.querySelector('input[type="file"]');
+  const fileInput = screen.getByLabelText(/file|image|upload/i) || 
+                    document.querySelector('input[type="file"]');
 
   await user.upload(fileInput, file);
 
-  // wait image state to be set
+  // wait upload call
   await waitFor(() => {
-    expect(global.fetch).toHaveBeenCalled();
+    expect(global.fetch).toHaveBeenCalledTimes(1);
   });
 
-  const button = screen.getByRole("button", {
+  const button = await screen.findByRole("button", {
     name: /add item/i,
-  });
-
-  // IMPORTANT: wait until enabled
-  await waitFor(() => {
-    expect(button).not.toBeDisabled();
   });
 
   await user.click(button);
 
-  expect(
-    await screen.findByText(/collection page/i)
-  ).toBeInTheDocument();
+  await waitFor(() => {
+    expect(
+      screen.getByText(/collection page/i)
+    ).toBeInTheDocument();
+  });
 });

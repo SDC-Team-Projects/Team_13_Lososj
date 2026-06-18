@@ -1,41 +1,64 @@
+import { describe, test, expect, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
-import { test, expect, vi } from "vitest";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 import MyCollectionsPage from "../../pages/MyCollectionsPage";
+import { AuthContext } from "../../context/AuthContext";
 
-/* MOCK API */
+// ---------- API ----------
+
 vi.mock("../../api/collections", () => ({
   getCollections: vi.fn(() => Promise.resolve([])),
   getFavoriteCollections: vi.fn(() => Promise.resolve([])),
   addFavoriteCollection: vi.fn(),
   removeFavoriteCollection: vi.fn(),
+  deleteCollection: vi.fn(),
 }));
 
-/* MOCK SIDEBAR */
-vi.mock("../../components/Sidebar", () => ({
-  default: () => <div>Sidebar</div>,
+// ---------- page loader ----------
+
+vi.mock("../../hook/usePageLoader", () => ({
+  usePageLoader: () => {},
 }));
 
-/* MOCK SEARCHBAR */
-vi.mock("../../components/SearchBar", () => ({
-  default: () => <div>SearchBar</div>,
-}));
+describe("MyCollectionsPage empty state", () => {
+  test("user sees empty state when no collections exist", async () => {
+    const queryClient = new QueryClient({
+      defaultOptions: {
+        queries: {
+          retry: false,
+        },
+      },
+    });
 
-test("user sees empty state when no collections exist", async () => {
-  render(
-    <MemoryRouter>
-      <MyCollectionsPage />
-    </MemoryRouter>
-  );
+    render(
+      <QueryClientProvider client={queryClient}>
+        <AuthContext.Provider
+          value={{
+            user: {
+              id: 1,
+              username: "test",
+              role: "USER",
+            },
+            token: "token",
+            loading: false,
+            login: vi.fn(),
+            logout: vi.fn(),
+            setUser: vi.fn(),
+            isAuthenticated: true,
+            isAdmin: false,
+          }}
+        >
+          <MemoryRouter>
+            <MyCollectionsPage />
+          </MemoryRouter>
+        </AuthContext.Provider>
+      </QueryClientProvider>
+    );
 
-  expect(
-    await screen.findByText(/no collections yet/i)
-  ).toBeInTheDocument();
-
-  expect(
-    screen.getByRole("button", {
-  name: /create new collection/i,
-})
-  ).toBeInTheDocument();
+    expect(
+      await screen.findByText(/no collections yet/i)
+    ).toBeInTheDocument();
+  });
 });

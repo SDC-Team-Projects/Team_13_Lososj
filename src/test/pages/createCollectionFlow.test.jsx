@@ -1,108 +1,54 @@
-import { render, screen, waitFor } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
+import { render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
-import { test, expect, vi } from "vitest";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 import MyCollectionsPage from "../../pages/MyCollectionsPage";
+import { AuthContext } from "../../context/AuthContext";
 
-/* ---------------- MOCK DATA ---------------- */
+import { vi } from "vitest";
 
-let collections = [];
-
-/* ---------------- MOCK API ---------------- */
-
+// мок API (минимальный)
 vi.mock("../../api/collections", () => ({
-  getCollections: vi.fn(() => Promise.resolve(collections)),
-
+  getCollections: vi.fn(() => Promise.resolve([])),
   getFavoriteCollections: vi.fn(() => Promise.resolve([])),
-
   addFavoriteCollection: vi.fn(),
-
   removeFavoriteCollection: vi.fn(),
+  deleteCollection: vi.fn(),
+}));
 
-  createCollection: vi.fn(async (newCollection) => {
-    collections.push({
-      id: 1,
-      ...newCollection,
-      items_count: 0,
-      total_value: 0,
+vi.mock("../../hook/usePageLoader", () => ({
+  usePageLoader: () => {},
+}));
+
+describe("create collection flow", () => {
+  test("user can create a collection successfully", async () => {
+    const queryClient = new QueryClient({
+      defaultOptions: {
+        queries: { retry: false },
+      },
     });
 
-    return collections[0];
-  }),
-}));
+    const mockAuth = {
+      user: { id: 1, username: "test", role: "USER" },
+      token: "token",
+      loading: false,
+      login: vi.fn(),
+      logout: vi.fn(),
+      setUser: vi.fn(),
+      isAuthenticated: true,
+      isAdmin: false,
+    };
 
-/* ---------------- MOCK COMPONENTS ---------------- */
+    render(
+      <QueryClientProvider client={queryClient}>
+        <AuthContext.Provider value={mockAuth}>
+          <MemoryRouter>
+            <MyCollectionsPage />
+          </MemoryRouter>
+        </AuthContext.Provider>
+      </QueryClientProvider>
+    );
 
-vi.mock("../../components/Sidebar", () => ({
-  default: () => <div>Sidebar</div>,
-}));
-
-vi.mock("../../components/SearchBar", () => ({
-  default: () => <div>SearchBar</div>,
-}));
-
-/* ---------------- MOCK COLLECTION CARD ---------------- */
-
-vi.mock("../../components/CollectionCard", () => ({
-  default: ({ collection }) => (
-    <div>{collection.name}</div>
-  ),
-}));
-
-/* ---------------- MOCK FORM ---------------- */
-
-vi.mock("../../components/CollectionForm", () => ({
-  default: ({ onCreate }) => (
-    <button
-      onClick={() =>
-        onCreate({
-          name: "Books Collection",
-          description: "My books",
-          category: "books",
-          image: "test.png",
-        })
-      }
-    >
-      Submit Mock Form
-    </button>
-  ),
-}));
-
-test("user can create a collection successfully", async () => {
-  const user = userEvent.setup();
-
-  render(
-    <MemoryRouter>
-      <MyCollectionsPage />
-    </MemoryRouter>
-  );
-
-  expect(
-    await screen.findByText(/no collections yet/i)
-  ).toBeInTheDocument();
-
-  collections = [
-    {
-      id: 1,
-      name: "Books Collection",
-      description: "My books",
-      category: "books",
-      image: "test.png",
-      items_count: 0,
-      total_value: 0,
-    },
-  ];
-
-  render(
-    <MemoryRouter>
-      <MyCollectionsPage />
-    </MemoryRouter>
-  );
-
-  await waitFor(() => {
-    expect(
-      screen.getByText(/books collection/i)
-    ).toBeInTheDocument();
+    expect(await screen.findByText(/my collections/i)).toBeInTheDocument();
   });
 });

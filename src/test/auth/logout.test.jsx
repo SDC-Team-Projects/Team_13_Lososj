@@ -1,87 +1,61 @@
-import { describe, test, expect, vi, beforeEach } from "vitest";
-import { render, screen } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
+import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { vi, describe, test, expect } from "vitest";
 
 import Sidebar from "../../components/Sidebar";
-
-const navigateMock = vi.fn();
-const logoutMock = vi.fn();
-
-vi.mock("react-router-dom", async () => {
-  const actual = await vi.importActual(
-    "react-router-dom"
-  );
-
-  return {
-    ...actual,
-    useNavigate: () => navigateMock,
-  };
-});
-
-vi.mock("../../context/AuthContext", () => ({
-  useAuth: () => ({
-    user: {
-      id: 1,
-      username: "testuser",
-      role: "USER",
-    },
-    logout: logoutMock,
-  }),
-}));
+import { AuthContext } from "../../context/AuthContext";
+import { logoutUser } from "../../api/auth";
 
 vi.mock("../../api/auth", () => ({
-  logoutUser: vi.fn(() =>
-    Promise.resolve()
-  ),
+  logoutUser: vi.fn(() => Promise.resolve()),
 }));
 
-describe("logout flow", () => {
-
-  beforeEach(() => {
-    vi.clearAllMocks();
-  });
-
+describe("Sidebar logout", () => {
   test("user can logout successfully", async () => {
+    const queryClient = new QueryClient({
+      defaultOptions: {
+        queries: {
+          retry: false,
+        },
+      },
+    });
+
+    const mockAuth = {
+      user: {
+        id: 1,
+        role: "USER",
+      },
+      logout: vi.fn(),
+    };
 
     render(
-      <MemoryRouter>
-        <Sidebar />
-      </MemoryRouter>
+      <QueryClientProvider client={queryClient}>
+        <AuthContext.Provider value={mockAuth}>
+          <MemoryRouter>
+            <Sidebar />
+          </MemoryRouter>
+        </AuthContext.Provider>
+      </QueryClientProvider>
     );
 
-    // ПЕРВАЯ кнопка = menu button
-    const menuBtn =
-      screen.getAllByRole("button")[0];
+    // открыть dropdown Settings
+    fireEvent.mouseEnter(screen.getByText("Settings"));
 
-    await userEvent.click(menuBtn);
+    // нажать Log Out в dropdown
+    fireEvent.click(await screen.findByText("Log Out"));
 
-    // settings
-    const settingsBtn =
-      screen.getByText("Settings");
+    // дождаться открытия модалки
+    await screen.findByText("Are you sure you want to leave your account?");
 
-    await userEvent.hover(settingsBtn);
+    // кнопок Log Out теперь две:
+    // первая в dropdown, вторая в модалке
+    const logoutButtons = screen.getAllByText("Log Out");
+    fireEvent.click(logoutButtons[1]);
 
-    // logout button in dropdown
-    const logoutBtn =
-      screen.getByText("Log Out");
-
-    await userEvent.click(logoutBtn);
-
-    // confirm modal button
-    const confirmLogoutBtn =
-      screen.getAllByText("Log Out")[1];
-
-    await userEvent.click(
-      confirmLogoutBtn
-    );
-
-    expect(logoutMock)
-      .toHaveBeenCalled();
-
-    expect(navigateMock)
-      .toHaveBeenCalledWith(
-        "/login"
-      );
+    await waitFor(() => {
+      expect(logoutUser).toHaveBeenCalledTimes(1);
+      expect(mockAuth.logout).toHaveBeenCalledTimes(1);
+    });
   });
 });

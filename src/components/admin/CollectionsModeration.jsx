@@ -5,7 +5,6 @@ import {
 } from "../../api/admin";
 import styles from "../../css/AdminPage.module.css";
 
-
 const API_URL = "https://team-13-lososj.onrender.com/api";
 
 export default function CollectionsModeration() {
@@ -58,7 +57,7 @@ export default function CollectionsModeration() {
   return (
     <div>
       <h2>Collections Moderation</h2>
-
+      <div className={styles.tableWrapper}>
       <table border="1" cellPadding="10">
         <thead>
           <tr>
@@ -90,6 +89,7 @@ export default function CollectionsModeration() {
           ))}
         </tbody>
       </table>
+      </div>
     </div>
   );
 }

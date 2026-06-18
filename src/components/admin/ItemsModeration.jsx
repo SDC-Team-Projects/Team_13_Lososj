@@ -71,7 +71,7 @@ export default function ItemsModeration() {
   return (
     <div>
       <h2>Items Moderation</h2>
-
+      <div className={styles.tableWrapper}>
       <table border="1" cellPadding="10">
         <thead>
           <tr>
@@ -103,6 +103,7 @@ export default function ItemsModeration() {
           ))}
         </tbody>
       </table>
+      </div>
 
       <Modal
         isOpen={deleteModalOpen}

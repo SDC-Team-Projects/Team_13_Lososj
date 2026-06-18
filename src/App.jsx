@@ -27,6 +27,7 @@ import { Navigate } from "react-router-dom";
 import { useAuth } from "./context/AuthContext";
 import Layout from "./components/Layout";
 import FormLayout from "./components/FormLayout";
+import NotificationPage from "./pages/NotificationPage";
 
 function App() {
 
@@ -79,14 +80,6 @@ function App() {
 
   <Route path="/settings/password" element={<ChangePasswordPage />} />
 
-  <Route
-    path="/admin"
-    element={
-      <AdminRoute>
-        <AdminPage />
-      </AdminRoute>
-    }
-  />
 
   <Route path="/users/:id" element={<UserProfilePage />} />
   <Route
@@ -98,6 +91,15 @@ function App() {
  {/* Отдельный без sidebar */}
 
   <Route
+    path="/admin"
+    element={
+      <AdminRoute>
+        <AdminPage />
+      </AdminRoute>
+    }
+  />
+
+  <Route
   element={
     <ProtectedRoute>
       <FormLayout />
@@ -107,6 +109,11 @@ function App() {
   <Route
     path="/collectionForm"
     element={<CollectionFormPage />}
+  />
+
+  <Route
+    path="/notifications"
+    element={<NotificationPage />}
   />
 
   <Route
@@ -131,6 +138,7 @@ function App() {
   )
 }
 import { ssrImportMetaKey } from "vite/module-runner";
+import NotificationsPage from "./pages/NotificationPage";
 
 export default App
  

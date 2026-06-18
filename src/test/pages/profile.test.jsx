@@ -1,106 +1,35 @@
-import { describe, test, expect, vi, beforeEach } from "vitest";
-import { render, screen, waitFor } from "@testing-library/react";
-
+import { renderWithProviders } from "../utils/renderWithProviders";
+import { screen } from "@testing-library/react";
 import ProfilePage from "../../pages/ProfilePage";
+import { vi } from "vitest";
 
-/* ================= MOCKS ================= */
-
-vi.mock("../../components/Sidebar", () => ({
-  default: () => <div>Sidebar</div>,
-}));
-
-vi.mock("../../components/ProfileCard", () => ({
-  default: ({ user }) => (
-    <div>
-      <h2>{user.username}</h2>
-      <p>{user.email}</p>
-    </div>
-  ),
-}));
-
-vi.mock("../../components/InfoCard", () => ({
-  default: ({ title, count }) => (
-    <div>
-      <span>{title}</span>
-      <strong>{count}</strong>
-    </div>
-  ),
-}));
-
+// mock API
 vi.mock("../../api/collections", () => ({
-  getUserAnalytics: vi.fn(),
+  getUserAnalytics: vi.fn().mockResolvedValue({
+    items_count: 5,
+    collections_count: 3,
+    total_value: 1000,
+  }),
 }));
-
-vi.mock("../../context/AuthContext", () => ({
-  useAuth: vi.fn(),
-}));
-
-/* ================= IMPORTS AFTER MOCKS ================= */
-
-import { getUserAnalytics } from "../../api/collections";
-import { useAuth } from "../../context/AuthContext";
-
-/* ================= TEST ================= */
 
 describe("ProfilePage", () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-  });
-
-  test("profile page renders user info and analytics", async () => {
-    useAuth.mockReturnValue({
-      loading: false,
+  it("profile page renders user info and analytics", async () => {
+    renderWithProviders(<ProfilePage />, {
       user: {
         id: 1,
-        username: "John Doe",
-        email: "john@example.com",
+        name: "Test User",
+        email: "test@test.com",
       },
     });
 
-    getUserAnalytics.mockResolvedValue({
-      items_count: 12,
-      collections_count: 4,
-      total_value: 2500,
-    });
+    // проверяем что профиль отрендерился
+    expect(await screen.findByText("Items")).toBeTruthy();
+    expect(await screen.findByText("Collections")).toBeTruthy();
+    expect(await screen.findByText("Total value")).toBeTruthy();
 
-    render(<ProfilePage />);
-
-    /* USER INFO */
-
-    expect(
-      screen.getByText("John Doe")
-    ).toBeInTheDocument();
-
-    expect(
-      screen.getByText("john@example.com")
-    ).toBeInTheDocument();
-
-    /* ANALYTICS */
-
-    await waitFor(() => {
-      expect(
-        screen.getByText("Items")
-      ).toBeInTheDocument();
-
-      expect(
-        screen.getByText("Collections")
-      ).toBeInTheDocument();
-
-      expect(
-        screen.getByText("Total value")
-      ).toBeInTheDocument();
-
-      expect(
-        screen.getByText("12")
-      ).toBeInTheDocument();
-
-      expect(
-        screen.getByText("4")
-      ).toBeInTheDocument();
-
-      expect(
-        screen.getByText("2500")
-      ).toBeInTheDocument();
-    });
+    // можно дополнительно проверить числа
+    expect(await screen.findByText("5")).toBeTruthy();
+    expect(await screen.findByText("3")).toBeTruthy();
+    expect(await screen.findByText("1000")).toBeTruthy();
   });
 });

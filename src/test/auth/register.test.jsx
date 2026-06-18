@@ -1,215 +1,163 @@
-
-
-import { render, screen, waitFor } from "@testing-library/react"
-import userEvent from "@testing-library/user-event"
+import { render, screen, fireEvent, waitFor } from "@testing-library/react"
 import { MemoryRouter } from "react-router-dom"
 import { test, expect, vi, beforeEach } from "vitest"
+import RegisterForm from "../../components/RegisterForm"
 
-import RegisterPage from "../../pages/RegisterPage"
-import { AuthContext } from "../../context/AuthContext"
-
-const mockedNavigate = vi.fn()
+/* MOCK NAVIGATION */
+const navigateMock = vi.fn()
 
 vi.mock("react-router-dom", async () => {
   const actual = await vi.importActual("react-router-dom")
+
   return {
     ...actual,
-    useNavigate: () => mockedNavigate,
+    useNavigate: () => navigateMock,
+    Link: ({ to, children }) => <a href={to}>{children}</a>,
   }
 })
 
-global.fetch = vi.fn()
+/* MOCK AUTH CONTEXT */
+const loginMock = vi.fn()
 
+vi.mock("../../context/AuthContext", () => ({
+  useAuth: () => ({
+    login: loginMock,
+  }),
+}))
+
+/* MOCK TOAST */
+vi.mock("react-hot-toast", () => ({
+  Toaster: () => null,
+  toast: {
+    error: vi.fn(),
+    success: vi.fn(),
+  },
+}))
+
+/* MOCK UI COMPONENTS */
+vi.mock("../../components/ui/Input", () => ({
+  default: (props) => <input {...props} />,
+}))
+
+vi.mock("../../components/ui/Button", () => ({
+  default: (props) => <button {...props} />,
+}))
+
+vi.mock("../../components/ui/Select", () => ({
+  default: (props) => (
+    <select
+      name={props.name}
+      value={props.value}
+      onChange={(e) =>
+        props.onChange({
+          target: {
+            name: props.name,
+            value: e.target.value,
+          },
+        })
+      }
+    >
+      <option value="">Select country</option>
+      <option value="LT">Lithuania</option>
+    </select>
+  ),
+}))
+
+/* MOCK FETCH */
 beforeEach(() => {
   vi.clearAllMocks()
+  global.fetch = vi.fn()
 })
 
-// ✅ 1. SUCCESS TEST
-test("full registration flow works correctly", async () => {
-  const user = userEvent.setup()
+function renderForm() {
+  return render(
+    <MemoryRouter>
+      <RegisterForm />
+    </MemoryRouter>
+  )
+}
 
-  const mockUser = {
-    id: 1,
-    email: "test@mail.com",
-    username: "John Doe",
-    city: "Vilnius",
-    country: "LT",
-  }
+/* TEST 1 */
+test("renders register form correctly", () => {
+  renderForm()
 
-  fetch.mockResolvedValueOnce({
+  expect(
+    screen.getByRole("heading", { name: /create account/i })
+  ).toBeInTheDocument()
+
+  expect(
+    screen.getByPlaceholderText(/email@example.com/i)
+  ).toBeInTheDocument()
+
+  expect(
+    screen.getByRole("button", { name: /create account/i })
+  ).toBeInTheDocument()
+})
+
+/* TEST 2 */
+test("shows error when passwords do not match", async () => {
+  renderForm()
+
+  fireEvent.change(screen.getByPlaceholderText(/email@example.com/i), {
+    target: { name: "email", value: "test@mail.com" },
+  })
+
+  fireEvent.change(screen.getAllByPlaceholderText(/password/i)[0], {
+    target: { name: "password", value: "123" },
+  })
+
+  fireEvent.change(screen.getAllByPlaceholderText(/confirm password/i)[0], {
+    target: { name: "confirmPassword", value: "999" },
+  })
+
+  fireEvent.click(screen.getByRole("button", { name: /create account/i }))
+
+  await waitFor(() => {
+    expect(navigateMock).not.toHaveBeenCalled()
+  })
+})
+
+/* TEST 3 */
+test("successful registration calls API and navigates", async () => {
+  global.fetch.mockResolvedValueOnce({
     ok: true,
     json: async () => ({
       token: "fake-token",
-      user: mockUser,
+      user: { id: 1 },
     }),
   })
 
-  const mockLogin = vi.fn()
+  renderForm()
 
-  render(
-    <AuthContext.Provider value={{ login: mockLogin }}>
-      <MemoryRouter>
-        <RegisterPage />
-      </MemoryRouter>
-    </AuthContext.Provider>
-  )
+  fireEvent.change(screen.getByPlaceholderText(/email@example.com/i), {
+    target: { name: "email", value: "test@mail.com" },
+  })
 
-  await user.type(screen.getByPlaceholderText("Name Surname"), "John Doe")
-  await user.type(screen.getByPlaceholderText("email@example.com"), "test@mail.com")
+  fireEvent.change(screen.getByPlaceholderText(/name surname/i), {
+    target: { name: "username", value: "John Doe" },
+  })
 
-  await user.selectOptions(screen.getByRole("combobox"), "LT")
+  fireEvent.change(screen.getByPlaceholderText(/enter city/i), {
+    target: { name: "city", value: "Vilnius" },
+  })
 
-  await user.type(screen.getByPlaceholderText("Enter city"), "Vilnius")
-  await user.type(screen.getByPlaceholderText("Password"), "123456")
-  await user.type(screen.getByPlaceholderText("Confirm Password"), "123456")
+  fireEvent.change(screen.getAllByPlaceholderText(/password/i)[0], {
+    target: { name: "password", value: "123456" },
+  })
 
-  await user.click(screen.getByRole("button", { name: /create account/i }))
+  fireEvent.change(screen.getAllByPlaceholderText(/confirm password/i)[0], {
+    target: { name: "confirmPassword", value: "123456" },
+  })
+
+  fireEvent.change(screen.getByRole("combobox"), {
+    target: { name: "country", value: "LT" },
+  })
+
+  fireEvent.click(screen.getByRole("button", { name: /create account/i }))
 
   await waitFor(() => {
-    expect(fetch).toHaveBeenCalled()
-    expect(mockLogin).toHaveBeenCalledWith("fake-token", mockUser)
-    expect(mockedNavigate).toHaveBeenCalledWith("/home")
+    expect(global.fetch).toHaveBeenCalled()
+    expect(loginMock).toHaveBeenCalled()
+    expect(navigateMock).toHaveBeenCalledWith("/home")
   })
 })
-
-
-// ❌ 2. FAILURE TEST (PASSWORD MISMATCH)
-test("register fails when passwords do not match", async () => {
-  const user = userEvent.setup()
-
-  const mockLogin = vi.fn()
-  fetch.mockClear()
-  mockedNavigate.mockClear()
-
-  render(
-    <AuthContext.Provider value={{ login: mockLogin }}>
-      <MemoryRouter>
-        <RegisterPage />
-      </MemoryRouter>
-    </AuthContext.Provider>
-  )
-
-  await user.type(screen.getByPlaceholderText("Name Surname"), "John Doe")
-  await user.type(screen.getByPlaceholderText("email@example.com"), "test@mail.com")
-  await user.type(screen.getByPlaceholderText("Enter city"), "Vilnius")
-
-  await user.type(screen.getByPlaceholderText("Password"), "123456")
-  await user.type(screen.getByPlaceholderText("Confirm Password"), "999999")
-
-  await user.click(screen.getByRole("button", { name: /create account/i }))
-
-  // 🔥 даём React завершить state + submit
-  await waitFor(() => {
-    expect(fetch).not.toHaveBeenCalled()
-    expect(mockLogin).not.toHaveBeenCalled()
-    expect(mockedNavigate).not.toHaveBeenCalled()
-  })
-})
-
-
-
-// import { render, screen } from "@testing-library/react";
-// import userEvent from "@testing-library/user-event";
-// import { MemoryRouter } from "react-router-dom";
-// import { test, expect, vi, beforeEach } from "vitest";
-
-// import RegisterPage from "../../pages/RegisterPage";
-// import { AuthContext } from "../../context/AuthContext";
-
-// const mockedNavigate = vi.fn();
-
-// vi.mock("react-router-dom", async () => {
-//   const actual = await vi.importActual("react-router-dom");
-//   return {
-//     ...actual,
-//     useNavigate: () => mockedNavigate,
-//   };
-// });
-
-// global.fetch = vi.fn();
-
-// beforeEach(() => {
-//   vi.clearAllMocks();
-// });
-
-// test("full registration flow works correctly", async () => {
-//   const user = userEvent.setup();
-
-//   const mockUser = {
-//     id: 1,
-//     email: "test@mail.com",
-//     username: "John Doe",
-//     city: "Vilnius",
-//     country: "LT",
-//   };
-
-//   // стабильный fetch mock
-//   fetch.mockImplementation(() =>
-//     Promise.resolve({
-//       ok: true,
-//       json: async () => ({
-//         token: "fake-token",
-//         user: mockUser,
-//       }),
-//     })
-//   );
-
-//   const mockLogin = vi.fn();
-
-//   render(
-//     <AuthContext.Provider value={{ login: mockLogin }}>
-//       <MemoryRouter>
-//         <RegisterPage />
-//       </MemoryRouter>
-//     </AuthContext.Provider>
-//   );
-
-//   await user.type(screen.getByPlaceholderText("Name Surname"), "John Doe");
-//   await user.type(screen.getByPlaceholderText("email@example.com"), "test@mail.com");
-
-//   await user.selectOptions(screen.getByRole("combobox"), "LT");
-
-//   await user.type(screen.getByPlaceholderText("Enter city"), "Vilnius");
-//   await user.type(screen.getByPlaceholderText("Password"), "123456");
-//   await user.type(screen.getByPlaceholderText("Confirm Password"), "123456");
-
-//   await user.click(screen.getByRole("button", { name: /create account/i }));
-
-//   // даём React завершить async state updates
-//   await new Promise((r) => setTimeout(r, 0));
-
-//   expect(fetch).toHaveBeenCalled();
-//   expect(mockLogin).toHaveBeenCalledWith("fake-token", mockUser);
-//   expect(mockedNavigate).toHaveBeenCalledWith("/home");
-// });
-
-// test("register fails when passwords do not match", async () => {
-//   const user = userEvent.setup();
-
-//   const mockLogin = vi.fn();
-//   fetch.mockClear();
-//   mockedNavigate.mockClear();
-
-//   render(
-//     <AuthContext.Provider value={{ login: mockLogin }}>
-//       <MemoryRouter>
-//         <RegisterPage />
-//       </MemoryRouter>
-//     </AuthContext.Provider>
-//   );
-
-//   await user.type(screen.getByPlaceholderText("Name Surname"), "John Doe");
-//   await user.type(screen.getByPlaceholderText("email@example.com"), "test@mail.com");
-//   await user.type(screen.getByPlaceholderText("Enter city"), "Vilnius");
-
-//   await user.type(screen.getByPlaceholderText("Password"), "123456");
-//   await user.type(screen.getByPlaceholderText("Confirm Password"), "999999");
-
-//   await user.click(screen.getByRole("button", { name: /create account/i }));
-
-//   await new Promise((r) => setTimeout(r, 0));
-
-//   expect(fetch).not.toHaveBeenCalled();
-//   expect(mockLogin).not.toHaveBeenCalled();
-//   expect(mockedNavigate).not.toHaveBeenCalled();
-// });

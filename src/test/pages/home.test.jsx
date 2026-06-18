@@ -1,6 +1,7 @@
 import { render, screen } from "@testing-library/react"
 import { test, expect, vi } from "vitest"
 import { MemoryRouter } from "react-router-dom"
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 
 import MainPage from "../../pages/MainPage"
 import { AuthContext } from "../../context/AuthContext"
@@ -14,20 +15,31 @@ vi.mock("../../api/collections", () => ({
       total_value: 1000,
     })
   ),
+
+  getCostChart: vi.fn(() => Promise.resolve([])), // ✅ ДОБАВИТЬ
 }))
 
 test("home page displays user stats correctly", async () => {
   const mockUser = { id: 1, email: "test@mail.com" }
 
+  const queryClient = new QueryClient({
+    defaultOptions: {
+      queries: {
+        retry: false,
+      },
+    },
+  })
+
   render(
-    <AuthContext.Provider value={{ user: mockUser }}>
-      <MemoryRouter>
-        <MainPage />
-      </MemoryRouter>
-    </AuthContext.Provider>
+    <QueryClientProvider client={queryClient}>
+      <AuthContext.Provider value={{ user: mockUser }}>
+        <MemoryRouter>
+          <MainPage />
+        </MemoryRouter>
+      </AuthContext.Provider>
+    </QueryClientProvider>
   )
 
-  // ждём загрузку данных
   expect(await screen.findByText("Items")).toBeInTheDocument()
   expect(await screen.findByText("Collections")).toBeInTheDocument()
   expect(await screen.findByText("Total value")).toBeInTheDocument()

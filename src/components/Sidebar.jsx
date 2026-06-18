@@ -1,5 +1,5 @@
 import "../css/Sidebar.css";
-
+import { Bell } from "lucide-react";
 import { NavLink, useNavigate } from "react-router-dom";
 import { logoutUser } from "../api/auth";
 import { useState } from "react";
@@ -18,24 +18,32 @@ import {
 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import Modal from "../components/Modal";
+import { useQueryClient } from "@tanstack/react-query";
+
+
 
 export default function Sidebar() {
+  const queryClient = useQueryClient();
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [logoutOpen, setLogoutOpen] = useState(false);
   const { user, logout } = useAuth();
 
-const handleLogout = async () => {
-  try {
-    await logoutUser();
-    logout();
-    navigate("/login");
-  } catch (err) {
-    console.error(err);
-  }
-};
+  const handleLogout = async () => {
+    try {
+      await logoutUser();
 
+      queryClient.removeQueries(); // 💥 очищаем кеш
+
+      logout(); // очищаем auth
+      setLogoutOpen(false);
+
+      navigate("/login");
+    } catch (err) {
+      console.error(err);
+    }
+  };
   const closeSidebar = () => setOpen(false);
 
   return (
@@ -73,7 +81,7 @@ const handleLogout = async () => {
           <NavLink to="/collections" onClick={closeSidebar}> <FolderOpen size={18} /> My Collections</NavLink>
           <NavLink to="/favorites" onClick={closeSidebar}>  <Heart size={18} /> Favourites</NavLink>
           <NavLink to="/profile" onClick={closeSidebar}> <User size={18} /> Profile</NavLink>
-
+          <NavLink to="/notifications" onClick={closeSidebar}> <Bell size={18} /> Notifications </NavLink>
           {/* SETTINGS */}
           <div
             className="sidebarSettings"
@@ -128,3 +136,4 @@ const handleLogout = async () => {
     </>
   );
 }
+
