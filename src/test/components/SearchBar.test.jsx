@@ -1,9 +1,9 @@
+import { useState } from "react";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { test, expect, vi, beforeEach } from "vitest";
-import SearchBar from "../../components/SearchBar";
+import { describe, test, expect, vi, beforeEach } from "vitest";
 
-let setFilters;
+import SearchBar from "../../components/SearchBar";
 
 const initialFilters = {
   search: "",
@@ -13,77 +13,130 @@ const initialFilters = {
   sort: "",
 };
 
-function setup() {
-  setFilters = vi.fn();
+let setFiltersSpy;
 
-  render(
-    <SearchBar filters={initialFilters} setFilters={setFilters} />
+function SearchBarWrapper() {
+  const [filters, setFilters] = useState(initialFilters);
+
+  function handleSetFilters(update) {
+    setFiltersSpy(update);
+    setFilters(update);
+  }
+
+  return (
+    <SearchBar
+      filters={filters}
+      setFilters={handleSetFilters}
+    />
   );
+}
 
-  return { setFilters };
+function setup() {
+  setFiltersSpy = vi.fn();
+
+  render(<SearchBarWrapper />);
+
+  return {
+    user: userEvent.setup(),
+  };
 }
 
 beforeEach(() => {
   vi.clearAllMocks();
 });
 
-test("updates search input", async () => {
-  const user = userEvent.setup();
-  setup();
+describe("SearchBar", () => {
+  test("renders search input", () => {
+    setup();
 
-  const input = screen.getByPlaceholderText("Search collections...");
+    expect(
+      screen.getByPlaceholderText("Search collections...")
+    ).toBeInTheDocument();
+  });
 
-  await user.type(input, "books");
+  test("updates search input", async () => {
+    const { user } = setup();
 
-  expect(setFilters).toHaveBeenCalled();
-});
+    const input = screen.getByPlaceholderText(
+      "Search collections..."
+    );
 
-test("opens filters panel", async () => {
-  const user = userEvent.setup();
-  setup();
+    await user.type(input, "books");
 
-  await user.click(screen.getByRole("button", { name: /filters/i }));
+    expect(input).toHaveValue("books");
+    expect(setFiltersSpy).toHaveBeenCalled();
+  });
 
-  expect(screen.getByPlaceholderText("Min value")).toBeInTheDocument();
-});
+  test("opens filters panel", async () => {
+    const { user } = setup();
 
-test("changes category filter", async () => {
-  const user = userEvent.setup();
-  setup();
+    await user.click(
+      screen.getByRole("button", {
+        name: /filters/i,
+      })
+    );
 
-  await user.click(screen.getByRole("button", { name: /filters/i }));
+    expect(
+      screen.getByPlaceholderText("Min value")
+    ).toBeInTheDocument();
 
-  const select = screen.getByDisplayValue("All Categories");
+    expect(
+      screen.getByPlaceholderText("Max value")
+    ).toBeInTheDocument();
+  });
 
-  await user.selectOptions(select, "books");
+  test("changes category filter", async () => {
+    const { user } = setup();
 
-  expect(setFilters).toHaveBeenCalled();
-});
+    await user.click(
+      screen.getByRole("button", {
+        name: /filters/i,
+      })
+    );
 
-test("changes min and max value filters", async () => {
-  const user = userEvent.setup();
-  setup();
+    const categorySelect =
+      screen.getByDisplayValue("All Categories");
 
-  await user.click(screen.getByRole("button", { name: /filters/i }));
+    await user.selectOptions(categorySelect, "books");
 
-  const minInput = screen.getByPlaceholderText("Min value");
-  const maxInput = screen.getByPlaceholderText("Max value");
+    expect(categorySelect).toHaveValue("books");
+    expect(setFiltersSpy).toHaveBeenCalled();
+  });
 
-  await user.type(minInput, "10");
-  await user.type(maxInput, "100");
+  test("changes min and max value filters", async () => {
+    const { user } = setup();
 
-  expect(setFilters).toHaveBeenCalled();
-});
+    await user.click(
+      screen.getByRole("button", {
+        name: /filters/i,
+      })
+    );
 
-test("changes sort option", async () => {
-  const user = userEvent.setup();
-  setup();
+    const minInput = screen.getByPlaceholderText("Min value");
+    const maxInput = screen.getByPlaceholderText("Max value");
 
-  await user.click(screen.getByRole("button", { name: /filters/i }));
+    await user.type(minInput, "10");
+    await user.type(maxInput, "100");
 
-  const sortSelect = screen.getByDisplayValue("Newest");
+    expect(minInput).toHaveValue(10);
+    expect(maxInput).toHaveValue(100);
+    expect(setFiltersSpy).toHaveBeenCalled();
+  });
 
-  await user.selectOptions(sortSelect, "price_asc");
+  test("changes sort option", async () => {
+    const { user } = setup();
 
-  expect(setFilters).toHaveBeenCalled();
+    await user.click(
+      screen.getByRole("button", {
+        name: /filters/i,
+      })
+    );
+
+    const sortSelect = screen.getByDisplayValue("Newest");
+
+    await user.selectOptions(sortSelect, "price_asc");
+
+    expect(sortSelect).toHaveValue("price_asc");
+    expect(setFiltersSpy).toHaveBeenCalled();
+  });
 });
