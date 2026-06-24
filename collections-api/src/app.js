@@ -1544,7 +1544,6 @@ app.post("/api/forgot-password", async (req, res) => {
       [email]
     );
 
-     
     if (result.rows.length === 0) {
       return res.json({
         message: "If the email exists, a reset link has been sent."
@@ -1560,47 +1559,23 @@ app.post("/api/forgot-password", async (req, res) => {
     await pool.query(
       `
       UPDATE users
-      SET
-        reset_token = $1,
-        reset_token_expires = $2
+      SET reset_token = $1,
+          reset_token_expires = $2
       WHERE id = $3
       `,
-      [
-        token,
-        expires,
-        user.id
-      ]
+      [token, expires, user.id]
     );
 
     const resetLink =
       `${process.env.CLIENT_URL}/reset-password/${token}`;
 
     await sendMail({
-
-      from: `"Collections App" <${process.env.EMAIL_FROM}>`,
-
       to: user.email,
-
       subject: "Reset your password",
-
       html: `
         <h2>Password Reset</h2>
-
-        <p>You requested a password reset.</p>
-
-        <p>
-          <a href="${resetLink}">
-            Reset Password
-          </a>
-        </p>
-
-        <p>
-          This link will expire in 1 hour.
-        </p>
-
-        <p>
-          If you did not request this, simply ignore this email.
-        </p>
+        <p>Click the link below:</p>
+        <a href="${resetLink}">Reset Password</a>
       `
     });
 
@@ -1609,13 +1584,8 @@ app.post("/api/forgot-password", async (req, res) => {
     });
 
   } catch (err) {
-
     console.error(err);
-
-    res.status(500).json({
-      error: "Server error"
-    });
-
+    res.status(500).json({ error: "Server error" });
   }
 });
 
