@@ -20,7 +20,7 @@ import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 
 export default function MyCollectionsPage() {
   const queryClient = useQueryClient();
-  const [gridMode, setGridMode] = useState(1);
+  const [gridMode, setGridMode] = useState(3);
 
   const [filters, setFilters] = useState({
     search: "",

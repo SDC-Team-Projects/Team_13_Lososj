@@ -25,6 +25,8 @@ export default function NotificationsPage() {
   if (loading) return <div>Loading...</div>;
 
   return (
+    <div className="layout">
+          <Sidebar />
     <div className="notificationsPage">
       <h1>Notifications</h1>
 
@@ -37,6 +39,7 @@ export default function NotificationsPage() {
           ))}
         </div>
       )}
+    </div>
     </div>
   );
 }

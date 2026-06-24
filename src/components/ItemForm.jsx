@@ -20,6 +20,7 @@ export default function ItemForm() {
   const [condition, setCondition] = useState("");
   const [price, setPrice] = useState("");
   const [image, setImage] = useState("");
+  
 
   const [uploading, setUploading] = useState(false);
 
@@ -61,28 +62,6 @@ export default function ItemForm() {
     }
   };
 
-  // const handleSubmit = async (e) => {
-  //   e.preventDefault();
-
-  //   try {
-  //     await createItem({
-  //       collection_id: id,
-  //       name,
-  //       description,
-  //       notes,
-  //       condition,
-  //       estimated_value: Number(price),
-
-  //       // ✅ ОДИН ИСТОЧНИК ИСТИНЫ
-  //       image,
-  //     });
-
-  //     navigate(`/collections/${id}`);
-  //   } catch (err) {
-  //     console.error(err);
-  //   }
-  // };
-
 
   const handleSubmit = async (e) => {
   e.preventDefault();
@@ -98,7 +77,6 @@ export default function ItemForm() {
       image,
     });
 
-    // даём React Router шанс завершить render
     setTimeout(() => {
       navigate(`/collections/${id}`);
     }, 0);
@@ -173,20 +151,23 @@ export default function ItemForm() {
           onChange={(e) => setDescription(e.target.value)}
         />
 
-        <label className={styles.labelRequired}>Notes</label>
-        <Input
-          placeholder="Additional notes..."
-          value={notes}
-          onChange={(e) => setNotes(e.target.value)}
-        />
 
-        <label className={styles.labelRequired}>Estimated Price</label>
-        <Input
-          type="number"
-          placeholder="100"
-          value={price}
-          onChange={(e) => setPrice(e.target.value)}
-        />
+        <div className={styles.input}>
+  <label className={styles.labelRequired}>
+    Estimated Price
+  </label>
+
+  <div className={styles.priceInputWrap}>
+    <span className={styles.currencySymbol}>$</span>
+
+    <Input
+      type="number"
+      placeholder="100"
+      value={price}
+      onChange={(e) => setPrice(e.target.value)}
+    />
+  </div>
+</div> 
 
         <div className={styles.buttons}>
           <Button

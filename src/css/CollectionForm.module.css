@@ -30,15 +30,16 @@
 }
 
 .labelRequired{
-  padding: 16px;
+  padding: 0;
+  margin-bottom: 4px;
 }
 
 .right {
 display: flex;
-flex-direction: column;
-gap: 10px;
-flex: 1;
-margin-top: 175px;
+  flex-direction: column;
+  gap: 8px;
+  flex: 1;
+  margin-top: 175px;
 }
 
 .left {
@@ -75,6 +76,35 @@ flex: 1;
 .uploadInput {
   display: none;
 
+}
+
+.priceInputWrap {
+  position: relative;
+  width: 100%;
+}
+
+.currencySymbol {
+  position: absolute;
+  left: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+
+  font-size: 15px;
+  font-weight: 600;
+  color: #555;
+
+  z-index: 1;
+  pointer-events: none;
+}
+
+.priceInputWrap input {
+  padding-left: 36px;
+}
+
+.input {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
 }
 
 .uploadContent {

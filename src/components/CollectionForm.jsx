@@ -27,6 +27,10 @@ const navigate = useNavigate();
     { value: "other", label: "Other" },
   ];
 
+  const handleCancel = () => {
+  navigate("/collections");
+};
+
 const handleImageChange = async (e) => {
   const file = e.target.files[0];
   if (!file) return;
@@ -155,11 +159,17 @@ const handleSubmit = async (e) => {
 
         <div className={styles.buttons}>
 
-          <Button type="button" className={`${styles.button} ${styles.primary}`}>
+          <Button
+          type="button" 
+          onClick={handleCancel}
+          className={`${styles.button} ${styles.primary}`}>
             Cancel
           </Button>
 
-          <Button type="submit"  disabled={!image} className={`${styles.button} ${styles.primary}`}>
+          <Button 
+          type="submit"  
+          disabled={!image} 
+          className={`${styles.button} ${styles.primary}`}>
             Add Collection
           </Button>
         </div>

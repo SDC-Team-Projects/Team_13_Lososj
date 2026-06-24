@@ -69,7 +69,7 @@ usePageLoader(isLoading);
         <div className="infoRow">
           <InfoCard title="Items" count={analytics.items_count} />
           <InfoCard title="Collections" count={analytics.collections_count} />
-          <InfoCard title="Total value" count={analytics.total_value} />
+          <InfoCard title="Total value" count={`$${analytics.total_value}`} />
         </div>
 
       </div>

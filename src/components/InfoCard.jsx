@@ -10,3 +10,5 @@ export default function InfoCard ({title = "Title", count = 0}) {
         </div>
     )
 }
+
+

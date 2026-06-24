@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
@@ -19,8 +19,8 @@ export default function ItemPage() {
   const queryClient = useQueryClient();
 
   const { user } = useAuth();
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
-  // 1. ITEM QUERY
   const {
     data: item,
     isLoading,
@@ -32,7 +32,6 @@ export default function ItemPage() {
 
   usePageLoader(isLoading);
 
-  // 2. DELETE MUTATION
   const deleteMutation = useMutation({
     mutationFn: deleteItem,
     onSuccess: () => {
@@ -44,26 +43,31 @@ export default function ItemPage() {
     },
   });
 
-  // 3. OWNER CHECK
   const owner = useMemo(() => {
     if (!user || !item) return false;
     return isOwner(user, item.user_id);
   }, [user, item]);
 
-  // 4. IMAGE SAFE
   const image =
     item?.custom_fields?.image ||
+    item?.image ||
     "https://placehold.co/1200x800";
 
-  // 5. DELETE HANDLER
-  function handleDelete() {
-    const confirmDelete = window.confirm("Delete this item?");
-    if (!confirmDelete) return;
-
-    deleteMutation.mutate(item.id);
+  function handleDeleteClick() {
+    setShowDeleteConfirm(true);
   }
 
-  // 6. LOADING STATES
+  function confirmDeleteItem() {
+    if (!item) return;
+
+    deleteMutation.mutate(item.id);
+    setShowDeleteConfirm(false);
+  }
+
+  function cancelDeleteItem() {
+    setShowDeleteConfirm(false);
+  }
+
   if (isLoading) return <h2>Loading item...</h2>;
   if (!item) return <h2>Item not found</h2>;
 
@@ -73,7 +77,6 @@ export default function ItemPage() {
 
       <div className="content">
         <div className="itemPage">
-
           <div className="itemHero">
             <img src={image} alt={item.name} />
           </div>
@@ -90,10 +93,8 @@ export default function ItemPage() {
             ${item.estimated_value}
           </div>
 
-          {/* OWNER ACTIONS */}
           {owner && (
             <div className="itemActions">
-
               <Button
                 variant="primary"
                 onClick={() =>
@@ -105,17 +106,15 @@ export default function ItemPage() {
 
               <Button
                 variant="danger"
-                onClick={handleDelete}
+                onClick={handleDeleteClick}
               >
                 <Trash2 size={18} />
                 Delete
               </Button>
-
             </div>
           )}
 
           <div className="detailsCard">
-
             <div className="detailBlock">
               <h3>Description</h3>
               <p>
@@ -124,7 +123,6 @@ export default function ItemPage() {
             </div>
 
             <div className="detailsGrid">
-
               <div className="condition">
                 <span>Condition</span>
                 <strong>{item.condition}</strong>
@@ -136,13 +134,41 @@ export default function ItemPage() {
                   {new Date(item.created_at).toLocaleDateString()}
                 </strong>
               </div>
-
             </div>
-
           </div>
-
         </div>
       </div>
+
+      {showDeleteConfirm && (
+        <div className="deleteOverlay">
+          <div className="deleteModal">
+            <h3>Delete item?</h3>
+
+            <p>
+              Are you sure you want to delete "{item.name}"?
+              This action cannot be undone.
+            </p>
+
+            <div className="deleteModalActions">
+              <Button
+                variant="secondary"
+                onClick={cancelDeleteItem}
+                disabled={deleteMutation.isPending}
+              >
+                Cancel
+              </Button>
+
+              <Button
+                variant="danger"
+                onClick={confirmDeleteItem}
+                disabled={deleteMutation.isPending}
+              >
+                {deleteMutation.isPending ? "Deleting..." : "Delete"}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

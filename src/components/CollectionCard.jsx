@@ -1,11 +1,8 @@
-
-
-
 import "../css/CollectionCard.css";
 import { Link, useNavigate } from "react-router-dom";
 import Button from "../ui/Button";
 import React, { useState, useMemo } from "react";
-
+import { createPortal } from "react-dom";
 import { downloadCollectionPdf } from "../api/collections";
 import { useAuth } from "../context/AuthContext";
 import { isOwner } from "../utils/permissions";
@@ -34,6 +31,8 @@ export default function CollectionCard({
   onToggleFavorite,
 }) {
   const [downloading, setDownloading] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+
   const navigate = useNavigate();
   const { user } = useAuth();
 
@@ -81,29 +80,27 @@ export default function CollectionCard({
     }
   }
 
-
   async function handleShare(e) {
-  e.preventDefault();
-  e.stopPropagation();
+    e.preventDefault();
+    e.stopPropagation();
 
-  const link =
-    `${window.location.origin}/public/collections/${collection.id}`;
+    const link = `${window.location.origin}/public/collections/${collection.id}`;
 
-  try {
-    if (navigator.share) {
-      await navigator.share({
-        title: collection.name,
-        text: collection.description,
-        url: link,
-      });
-    } else {
-      await navigator.clipboard.writeText(link);
-      alert("Link copied to clipboard");
+    try {
+      if (navigator.share) {
+        await navigator.share({
+          title: collection.name,
+          text: collection.description,
+          url: link,
+        });
+      } else {
+        await navigator.clipboard.writeText(link);
+        alert("Link copied to clipboard");
+      }
+    } catch (err) {
+      console.error(err);
     }
-  } catch (err) {
-    console.error(err);
   }
-}
 
   function handleEdit(e) {
     e.preventDefault();
@@ -111,15 +108,19 @@ export default function CollectionCard({
     navigate(`/collections/edit/${collection.id}`);
   }
 
-  function handleDelete(e) {
+  function handleDeleteClick(e) {
     e.preventDefault();
     e.stopPropagation();
+    setShowDeleteConfirm(true);
+  }
 
-    const confirmed = window.confirm(
-      "Are you sure you want to delete this collection?"
-    );
+  function confirmDeleteCollection() {
+    onDelete?.(collection.id);
+    setShowDeleteConfirm(false);
+  }
 
-    if (confirmed) onDelete?.(collection.id);
+  function cancelDeleteCollection() {
+    setShowDeleteConfirm(false);
   }
 
   return (
@@ -187,24 +188,25 @@ export default function CollectionCard({
 
               <div>
                 <span>Owner</span>
-<div
-  className="ownerAvatarWrapper"
-  onClick={(e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    navigate(`/users/${collection.user_id}`);
-  }}
->
-  {collection.owner_avatar ? (
-    <img
-      src={collection.owner_avatar}
-      alt="owner"
-      className="ownerAvatar"
-    />
-  ) : (
-    <User size={14} />
-  )}
-</div>
+
+                <div
+                  className="ownerAvatarWrapper"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    navigate(`/users/${collection.user_id}`);
+                  }}
+                >
+                  {collection.owner_avatar ? (
+                    <img
+                      src={collection.owner_avatar}
+                      alt="owner"
+                      className="ownerAvatar"
+                    />
+                  ) : (
+                    <User size={14} />
+                  )}
+                </div>
               </div>
             </div>
           )}
@@ -237,8 +239,8 @@ export default function CollectionCard({
           <Button
             variant="secondary"
             onClick={handleShare}
-            >
-              <Share2 size={18} />
+          >
+            <Share2 size={18} />
           </Button>
 
           {owner && (
@@ -247,13 +249,50 @@ export default function CollectionCard({
                 <Pencil size={18} />
               </Button>
 
-              <Button variant="danger" onClick={handleDelete}>
+              <Button variant="danger" onClick={handleDeleteClick}>
                 <Trash2 size={18} />
               </Button>
             </>
           )}
         </div>
       )}
-    </div>
+
+      {showDeleteConfirm &&
+  createPortal(
+    <div
+      className="collectionDeleteOverlay"
+      onClick={cancelDeleteCollection}
+    >
+      <div
+        className="collectionDeleteModal"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <h3>Delete collection?</h3>
+
+        <p>
+          Are you sure you want to delete "{collection.name}"?
+          This action cannot be undone.
+        </p>
+
+        <div className="collectionDeleteActions">
+          <Button
+            variant="secondary"
+            onClick={cancelDeleteCollection}
+          >
+            Cancel
+          </Button>
+
+          <Button
+            variant="danger"
+            onClick={confirmDeleteCollection}
+          >
+            Delete
+          </Button>
+        </div>
+      </div>
+    </div>,
+    document.body
+  )}
+  </div>
   );
 }

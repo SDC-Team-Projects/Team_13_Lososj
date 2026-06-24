@@ -31,7 +31,6 @@ export default function CollectionPage() {
   const { id } = useParams();
   const navigate = useNavigate();
 
-  // const [collection, setCollection] = useState(null);
 
   const {
   data: collection,
@@ -41,8 +40,6 @@ export default function CollectionPage() {
   queryFn: () => getCollectionById(id),
 });
 
-
-  // const [items, setItems] = useState([]);
 
   const {
   data: items = [],
@@ -55,9 +52,6 @@ export default function CollectionPage() {
 usePageLoader(collectionLoading || itemsLoading);
 
 
-  // const [loading, setLoading] = useState(true);
-
-  // const [favoriteIds, setFavoriteIds] = useState([]);
 
   const { data: favorites = [] } = useQuery({
   queryKey: ["favoriteCollections"],
@@ -69,42 +63,6 @@ const favoriteIds = favorites.map((c) => c.id);
 
   const { user } = useAuth();
 
-  // useEffect(() => {
-  //   loadData();
-  //   loadFavorites();
-  // }, [id, user]);
-
-  // const loadData = async () => {
-  //   try {
-
-  //     const [collectionData, itemsData] =
-  //       await Promise.all([
-  //         getCollectionById(id),
-  //         getItemsByCollection(id),
-  //       ]);
-
-  //     setCollection(collectionData);
-  //     setItems(itemsData);
-
-  //   } catch (err) {
-  //     console.error(err);
-
-  //   } finally {
-  //     setLoading(false);
-  //   }
-  // };
-
-  // async function handleDelete(collectionId) {
-  //   try {
-
-  //     await deleteCollection(collectionId);
-
-  //     navigate("/collections");
-
-  //   } catch (err) {
-  //     console.error(err);
-  //   }
-  // }
 
   const deleteMutation = useMutation({
   mutationFn: deleteCollection,
@@ -117,54 +75,6 @@ const favoriteIds = favorites.map((c) => c.id);
   },
 });
 
-
-  // async function loadFavorites() {
-  //   try {
-
-  //     const data = await getFavoriteCollections();
-
-  //     setFavoriteIds(
-  //       data.map((c) => c.id)
-  //     );
-
-  //   } catch (err) {
-  //     console.error(err);
-  //   }
-  // }
-
-  // async function toggleFavorite(collectionId) {
-
-  //   const isFav =
-  //     favoriteIds.includes(collectionId);
-
-  //   try {
-
-  //     if (isFav) {
-
-  //       await removeFavoriteCollection(
-  //         collectionId
-  //       );
-
-  //       setFavoriteIds((prev) =>
-  //         prev.filter((id) => id !== collectionId)
-  //       );
-
-  //     } else {
-
-  //       await addFavoriteCollection(
-  //         collectionId
-  //       );
-
-  //       setFavoriteIds((prev) => [
-  //         ...prev,
-  //         collectionId
-  //       ]);
-  //     }
-
-  //   } catch (err) {
-  //     console.error(err);
-  //   }
-  // }
 
 
 const favoriteMutation = useMutation({
@@ -197,11 +107,6 @@ function toggleFavorite(collectionId) {
     user && collection
       ? isOwner(user, collection.user_id)
       : false;
-
-  // if (loading) {
-  //   return <h2>Loading collection...</h2>;
-  // }
-
 
   if (collectionLoading || itemsLoading) {
   return <h2>Loading collection...</h2>;

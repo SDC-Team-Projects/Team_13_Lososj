@@ -12,7 +12,7 @@ import "../css/MyCollectionsPage.css";
 import { usePageLoader } from "../hook/usePageLoader";
 
 export default function FavoritesPage() {
-  const [gridMode, setGridMode] = useState(1);
+  const [gridMode, setGridMode] = useState(3);
   const queryClient = useQueryClient();
   const [filters, setFilters] = useState({
     search: "",

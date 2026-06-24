@@ -28,6 +28,8 @@ import { useAuth } from "./context/AuthContext";
 import Layout from "./components/Layout";
 import FormLayout from "./components/FormLayout";
 import NotificationPage from "./pages/NotificationPage";
+import { ssrImportMetaKey } from "vite/module-runner";
+
 
 function App() {
 
@@ -80,13 +82,18 @@ function App() {
 
   <Route path="/settings/password" element={<ChangePasswordPage />} />
 
-
+  <Route
+    path="/notifications"
+    element={<NotificationPage />}
+  />
+  
   <Route path="/users/:id" element={<UserProfilePage />} />
   <Route
     path="/public/collections/:id"
     element={<PublicCollectionPage />}
   />
 </Route>
+
 
  {/* Отдельный без sidebar */}
 
@@ -111,10 +118,6 @@ function App() {
     element={<CollectionFormPage />}
   />
 
-  <Route
-    path="/notifications"
-    element={<NotificationPage />}
-  />
 
   <Route
     path="/collections/edit/:id"
@@ -137,8 +140,7 @@ function App() {
     </>
   )
 }
-import { ssrImportMetaKey } from "vite/module-runner";
-import NotificationsPage from "./pages/NotificationPage";
+
 
 export default App
  

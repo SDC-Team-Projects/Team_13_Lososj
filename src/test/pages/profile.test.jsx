@@ -3,7 +3,7 @@ import { screen } from "@testing-library/react";
 import ProfilePage from "../../pages/ProfilePage";
 import { vi } from "vitest";
 
-// mock API
+//mock API
 vi.mock("../../api/collections", () => ({
   getUserAnalytics: vi.fn().mockResolvedValue({
     items_count: 5,

@@ -23,8 +23,13 @@
   border-radius: 12px;
   border: none;
   cursor: pointer;
-  /* background-color: rgb(125, 187, 253); */
-  background-color: #2563eb;
+    border: none;
+  outline: none;
+  background: linear-gradient(
+135deg,
+#3e30ff,
+#82c0ff
+);
   color: white;
   font-weight: 16px;
 }
@@ -35,8 +40,6 @@
   display: flex;
   flex-wrap: wrap;
   gap: 12px;
-
-  padding: 16px;
 
   background: rgba(255,255,255,0.08);
   backdrop-filter: blur(14px);
@@ -54,3 +57,4 @@
   border: 1px solid rgba(0,0,0,0.08);
   font-size: 14px;
 }
+

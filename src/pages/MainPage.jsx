@@ -16,8 +16,6 @@ import { usePageLoader } from "../hook/usePageLoader";
 export default function MainPage() {
   const queryClient = useQueryClient();
 
-  // const [recentCollections, setRecentCollections] = useState([]);
-
   const {
   data: recentCollections = [],
   isLoading
@@ -28,12 +26,6 @@ export default function MainPage() {
 });
 
 usePageLoader(isLoading);
-
-  // const [analytics, setAnalytics] = useState({
-  //   items_count: 0,
-  //   collections_count: 0,
-  //   total_value: 0,
-  // });
 
   const {
   data: analytics = {
@@ -48,73 +40,6 @@ usePageLoader(isLoading);
 });
 
   const location = useLocation();
-
-// useEffect(() => {
-//   loadAnalytics();
-//   loadRecentCollections();
-// }, [location.pathname]);
-
-// useEffect(() => {
-//   const onFocus = () => {
-//     loadAnalytics();
-//     loadRecentCollections();
-//   };
-
-//   window.addEventListener("focus", onFocus);
-
-//   return () => window.removeEventListener("focus", onFocus);
-// }, []);
-
-  //  async function loadAnalytics() {
-  //   try {
-  //     const data = await getUserAnalytics();
-  //     setAnalytics(data);
-  //   } catch (err) {
-  //     console.error(err);
-  //   }
-  // }
-
-
-//   async function loadRecentCollections() {
-//   try {
-//     const res = await apiFetch(
-//       "https://team-13-lososj.onrender.com/api/views-history"
-//     );
-
-//     if (!res.ok) throw new Error("Failed");
-
-//     const data = await res.json();
-
-//     // 1. берём только коллекции
-//     const collectionsOnly = data
-//       .filter((v) => v.collection_id !== null)
-//       .map((v) => ({
-//         id: v.collection_id,
-//         name: v.collection_name,
-//         image: v.collection_image,
-//         category: v.category,  
-//         viewed_at: v.viewed_at,
-//       }));
-
-//     // 2. убираем дубли (берём последнюю версию)
-//     const uniqueMap = new Map();
-
-//     collectionsOnly.forEach((c) => {
-//       uniqueMap.set(c.id, c);
-//     });
-
-//     const unique = Array.from(uniqueMap.values());
-
-// // 3. сортируем по времени (новые первые)
-// unique.sort(
-//   (a, b) => new Date(b.viewed_at) - new Date(a.viewed_at)
-// );
-
-// setRecentCollections(unique);
-//   } catch (err) {
-//     console.error(err);
-//   }
-// }
 
 async function getRecentCollections() {
   const res = await apiFetch(
@@ -162,7 +87,7 @@ async function getRecentCollections() {
            <div className="infoRow">
            <InfoCard title="Items" count={analytics.items_count}></InfoCard>
            <InfoCard title="Collections" count={analytics.collections_count}/>
-           <InfoCard title="Total value" count={analytics.total_value}></InfoCard>
+           <InfoCard title="Total value" count={`$${analytics.total_value}`}/>
          </div>
 
          <div className="costChart">
