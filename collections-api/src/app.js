@@ -10,7 +10,7 @@ const PDFDocument = require("pdfkit");
 const axios = require("axios");
 const crypto = require("crypto");
 const sharp = require("sharp");
-const { sendEmail } = require("./mailer");
+const { sendResetEmail } = require("./mailer");
 
 const app = express();
 
@@ -1568,16 +1568,9 @@ app.post("/api/forgot-password", async (req, res) => {
 
     const resetLink =
       `${process.env.CLIENT_URL}/reset-password/${token}`;
+    
 
-    await sendMail({
-      to: user.email,
-      subject: "Reset your password",
-      html: `
-        <h2>Password Reset</h2>
-        <p>Click the link below:</p>
-        <a href="${resetLink}">Reset Password</a>
-      `
-    });
+    await sendResetEmail(user.email, resetLink);
 
     res.json({
       message: "Reset email sent"
