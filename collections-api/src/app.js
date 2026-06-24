@@ -1544,6 +1544,7 @@ app.post("/api/forgot-password", async (req, res) => {
       [email]
     );
 
+     
     if (result.rows.length === 0) {
       return res.json({
         message: "If the email exists, a reset link has been sent."
@@ -1554,9 +1555,7 @@ app.post("/api/forgot-password", async (req, res) => {
 
     const token = crypto.randomBytes(32).toString("hex");
 
-    const expires = new Date(
-      Date.now() + 1000 * 60 * 60
-    ); // 1 hour
+    const expires = new Date(Date.now() + 60 * 60 * 1000);
 
     await pool.query(
       `
@@ -1578,20 +1577,30 @@ app.post("/api/forgot-password", async (req, res) => {
 
     await transporter.sendMail({
 
-      from: process.env.EMAIL_USER,
+      from: `"Collections App" <${process.env.EMAIL_FROM}>`,
 
       to: user.email,
 
-      subject: "Reset password",
+      subject: "Reset your password",
 
       html: `
-        <h2>Password reset</h2>
+        <h2>Password Reset</h2>
 
-        <p>Click the button below:</p>
+        <p>You requested a password reset.</p>
 
-        <a href="${resetLink}">
-          Reset password
-        </a>
+        <p>
+          <a href="${resetLink}">
+            Reset Password
+          </a>
+        </p>
+
+        <p>
+          This link will expire in 1 hour.
+        </p>
+
+        <p>
+          If you did not request this, simply ignore this email.
+        </p>
       `
     });
 
