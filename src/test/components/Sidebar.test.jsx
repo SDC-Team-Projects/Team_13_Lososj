@@ -85,47 +85,47 @@ beforeEach(() => {
 });
 
 describe("Sidebar", () => {
-  test("renders sidebar header and navigation links", () => {
-    setup();
+test("renders sidebar header and navigation links", () => {
+  setup();
 
-    expect(screen.getByText("Collector App")).toBeInTheDocument();
+  expect(screen.getByText("Collector App")).toBeInTheDocument();
 
-    expect(
-      screen.getByRole("link", {
-        name: /home/i,
-      })
-    ).toHaveAttribute("href", "/home");
+  expect(
+    screen.getByRole("link", {
+      name: /home/i,
+    })
+  ).toHaveAttribute("href", "/home");
 
-    expect(
-      screen.getByRole("link", {
-        name: /overview/i,
-      })
-    ).toHaveAttribute("href", "/overview");
+  expect(
+    screen.getByRole("link", {
+      name: /overview/i,
+    })
+  ).toHaveAttribute("href", "/overview");
 
-    expect(
-      screen.getByRole("link", {
-        name: /my collections/i,
-      })
-    ).toHaveAttribute("href", "/collections");
+  expect(
+    screen.getByRole("link", {
+      name: /my collections/i,
+    })
+  ).toHaveAttribute("href", "/collections");
 
-    expect(
-      screen.getByRole("link", {
-        name: /favourites/i,
-      })
-    ).toHaveAttribute("href", "/favorites");
+  expect(
+    screen.getByRole("link", {
+      name: /favourites/i,
+    })
+  ).toHaveAttribute("href", "/favorites");
 
-    expect(
-      screen.getByRole("link", {
-        name: /profile/i,
-      })
-    ).toHaveAttribute("href", "/profile");
+  expect(
+    screen.getByRole("link", {
+      name: /profile/i,
+    })
+  ).toHaveAttribute("href", "/profile");
 
-    expect(
-      screen.getByRole("link", {
-        name: /notifications/i,
-      })
-    ).toHaveAttribute("href", "/notifications");
-  });
+  expect(
+    screen.queryByRole("link", {
+      name: /notifications/i,
+    })
+  ).not.toBeInTheDocument();
+});
 
   test("does not show admin panel link for regular user", () => {
     setup();

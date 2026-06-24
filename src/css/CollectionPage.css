@@ -3,40 +3,66 @@
   min-height: 100vh;
 }
 
+/* если ширина sidebar другая — поменяй тут */
 .collectionPageContent {
   flex: 1;
+  min-width: 0;
+
+  margin-left: 260px; /* место под sidebar */
   padding: 30px;
+  box-sizing: border-box;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 .collectionPageTitle {
+  width: 100%;
+  max-width: 1050px;
+
   font-size: 28px;
   font-weight: 700;
   margin-bottom: 20px;
-  margin-left: 300px;
+
+  text-align: center;
 }
 
 .collectionPageMainCard {
-  margin-left: 265px;
   width: 100%;
+  max-width: 1050px;
+
+  display: flex;
+  justify-content: center;
 }
 
 .collectionPageButton {
+  width: 100%;
+  max-width: 1050px;
+
   display: flex;
   justify-content: center;
+
   margin-top: 30px;
-    margin-left: 300px;
 }
 
 .collectionPageItemsGrid {
+  width: 100%;
+  max-width: 1050px;
+
   margin-top: 40px;
+
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 24px;
-    margin-left: 300px;
+  gap: 45px;
+
+  justify-items: center;
+  margin-left: 100px;
 }
 
 .collectionPageItemCard {
-  margin-left: 20px;
+  width: 100%;
+  margin-left: 0;
 }
 
 .collectionPageEmptyText {
@@ -51,9 +77,12 @@
   }
 
   .collectionPageContent {
+    margin-left: 0;
+
     padding: 80px 16px 24px;
     width: 100%;
     box-sizing: border-box;
+
     overflow-x: hidden;
   }
 
@@ -61,18 +90,17 @@
     font-size: 24px;
     line-height: 1.2;
     margin-bottom: 16px;
-    margin-left: 100px;
   }
 
   .collectionPageMainCard {
     width: 100%;
-    margin-left: 5px;
+    max-width: 340px;
   }
 
   .collectionPageButton {
     margin-top: 24px;
     width: 100%;
-    margin-left: 5px;
+    max-width: 340px;
   }
 
   .collectionPageButton a,
@@ -81,14 +109,17 @@
   }
 
   .collectionPageItemsGrid {
+    width: 100%;
+    max-width: 100%;
+
     margin-top: 28px;
+
     grid-template-columns: 1fr;
     gap: 16px;
-    margin-left: 5px;
+    margin-right: 93px;
   }
 
   .collectionPageItemCard {
-    margin-left: 0;
     width: 100%;
   }
 }
