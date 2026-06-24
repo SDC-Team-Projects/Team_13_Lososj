@@ -10,7 +10,7 @@ const PDFDocument = require("pdfkit");
 const axios = require("axios");
 const crypto = require("crypto");
 const sharp = require("sharp");
-const transporter = require("./mailer");
+const { sendEmail } = require("./mailer");
 
 const app = express();
 
@@ -1575,7 +1575,7 @@ app.post("/api/forgot-password", async (req, res) => {
     const resetLink =
       `${process.env.CLIENT_URL}/reset-password/${token}`;
 
-    await transporter.sendMail({
+    await sendMail({
 
       from: `"Collections App" <${process.env.EMAIL_FROM}>`,
 
