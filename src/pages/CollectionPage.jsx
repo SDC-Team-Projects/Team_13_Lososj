@@ -116,87 +116,59 @@ function toggleFavorite(collectionId) {
     return <h2>Collection not found</h2>;
   }
 
-
   return (
-    <div className="layout">
+  <div className="collectionPageLayout">
+    <Sidebar />
 
-      <Sidebar />
+    <div className="collectionPageContent">
+      <h1 className="collectionPageTitle">
+        {collection.name}
+      </h1>
 
-      <div className="content">
+      <div className="collectionPageMainCard">
+        <CollectionCard
+          collection={collection}
+          variant="horizontal"
+          isFavorite={favoriteIds.includes(collection.id)}
+          onToggleFavorite={toggleFavorite}
+          onDelete={deleteMutation.mutate}
+        />
+      </div>
 
-        <h1>{collection.name}</h1>
-
-        <div className="itemsList">
-
-          <CollectionCard
-            collection={collection}
-            variant="horizontal"
-            isFavorite={
-              favoriteIds.includes(collection.id)
-            }
-            onToggleFavorite={toggleFavorite}
-            onDelete={deleteMutation.mutate}
-          />
-
+      {owner && (
+        <div className="collectionPageButton">
+          <Link to={`/collections/${id}/items/new`}>
+            <Button variant="primary">
+              + Add Item
+            </Button>
+          </Link>
         </div>
+      )}
 
-        {owner && (
-          <div className="button">
-
-            <Link
-              to={`/collections/${id}/items/new`}
-            >
-              <Button variant="primary">
-                + Add Item
-              </Button>
-            </Link>
-
-          </div>
-        )}
-
-        <div
-          style={{
-            marginTop: "40px",
-            display: "grid",
-            gridTemplateColumns:
-              "repeat(auto-fill, minmax(280px, 1fr))",
-            gap: "24px",
-          }}
-        >
-
-          {items.length > 0 ? (
-
-            items.map((item) => (
-
-              <div  key={item.id} className="itemsCards">
-
+      <div className="collectionPageItemsGrid">
+        {items.length > 0 ? (
+          items.map((item) => (
+            <div key={item.id} className="collectionPageItemCard">
               <ItemCard
                 variant="horizontal"
                 item={{
                   ...item,
-
                   image:
                     item.custom_fields?.image ||
                     "https://placehold.co/600x400",
-
                   price: item.estimated_value,
-
                   category: item.condition,
                 }}
               />
-              </div>
-
-            ))
-
-          ) : (
-
-            <p>No items yet</p>
-
-          )}
-
-        </div>
-
+            </div>
+          ))
+        ) : (
+          <p className="collectionPageEmptyText">
+            No items yet
+          </p>
+        )}
       </div>
     </div>
-  );
+  </div>
+);
 }

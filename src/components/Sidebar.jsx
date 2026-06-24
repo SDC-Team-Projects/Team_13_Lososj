@@ -34,9 +34,9 @@ export default function Sidebar() {
     try {
       await logoutUser();
 
-      queryClient.removeQueries(); // 💥 очищаем кеш
+      queryClient.removeQueries(); 
 
-      logout(); // очищаем auth
+      logout(); 
       setLogoutOpen(false);
 
       navigate("/login");
@@ -81,7 +81,6 @@ export default function Sidebar() {
           <NavLink to="/collections" onClick={closeSidebar}> <FolderOpen size={18} /> My Collections</NavLink>
           <NavLink to="/favorites" onClick={closeSidebar}>  <Heart size={18} /> Favourites</NavLink>
           <NavLink to="/profile" onClick={closeSidebar}> <User size={18} /> Profile</NavLink>
-          <NavLink to="/notifications" onClick={closeSidebar}> <Bell size={18} /> Notifications </NavLink>
           {/* SETTINGS */}
           <div
             className="sidebarSettings"

@@ -363,3 +363,152 @@
 .recentBlock .collectionCard:hover {
   transform: none;
 }
+
+/* ================= HORIZONTAL CARD MOBILE ONLY ================= */
+
+@media (max-width: 768px) {
+  .collectionCard.horizontal {
+    width: 100%;
+    max-width: 340px;
+    margin: 0 auto;
+
+    display: flex;
+    flex-direction: column;
+
+    border-radius: 28px;
+    overflow: hidden;
+  }
+
+  .collectionCard.horizontal:hover {
+    transform: none;
+  }
+
+  .collectionCard.horizontal .cardLink {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+
+    text-decoration: none;
+    color: inherit;
+  }
+
+  .collectionCard.horizontal .imageBlock {
+    width: 100%;
+    min-width: 0;
+    height: 180px;
+
+    border-radius: 20px;
+    overflow: hidden;
+  }
+
+  .collectionCard.horizontal .contentBlock {
+    width: 100%;
+    min-width: 0;
+    max-width: none;
+
+    padding: 22px;
+    box-sizing: border-box;
+
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    gap: 12px;
+  }
+
+  .collectionCard.horizontal .category {
+    width: fit-content;
+    max-width: 100%;
+
+    margin-top: 0;
+    padding: 8px 16px;
+
+    font-size: 14px;
+  }
+
+  .collectionCard.horizontal .title {
+    font-size: 20px;
+    line-height: 1.25;
+
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .collectionCard.horizontal .desc {
+    font-size: 14px;
+    line-height: 1.45;
+
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+
+    overflow: hidden;
+  }
+
+  .collectionCard.horizontal .statsRow {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+
+    padding-top: 10px;
+    margin-top: 4px;
+  }
+
+  .collectionCard.horizontal .actions {
+    width: 100%;
+
+    padding: 0 22px 22px;
+    box-sizing: border-box;
+
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+
+    gap: 12px;
+  }
+
+  .collectionCard.horizontal .actions button {
+    width: 48px;
+    height: 42px;
+    min-width: 48px;
+
+    flex: 0 0 48px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .collectionCard.horizontal .favoriteIcon {
+    top: 14px;
+    right: 14px;
+  }
+}
+
+@media (max-width: 480px) {
+  .collectionCard.horizontal {
+    margin-left: auto;
+    margin-right: auto;
+    align-self: center;
+  }
+
+  .collectionCard.horizontal .imageBlock {
+    height: 170px;
+  }
+
+  .collectionCard.horizontal .contentBlock {
+    padding: 18px;
+  }
+
+  .collectionCard.horizontal .actions {
+    padding: 0 18px 18px;
+    gap: 14px;
+  }
+
+  .collectionCard.horizontal .actions button {
+    width: 46px;
+    height: 40px;
+    min-width: 46px;
+    flex-basis: 46px;
+  }
+}

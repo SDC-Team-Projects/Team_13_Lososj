@@ -81,11 +81,6 @@ function App() {
   <Route path="/favorites" element={<FavoritesPage />} />
 
   <Route path="/settings/password" element={<ChangePasswordPage />} />
-
-  <Route
-    path="/notifications"
-    element={<NotificationPage />}
-  />
   
   <Route path="/users/:id" element={<UserProfilePage />} />
   <Route
