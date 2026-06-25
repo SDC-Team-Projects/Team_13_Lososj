@@ -1,29 +1,26 @@
 .collectionPageLayout {
-  display: flex;
   min-height: 100vh;
 }
 
-/* если ширина sidebar другая — поменяй тут */
+/* DESKTOP */
 .collectionPageContent {
-  flex: 1;
   min-width: 0;
 
-  margin-left: 260px; /* место под sidebar */
+  margin-left: 260px; /* ширина sidebar */
+  width: calc(100% - 260px);
+
   padding: 30px;
   box-sizing: border-box;
-
-  display: flex;
-  flex-direction: column;
-  align-items: center;
 }
 
 .collectionPageTitle {
   width: 100%;
   max-width: 1050px;
 
+  margin: 0 auto 20px;
+
   font-size: 28px;
   font-weight: 700;
-  margin-bottom: 20px;
 
   text-align: center;
 }
@@ -31,6 +28,8 @@
 .collectionPageMainCard {
   width: 100%;
   max-width: 1050px;
+
+  margin: 0 auto;
 
   display: flex;
   justify-content: center;
@@ -40,24 +39,23 @@
   width: 100%;
   max-width: 1050px;
 
+  margin: 30px auto 0;
+
   display: flex;
   justify-content: center;
-
-  margin-top: 30px;
 }
 
 .collectionPageItemsGrid {
   width: 100%;
   max-width: 1050px;
 
-  margin-top: 40px;
+  margin: 40px auto 0;
 
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
   gap: 45px;
 
   justify-items: center;
-  margin-left: 130px;
 }
 
 .collectionPageItemCard {
@@ -70,17 +68,13 @@
   color: #6b7280;
 }
 
-/* ONLY MOBILE */
+/* MOBILE */
 @media (max-width: 768px) {
-  .collectionPageLayout {
-    flex-direction: column;
-  }
-
   .collectionPageContent {
     margin-left: 0;
+    width: 100%;
 
     padding: 80px 16px 24px;
-    width: 100%;
     box-sizing: border-box;
 
     overflow-x: hidden;
@@ -98,9 +92,10 @@
   }
 
   .collectionPageButton {
-    margin-top: 24px;
     width: 100%;
     max-width: 340px;
+
+    margin-top: 24px;
   }
 
   .collectionPageButton a,
@@ -112,15 +107,17 @@
     width: 100%;
     max-width: 100%;
 
-    margin-top: 28px;
+    margin: 28px auto 0;
 
     grid-template-columns: 1fr;
     gap: 16px;
-    margin-right: 93px;
+
+    justify-items: center;
   }
 
   .collectionPageItemCard {
     width: 100%;
+    margin-left: 0;
   }
 }
 
