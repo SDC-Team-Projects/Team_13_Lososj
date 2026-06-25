@@ -52,15 +52,20 @@
   margin: 40px auto 0;
 
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(280px, 340px));
   gap: 45px;
 
+  justify-content: center;
   justify-items: center;
 }
 
 .collectionPageItemCard {
   width: 100%;
+  max-width: 340px;
   margin-left: 0;
+
+  display: flex;
+  justify-content: center;
 }
 
 .collectionPageEmptyText {
@@ -109,14 +114,17 @@
 
     margin: 28px auto 0;
 
-    grid-template-columns: 1fr;
+    display: grid;
+    grid-template-columns: minmax(0, 340px);
     gap: 16px;
 
+    justify-content: center;
     justify-items: center;
   }
 
   .collectionPageItemCard {
     width: 100%;
+    max-width: 340px;
     margin-left: 0;
   }
 }
