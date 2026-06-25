@@ -10,6 +10,7 @@ const PDFDocument = require("pdfkit");
 const axios = require("axios");
 const crypto = require("crypto");
 const sharp = require("sharp");
+const { sendResetEmail } = require("./mailer");
 
 const app = express();
 
@@ -44,6 +45,19 @@ async function fetchImageAsPngBuffer(url) {
   return outputBuffer;
 }
 
+
+/* ---------------- ANALYTICS HELPER ---------------- */
+
+async function addAnalytics({ userId, collectionId, itemId, changeAmount, totalValue, action }) {
+  await pool.query(
+    `
+    INSERT INTO analytics_history
+    (user_id, collection_id, item_id, change_amount, total_value, action)
+    VALUES ($1,$2,$3,$4,$5,$6)
+    `,
+    [userId, collectionId, itemId, changeAmount, totalValue, action]
+  );
+}
 
 /* ---------------- ACTIVITY HELPER ---------------- */
 
@@ -315,6 +329,74 @@ app.post("/api/collections", auth, async (req, res) => {
   }
 });
 
+/* PUBLIC COLLECTION WITH ITEMS */
+
+app.get("/api/public/collections/:id", async (req, res) => {
+  try {
+    const collectionResult = await pool.query(
+      `
+      SELECT
+        collections.*,
+        users.username AS owner_name,
+        users.avatar_url AS owner_avatar,
+        COUNT(items.id) AS items_count,
+        COALESCE(SUM(items.estimated_value), 0) AS total_value
+      FROM collections
+      JOIN users ON users.id = collections.user_id
+      LEFT JOIN items ON items.collection_id = collections.id
+      WHERE collections.id = $1
+        AND collections.is_public = true
+      GROUP BY collections.id, users.id
+      `,
+      [req.params.id]
+    );
+
+    if (collectionResult.rows.length === 0) {
+      return res.status(404).json({ error: "Collection not found" });
+    }
+
+    const itemsResult = await pool.query(
+      `
+      SELECT
+        items.*,
+        collections.user_id,
+        users.username AS owner_name,
+        users.avatar_url AS owner_avatar
+      FROM items
+      JOIN collections ON collections.id = items.collection_id
+      JOIN users ON users.id = collections.user_id
+      WHERE items.collection_id = $1
+      ORDER BY items.created_at DESC
+      `,
+      [req.params.id]
+    );
+
+    const items = itemsResult.rows.map(item => {
+      let cf = item.custom_fields;
+      if (!cf || typeof cf !== "object") cf = {};
+
+      if (item.image && !cf.image) {
+        cf.image = item.image;
+      }
+
+      return {
+        ...item,
+        custom_fields: cf
+      };
+    });
+
+    res.json({
+      collection: collectionResult.rows[0],
+      items
+    });
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+
 /* GET ALL PUBLIC COLLECTIONS */
 
 app.get("/api/collections/public", async (req, res) => {
@@ -323,27 +405,16 @@ app.get("/api/collections/public", async (req, res) => {
       `
       SELECT
         collections.*,
-
         collections.user_id,
-
         users.username AS owner_name,
-
+        users.avatar_url AS owner_avatar,
         COUNT(items.id) AS items_count,
-
         COALESCE(SUM(items.estimated_value), 0) AS total_value
-
       FROM collections
-
-      JOIN users
-      ON users.id = collections.user_id
-
-      LEFT JOIN items
-      ON items.collection_id = collections.id
-
+      JOIN users ON users.id = collections.user_id
+      LEFT JOIN items ON items.collection_id = collections.id
       WHERE collections.is_public = true
-
-      GROUP BY collections.id, users.username
-
+      GROUP BY collections.id, users.id
       ORDER BY collections.created_at DESC
       `
     );
@@ -364,20 +435,15 @@ app.get("/api/collections", auth, async (req, res) => {
       `
       SELECT
         collections.*,
-
+        users.username AS owner_name,
+        users.avatar_url AS owner_avatar,
         COUNT(items.id) AS items_count,
-
         COALESCE(SUM(items.estimated_value), 0) AS total_value
-
       FROM collections
-
-      LEFT JOIN items
-      ON items.collection_id = collections.id
-
+      JOIN users ON users.id = collections.user_id
+      LEFT JOIN items ON items.collection_id = collections.id
       WHERE collections.user_id = $1
-
-      GROUP BY collections.id
-
+      GROUP BY collections.id, users.id
       ORDER BY collections.created_at DESC
       `,
       [req.user.id]
@@ -475,13 +541,16 @@ app.get("/api/collections/:id", auth, async (req, res) => {
         collections.*,
         collections.user_id,
         users.username AS owner_name,
+        users.avatar_url AS owner_avatar,
         COUNT(items.id) AS items_count,
         COALESCE(SUM(items.estimated_value), 0) AS total_value
       FROM collections
-      JOIN users ON users.id = collections.user_id
-      LEFT JOIN items ON items.collection_id = collections.id
+      JOIN users
+        ON users.id = collections.user_id
+      LEFT JOIN items
+        ON items.collection_id = collections.id
       WHERE collections.id = $1
-      GROUP BY collections.id, users.username
+      GROUP BY collections.id, users.id
       `,
       [req.params.id]
     );
@@ -494,7 +563,6 @@ app.get("/api/collections/:id", auth, async (req, res) => {
 
     const collection = result.rows[0];
 
-    // VIEW HISTORY
     await addViewHistory(
       req.user.id,
       null,
@@ -517,14 +585,19 @@ app.get("/api/public/collections/:id", async (req, res) => {
       `
       SELECT
         collections.*,
+        collections.user_id,
         users.username AS owner_name,
+        users.avatar_url AS owner_avatar,
         COUNT(items.id) AS items_count,
         COALESCE(SUM(items.estimated_value), 0) AS total_value
       FROM collections
-      JOIN users ON users.id = collections.user_id
-      LEFT JOIN items ON items.collection_id = collections.id
-      WHERE collections.id = $1 AND collections.is_public = true
-      GROUP BY collections.id, users.username
+      JOIN users
+        ON users.id = collections.user_id
+      LEFT JOIN items
+        ON items.collection_id = collections.id
+      WHERE collections.id = $1
+        AND collections.is_public = true
+      GROUP BY collections.id, users.id
       `,
       [req.params.id]
     );
@@ -727,7 +800,6 @@ if (item.image && item.image.startsWith("http")) {
 /* CREATE ITEM */
 app.post("/api/items", auth, async (req, res) => {
   try {
-
     const {
       collection_id,
       name,
@@ -756,15 +828,37 @@ app.post("/api/items", auth, async (req, res) => {
       ]
     );
 
+    const item = result.rows[0];
+
+    const totalValueResult = await pool.query(
+      `
+      SELECT COALESCE(SUM(i.estimated_value), 0) AS total_value
+      FROM items i
+      JOIN collections c ON c.id = i.collection_id
+      WHERE c.user_id = $1
+      `,
+      [req.user.id]
+    );
+
+    await addAnalytics({
+      userId: req.user.id,
+      collectionId: collection_id,
+      itemId: item.id,
+      changeAmount: Number(estimated_value || 0),
+      totalValue: Number(totalValueResult.rows[0].total_value),
+      action: "create_item"
+    });
+
     await addActivity(req.user.id, "created item", name);
 
-    res.json(result.rows[0]);
+    res.json(item);
 
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Server error" });
   }
 });
+
 
 /* GET ITEMS BY COLLECTION */
 /*app.get("/api/collections/:id/items", auth, async (req, res) => {
@@ -898,6 +992,60 @@ app.get("/api/items/:id", auth, async (req, res) => {
   }
 });
 
+/* GET PUBLIC ITEM BY ID */
+app.get("/api/public/items/:id", async (req, res) => {
+  try {
+    const result = await pool.query(
+      `
+      SELECT
+        items.*,
+        collections.user_id,
+        collections.is_public,
+        users.username AS owner_name
+
+      FROM items
+
+      JOIN collections
+        ON collections.id = items.collection_id
+
+      JOIN users
+        ON users.id = collections.user_id
+
+      WHERE items.id = $1
+        AND collections.is_public = true
+      `,
+      [req.params.id]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: "Item not found" });
+    }
+
+    const item = result.rows[0];
+
+     
+    let cf = item.custom_fields;
+
+    if (!cf || typeof cf !== "object") {
+      cf = {};
+    }
+
+    if (item.image && !cf.image) {
+      cf.image = item.image;
+    }
+
+    item.custom_fields = cf;
+
+    res.json(item);
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+
+
 /* UPDATE ITEM */
 app.put("/api/items/:id", auth, async (req, res) => {
   try {
@@ -908,33 +1056,44 @@ app.put("/api/items/:id", auth, async (req, res) => {
       notes,
       image,
       condition,
-      estimated_value,
-      custom_fields
+      estimated_value
     } = req.body;
 
-    const cleanedCustomFields = custom_fields || {};
+    const oldItemResult = await pool.query(
+      "SELECT * FROM items WHERE id = $1",
+      [req.params.id]
+    );
 
-    if (cleanedCustomFields.image) {
-      delete cleanedCustomFields.image;
+    if (oldItemResult.rows.length === 0) {
+      return res.status(404).json({ error: "Item not found" });
+    }
+
+    const oldItem = oldItemResult.rows[0];
+
+    const ownerCheck = await pool.query(
+      `
+      SELECT c.user_id
+      FROM collections c
+      JOIN items i ON i.collection_id = c.id
+      WHERE i.id = $1
+      `,
+      [req.params.id]
+    );
+
+    if (ownerCheck.rows[0].user_id !== req.user.id) {
+      return res.status(403).json({ error: "No access" });
     }
 
     const result = await pool.query(
       `
       UPDATE items
-      SET
-        name = $1,
-        description = $2,
-        notes = $3,
-        image = $4,
-        condition = $5,
-        estimated_value = $6,
-        custom_fields = $7
-
-      WHERE id = $8
-      AND collection_id IN (
-        SELECT id FROM collections WHERE user_id = $9
-      )
-
+      SET name=$1,
+          description=$2,
+          notes=$3,
+          image=$4,
+          condition=$5,
+          estimated_value=$6
+      WHERE id=$7
       RETURNING *
       `,
       [
@@ -944,19 +1103,39 @@ app.put("/api/items/:id", auth, async (req, res) => {
         image || null,
         condition,
         estimated_value,
-        cleanedCustomFields,
-        req.params.id,
-        req.user.id
+        req.params.id
       ]
     );
 
-    if (result.rows.length === 0) {
-      return res.status(403).json({
-        error: "No access to edit this item"
+    const updatedItem = result.rows[0];
+
+    const diff =
+      Number(updatedItem.estimated_value) -
+      Number(oldItem.estimated_value);
+
+    if (diff !== 0) {
+
+      const totalValueResult = await pool.query(
+        `
+        SELECT COALESCE(SUM(i.estimated_value), 0) AS total_value
+        FROM items i
+        JOIN collections c ON c.id = i.collection_id
+        WHERE c.user_id = $1
+        `,
+        [req.user.id]
+      );
+
+      await addAnalytics({
+        userId: req.user.id,
+        collectionId: updatedItem.collection_id,
+        itemId: updatedItem.id,
+        changeAmount: diff,
+        totalValue: Number(totalValueResult.rows[0].total_value),
+        action: "update_item"
       });
     }
 
-    res.json(result.rows[0]);
+    res.json(updatedItem);
 
   } catch (err) {
     console.error(err);
@@ -967,19 +1146,57 @@ app.put("/api/items/:id", auth, async (req, res) => {
 /* DELETE ITEM */
 app.delete("/api/items/:id", auth, async (req, res) => {
   try {
-    const result = await pool.query(
-      "DELETE FROM items WHERE id = $1 RETURNING *",
+
+    const itemResult = await pool.query(
+      `
+      SELECT
+        items.*,
+        collections.user_id
+      FROM items
+      JOIN collections ON collections.id = items.collection_id
+      WHERE items.id = $1
+      `,
       [req.params.id]
     );
 
-    if (result.rows.length === 0) {
+    if (itemResult.rows.length === 0) {
       return res.status(404).json({ error: "Item not found" });
     }
 
-    // ACTIVITY
-    await addActivity(req.user.id, "deleted item", req.params.id);
+    const item = itemResult.rows[0];
+
+    if (item.user_id !== req.user.id) {
+      return res.status(403).json({ error: "No access" });
+    }
+
+    await pool.query(
+      "DELETE FROM items WHERE id = $1",
+      [req.params.id]
+    );
+
+    const totalValueResult = await pool.query(
+      `
+      SELECT COALESCE(SUM(i.estimated_value), 0) AS total_value
+      FROM items i
+      JOIN collections c ON c.id = i.collection_id
+      WHERE c.user_id = $1
+      `,
+      [req.user.id]
+    );
+
+    await addAnalytics({
+      userId: req.user.id,
+      collectionId: item.collection_id,
+      itemId: item.id,
+      changeAmount: -Number(item.estimated_value || 0),
+      totalValue: Number(totalValueResult.rows[0].total_value),
+      action: "delete_item"
+    });
+
+    await addActivity(req.user.id, "deleted item", item.name);
 
     res.json({ message: "Deleted successfully" });
+
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Server error" });
@@ -1316,6 +1533,115 @@ app.put("/api/profile", auth, async (req, res) => {
   }
 });
 
+/* FORGOT PASSWORD */
+app.post("/api/forgot-password", async (req, res) => {
+  try {
+
+    const { email } = req.body;
+
+    const result = await pool.query(
+      "SELECT * FROM users WHERE email = $1",
+      [email]
+    );
+
+    if (result.rows.length === 0) {
+      return res.json({
+        message: "If the email exists, a reset link has been sent."
+      });
+    }
+
+    const user = result.rows[0];
+
+    const token = crypto.randomBytes(32).toString("hex");
+
+    const expires = new Date(Date.now() + 60 * 60 * 1000);
+
+    await pool.query(
+      `
+      UPDATE users
+      SET reset_token = $1,
+          reset_token_expires = $2
+      WHERE id = $3
+      `,
+      [token, expires, user.id]
+    );
+
+    const resetLink =
+      `${process.env.CLIENT_URL}/reset-password/${token}`;
+    
+
+    await sendResetEmail(user.email, resetLink);
+
+    res.json({
+      message: "Reset email sent"
+    });
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+
+/* RESET PASSWORD */
+app.post("/api/reset-password/:token", async (req, res) => {
+  try {
+
+    const { password } = req.body;
+
+    const { token } = req.params;
+
+    const result = await pool.query(
+      `
+      SELECT *
+      FROM users
+      WHERE
+        reset_token = $1
+        AND reset_token_expires > NOW()
+      `,
+      [token]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(400).json({
+        error: "Invalid or expired token"
+      });
+    }
+
+    const hashedPassword =
+      await bcrypt.hash(password, 10);
+
+    await pool.query(
+      `
+      UPDATE users
+      SET
+        password = $1,
+        reset_token = NULL,
+        reset_token_expires = NULL
+      WHERE id = $2
+      `,
+      [
+        hashedPassword,
+        result.rows[0].id
+      ]
+    );
+
+    res.json({
+      message: "Password updated"
+    });
+
+  } catch (err) {
+
+    console.error(err);
+
+    res.status(500).json({
+      error: "Server error"
+    });
+
+  }
+});
+
+
 /* CHANGE PASSWORD */
 app.put("/api/profile/password", auth, async (req, res) => {
   try {
@@ -1494,7 +1820,7 @@ app.get("/api/analytics/collection/:id", auth, async (req, res) => {
   try {
     const collectionId = req.params.id;
 
-    // total items + value
+    
     const stats = await pool.query(
       `
       SELECT 
@@ -1506,23 +1832,29 @@ app.get("/api/analytics/collection/:id", auth, async (req, res) => {
       [collectionId]
     );
 
-    // categories distribution
-    const categories = await pool.query(
+     
+    const collection = await pool.query(
       `
-      SELECT c.name AS category, COUNT(*) AS count
-      FROM item_categories ic
-      JOIN categories c ON c.id = ic.category_id
-      JOIN items i ON i.id = ic.item_id
-      WHERE i.collection_id = $1
-      GROUP BY c.name
+      SELECT
+        c.id,
+        c.name,
+        c.user_id,
+        u.username AS owner_name
+      FROM collections c
+      JOIN users u ON u.id = c.user_id
+      WHERE c.id = $1
       `,
       [collectionId]
     );
 
+    if (collection.rows.length === 0) {
+      return res.status(404).json({ error: "Collection not found" });
+    }
+
     res.json({
-      items_count: stats.rows[0].items_count,
-      total_value: stats.rows[0].total_value,
-      categories_distribution: categories.rows
+      collection: collection.rows[0],
+      items_count: Number(stats.rows[0].items_count),
+      total_value: Number(stats.rows[0].total_value)
     });
 
   } catch (err) {
@@ -1576,17 +1908,20 @@ app.get("/api/analytics/collection/:id", auth, async (req, res) => {
 /* USER ANALYTICS */
 app.get("/api/analytics/user", auth, async (req, res) => {
   try {
-    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
-    res.setHeader('Pragma', 'no-cache');
-    res.setHeader('Expires', '0');
 
     const userId = req.user.id;
 
+     
     const collections = await pool.query(
-      "SELECT COUNT(*) FROM collections WHERE user_id = $1",
+      `
+      SELECT COUNT(*) 
+      FROM collections
+      WHERE user_id = $1
+      `,
       [userId]
     );
 
+    
     const items = await pool.query(
       `
       SELECT COUNT(i.id)
@@ -1597,6 +1932,7 @@ app.get("/api/analytics/user", auth, async (req, res) => {
       [userId]
     );
 
+     
     const value = await pool.query(
       `
       SELECT COALESCE(SUM(i.estimated_value), 0) AS total_value
@@ -1607,34 +1943,29 @@ app.get("/api/analytics/user", auth, async (req, res) => {
       [userId]
     );
 
+     
     const chartQuery = await pool.query(
       `
-      SELECT 
-        TO_CHAR(i.created_at, 'YYYY-MM-DD') AS date,
-        COALESCE(SUM(i.estimated_value), 0) AS daily_value
-      FROM items i
-      JOIN collections c ON c.id = i.collection_id
-      WHERE c.user_id = $1
-      GROUP BY TO_CHAR(i.created_at, 'YYYY-MM-DD')
-      ORDER BY date ASC
+      SELECT
+        created_at,
+        total_value
+      FROM analytics_history
+      WHERE user_id = $1
+      ORDER BY created_at ASC
       `,
       [userId]
     );
 
-    let runningTotal = 0;
-    const chartData = chartQuery.rows.map(row => {
-      runningTotal += parseFloat(row.daily_value);
-      return {
-        date: row.date,
-        value: runningTotal
-      };
-    });
+    const chart_data = chartQuery.rows.map(row => ({
+      date: row.created_at,
+      value: row.total_value
+    }));
 
     res.json({
-      collections_count: collections.rows[0].count,
-      items_count: items.rows[0].count,
-      total_value: value.rows[0].total_value,
-      chart_data: chartData
+      collections_count: Number(collections.rows[0].count),
+      items_count: Number(items.rows[0].count),
+      total_value: Number(value.rows[0].total_value),
+      chart_data
     });
 
   } catch (err) {
@@ -1663,32 +1994,35 @@ app.get("/api/activity", auth, async (req, res) => {
   }
 });
 
-/* GET VIEWS HISTORY */
+/* GET VIEWS HISTORY (LATEST UNIQUE COLLECTIONS FIRST) */
 app.get("/api/views-history", auth, async (req, res) => {
   try {
-
     const result = await pool.query(
       `
-      SELECT
-  views_history.*,
+      SELECT DISTINCT ON (views_history.collection_id)
 
-  items.name AS item_name,
-  items.image AS item_image,
+        views_history.*,
 
-  collections.name AS collection_name,
-  collections.image AS collection_image
+        items.name AS item_name,
+        items.image AS item_image,
 
-FROM views_history
+        collections.name AS collection_name,
+        collections.image AS collection_image,
+        collections.category AS category,
 
-LEFT JOIN items
-ON items.id = views_history.item_id
+        views_history.viewed_at
 
-LEFT JOIN collections
-ON collections.id = views_history.collection_id
+      FROM views_history
 
-WHERE views_history.user_id = $1
+      LEFT JOIN items
+        ON items.id = views_history.item_id
 
-ORDER BY viewed_at DESC
+      LEFT JOIN collections
+        ON collections.id = views_history.collection_id
+
+      WHERE views_history.user_id = $1
+
+      ORDER BY views_history.collection_id, views_history.viewed_at DESC
       `,
       [req.user.id]
     );
@@ -1696,12 +2030,8 @@ ORDER BY viewed_at DESC
     res.json(result.rows);
 
   } catch (err) {
-
     console.error(err);
-
-    res.status(500).json({
-      error: "Server error"
-    });
+    res.status(500).json({ error: "Server error" });
   }
 });
 
