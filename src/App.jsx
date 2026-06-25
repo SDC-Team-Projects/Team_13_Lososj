@@ -70,7 +70,6 @@ function App() {
   <Route path="/home" element={<MainPage />} />
 
   <Route path="/profile" element={<ProfilePage />} />
-  <Route path="/profile/edit" element={<EditProfilePage />} />
 
   <Route path="/collections" element={<MyCollectionsPage />} />
   <Route path="/collections/:id" element={<CollectionPage />} />
@@ -112,7 +111,8 @@ function App() {
     path="/collectionForm"
     element={<CollectionFormPage />}
   />
-
+  
+  <Route path="/profile/edit" element={<EditProfilePage />} />
 
   <Route
     path="/collections/edit/:id"
